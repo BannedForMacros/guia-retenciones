@@ -88,7 +88,8 @@
             <div class="row">
               <div class="col-md-12">
                 <label class="form-label">Direccion</label>
-                <input type="text" class="form-control" name="direccion_partida" id="direccion_partida" required placeholder="Indica la direccion de partida">
+                <input type="text" class="form-control" name="direccion_partida" id="direccion_partida" required
+                  placeholder="Indica la direccion de partida">
               </div>
             </div>
           </div>
@@ -105,7 +106,8 @@
             <div class="row">
               <div class="col-md-12">
                 <label class="form-label">Direccion</label>
-                <input type="text" class="form-control" name="direccion_llegada" id="direccion_llegada" required placeholder="Indica la direccion de llegada">
+                <input type="text" class="form-control" name="direccion_llegada" id="direccion_llegada" required
+                  placeholder="Indica la direccion de llegada">
               </div>
             </div>
           </div>
@@ -144,7 +146,7 @@
             <div class="row">
               <div class="col-md-12">
                 <table class="table table-borderless table-striped table-sm fs-6">
-                  <thead >
+                  <thead>
                     <th>Marca</th>
                     <th>Modelo</th>
                     <th>Placa</th>
@@ -185,7 +187,7 @@
             <div class="row">
               <div class="col-md-12">
                 <table class="table table-borderless table-striped table-sm fs-6">
-                  <thead >
+                  <thead>
                     <th>Doc Identidad</th>
                     <th>Conductor</th>
                     <th>Accion</th>
@@ -223,7 +225,7 @@
           <div class="row">
             <div class="col-md-2">
               <label class="form-label">Cantidad</label>
-              <input class="form-control form-control-sm" type="number" name="cantidad" id="cantidad" >
+              <input class="form-control form-control-sm" type="number" name="cantidad" id="cantidad">
             </div>
             <div class="col-md-2 mt-4">
               <button class="btn btn-success btn-sm"><i class="fa fa-plus"></i> Agregar</button>
@@ -233,7 +235,7 @@
           <div class="row mt-3">
             <div class="col-md-12">
               <table class="table table-borderless table-striped table-sm fs-6">
-                <thead >
+                <thead>
                   <th>Codigo</th>
                   <th>Descripcion</th>
                   <th>Cantidad</th>
@@ -256,12 +258,14 @@
               </table>
             </div>
           </div>
-          
+
           <div class="col-md-12">
             <br>
-            <a type="button" href="#" class="btn btn-danger btn-sm float-start"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+            <a type="button" href="#" class="btn btn-danger btn-sm float-start"><i class="fa fa-arrow-left"
+                aria-hidden="true"></i>
               Cancelar</a>
-            <button class="btn btn-primary btn-sm float-end" id="btn_guardar"><i class="fa fa-save" aria-hidden="true"></i>
+            <button class="btn btn-primary btn-sm float-end" id="btn_guardar"><i class="fa fa-save"
+                aria-hidden="true"></i>
               Guardar</button>
           </div>
 

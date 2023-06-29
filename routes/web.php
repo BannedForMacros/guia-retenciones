@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Guia\GuiaIngresoController;
+use App\Http\Controllers\Guia\GuiaSalidaController;
 use App\Http\Controllers\GuiaRemisionController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,3 +29,11 @@ Route::controller(GuiaRemisionController::class)->group(function(){
     Route::resource('guias', GuiaRemisionController::class)->except('update');
 });
 
+Route::controller(GuiaSalidaController::class)->group(function (){
+
+    Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
+});
+Route::controller(GuiaIngresoController::class)->group(function (){
+
+    Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
+});

@@ -45,7 +45,7 @@
               </a>
 
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="{{ route('guias.index') }}">Guia de Remision</a>
+                <a class="dropdown-item" href="{{ route('guiaingreso.create') }}">Guia de Ingreso</a>
               </div>
             </li>
           </ul>
