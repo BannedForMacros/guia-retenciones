@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="{{ asset('assets/select2-bootstrap-5/select2-bootstrap-5-theme.min.css') }}">
   
   <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+
   @routes
   <script type="text/javascript">
     var APP_URL = {!! json_encode(url('/')) !!}
