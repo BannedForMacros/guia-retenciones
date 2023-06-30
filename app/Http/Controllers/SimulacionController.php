@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Faker\Factory as Faker;
+use Illuminate\Support\Carbon;
 
 class SimulacionController extends Controller
 {
@@ -165,46 +166,149 @@ class SimulacionController extends Controller
     public function generateData()
     {
         $faker = Faker::create();
+        
+        $products = [
+            "iPhone",
+            "Samsung Galaxy",
+            "Nike Air Max",
+            "Adidas Superstar",
+            "Sony PlayStation",
+            "Microsoft Xbox",
+            "Canon EOS",
+            "MacBook Pro",
+            "Dell XPS",
+            "LG OLED TV",
+            "Bose QuietComfort",
+            "Gucci Guilty",
+            "Chanel Coco Mademoiselle",
+            "Rolex Submariner",
+            "Levi's 501",
+            "Ray-Ban Wayfarer",
+            "Converse Chuck Taylor",
+            "L'Oréal Paris",
+            "Coca-Cola",
+            "Nutella"
+        ];
 
-        $data = [];
-
-        for ($i = 0; $i < 60; $i++) {
-            $item = [
-                "AnioOrdenCompra" => $faker->randomNumber(1),
-                "NumeroOrden" => $faker->randomNumber(5),
-                "CodTransaccion" => $faker->randomNumber(5),
-                "CodArticulo" => $faker->randomNumber(5),
-                "Descripcion" => $faker->sentence,
-                "Cantidad" => $faker->randomFloat(2, 0, 100),
-                "Precio" => $faker->randomFloat(2, 0, 100),
-                "Descuento" => $faker->randomFloat(2, 0, 10),
-                "Condicion" => $faker->randomNumber(1),
-                "Estado" => $faker->word,
-                "UsuarioCreador" => $faker->userName,
-                "FechaCreacion" => $faker->dateTimeThisYear()->format('Y-m-d\TH:i:s.u'),
-                "UsuarioModificador" => $faker->userName,
-                "FechaModificacion" => $faker->dateTimeThisYear()->format('Y-m-d\TH:i:s.u'),
-                "Propiedad1" => $faker->randomNumber(1),
-                "Propiedad2" => $faker->randomNumber(1),
-                "Propiedad3" => $faker->randomNumber(1),
-                "CodUnidad" => $faker->randomNumber(5),
-                "CodArtNue" => $faker->word,
-                "TipoOrdenCompra" => $faker->word,
-                "Igv" => $faker->randomFloat(2, 0, 100),
-                "Isc" => $faker->randomFloat(2, 0, 100),
-                "cantdesp" => $faker->randomFloat(2, 0, 100),
-                "Perecible" => $faker->randomNumber(1),
-                "Caducidad" => $faker->date(),
-                "CodBarra" => $faker->ean13,
-                "CantEntre" => $faker->randomNumber(5),
-                "PrecioSinIgv" => $faker->randomFloat(2, 0, 100),
-                "Item" => $faker->randomNumber(5),
-                "MontoDescuento" => $faker->randomFloat(2, 0, 100),
+        $articles = [];
+        
+        for ($i = 0; $i < 20; $i++) {
+            $nombreArticulo =  $products[$i];
+            $article = [
+                "CodArticulo" => $i+1,
+                "NombreArticulo" => $nombreArticulo,
+                "CuentaCompra" => 0,
+                "CuentaVenta" => 0,
+                "NombreCorto" => $nombreArticulo,
+                "CodEstacion" => 0,
+                "CodFamilia" => 0,
+                "CodUnidad" => 0,
+                "TipoMoneda" => $faker->randomElement(['string', 'string', 'string']),
+                "PrecioPublico" => 0,
+                "PrecioSinIGV" => 0,
+                "CostoArticulo" => 0,
+                "ISC" => 0,
+                "IGV" => 0,
+                "StockMinimo" => 0,
+                "StockMaximo" => 0,
+                "CodBarra" => $faker->ean13(),
+                "CodPlu" => $faker->ean8(),
+                "Stock" => 0,
+                "CodBarraAd" => $faker->ean13(),
+                "FechaUSalida" => Carbon::now()->format('Y-m-d\TH:i:s.u'),
+                "FechaUIngreso" => Carbon::now()->format('Y-m-d\TH:i:s.u'),
+                "CostoPromedio" => 0,
+                "PuntosFidelidad" => 0,
+                "CostoAdicionalFidelidad" => 0,
+                "StockUInventario" => 0,
+                "IngresoDUInventario" => 0,
+                "SalidasDUInventario" => 0,
+                "Estado" => "string",
+                "UsuarioCreador" => "string",
+                "FechaCreacion" => Carbon::now()->format('Y-m-d\TH:i:s.u'),
+                "UsuarioModificador" => "string",
+                "FechaModificacion" => Carbon::now()->format('Y-m-d\TH:i:s.u'),
+                "CodSubFamilia" => 0,
+                "ControlStock" => "string",
+                "TipoKit" => "string",
+                "FechaExpiracion" => Carbon::now()->format('Y-m-d\TH:i:s.u'),
+                "Procedencia" => "string",
+                "Ubicacion" => 0,
+                "PorcentajeUtilidad" => 0,
+                "Foto" => "string",
+                "TipoMonedaCosto" => "string",
+                "PrecioPublico2" => 0,
+                "PrecioPublico3" => 0,
+                "StockM" => 0,
+                "CodArtNue" => "string",
+                "Inicial" => 0,
+                "Talla" => "string",
+                "StockInicial" => 0,
+                "Comision" => 0,
+                "Comentario" => "string",
+                "GastosAdministrativos" => 0,
+                "OtrosGastos" => 0,
+                "Peso" => 0,
+                "Grosor" => 0,
+                "PrecioGramo" => 0,
+                "CodAlmacen" => 0,
+                "serie" => "string",
+                "ConPromocion" => 0,
+                "TipoVenta" => "string",
+                "Perecible" => "string",
+                "CodBarra2" => "string",
+                "ControlPeso" => "string",
+                "Percepcion" => "string",
+                "TipoCalculoPrecio" => "string",
+                "GarantiaDias" => 0,
+                "canjepuntos" => 0,
+                "solesCanje" => 0,
+                "articanje" => 0,
+                "ModaLinea" => 0,
+                "PrecioTalla" => 0,
+                "Marca" => "Adidas",
+                "Importado" => 0,
+                "Transferible" => 0,
+                "CostoIgv" => 0,
+                "Insumo" => 0,
+                "Autor" => "string",
+                "Editorial" => "string",
+                "Express" => 0,
+                "Carta" => 0,
+                "PermitirC" => 0,
+                "PermitirV" => 0,
+                "CostoPactado" => 0,
+                "CodProveedorPrincipal" => 0,
+                "FechaAnulacion" => Carbon::now()->format('Y-m-d\TH:i:s.u'),
+                "Imagen" => "string",
+                "CodClasificacion" => 0,
+                "CodigoSAP" => "string",
+                "DescuentoPorcentaje" => 0,
+                "TipoExistencia" => "string",
+                "TipoIgv" => 0,
+                "TouchResumen" => 0,
+                "web1" => "string",
+                "web2" => "string",
+                "ESTADOENVIOWS" => 0,
+                "CodigoSunat" => "string",
+                "CodTipoEmpaque" => 0,
+                "IGVCostoProv" => 0,
+                "ImprimirComanda" => 0,
+                "Cortesia" => 0,
+                "CodCuenta" => "string",
+                "CodProyecto" => 0,
+                "ICBPER" => 0,
+                "NotaDebito" => 0,
+                "NotaCredito" => 0
             ];
-
-            $data[] = $item;
+        
+            $article["NombreCorto"] = $article["NombreArticulo"];
+        
+            $articles[] = $article;
         }
-
-        return json_encode($data, JSON_PRETTY_PRINT);
+        
+        // Mostrar el array de artículos generado
+        echo json_encode($articles, JSON_PRETTY_PRINT);
+        
     }
 }

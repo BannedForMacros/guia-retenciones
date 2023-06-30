@@ -1,11 +1,5 @@
 @extends('layouts.app')
 
-<style>
-  /* body {
-    background-color: #f5f7fa !important;
-  } */
-</style>
-
 
 @section('content')
   <div class="container-fluid">
@@ -76,8 +70,10 @@
             <div class="row">
               <div class="col-md-12 mb-2">
                 <label class="form-label">Proveedores</label>
-                <select class="form-select" name="proveedor_id" id="proveedor_id">
-                  <option value="1">proveedor 1</option>
+                <select class="form-select select_2" name="proveedor_id" id="proveedor_id">
+                  @foreach ($listProveedores as $item)
+                    <option value="{{ $item->CodProveedor }}">{{ $item->NombreProveedor }}</option>
+                  @endforeach
                 </select>
               </div>
             </div>
@@ -99,19 +95,25 @@
               <div class="col-md-3">
                 <label class="form-label">F. Pago</label>
                 <select class="form-select" name="forma_pago_id" id="forma_pago_id">
-                  <option value="1">Forma Pago 1</option>
+                  @foreach ($listFormasPago as $item)
+                    <option value="{{ $item->CodFormaPago }}">{{ $item->Descripcion }}</option>
+                  @endforeach
                 </select>
               </div>
               <div class="col-md-3">
                 <label class="form-label">Tipo Operacion</label>
                 <select class="form-select" name="tipo_operacion_id" id="tipo_operacion_id">
-                  <option value="1">Ingreso Por Compra</option>
+                  @foreach ($listTipoOperacion as $item)
+                    <option value="{{ $item->TipoOperacion }}">{{ $item->Descripcion }}</option>
+                  @endforeach
                 </select>
               </div>
               <div class="col-md-3">
                 <label class="form-label">Almacen</label>
                 <select class="form-select" name="almacen_id" id="almacen_id">
-                  <option value="1">Ingreso Por Compra</option>
+                  @foreach ($listAlmacenes as $item)
+                    <option value="{{ $item->CodAlmacen }}">{{ $item->Descripcion }}</option>
+                  @endforeach
                 </select>
               </div>
             </div>
@@ -123,43 +125,62 @@
         <div class="row mt-4">
           <h5><i class="fa fa-list"></i> Detalle</h5>
           <div class="col-md-12">
-            <div class="row">
-              <div class="col-md-8 mb-2">
+            <div class="row mt-2">
+              <div class="col-md-8">
                 <label class="form-label">Productos</label>
-                <select class="form-select" name="producto_id" id="producto_id">
-                  <option value="1">Producto 1</option>
+                <select class="form-select select_2" name="producto_id" id="producto_id">
+                  @foreach ($listArticulos as $item)
+                    <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
+                      data-descripcion="{{ $item->NombreArticulo }}" value="{{ $item->CodArticulo }}">
+                      [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
+                    </option>
+                  @endforeach
                 </select>
               </div>
-              <div class="col-md-4 mt-3">
-                <button class="btn btn-success btn-primary mt-1"><i class="fa fa-plus"></i> Agregar</button>
+
+            </div>
+            <div class="row">
+              <div class="col-md-3">
+                <label class="form-label">Cantidad</label>
+                <input class="form-control" type="number" value="1" data-cantidad_default='1'>
+              </div>
+              <div class="col-md-4 mt-4">
+                <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i>
+                  Agregar</button>
               </div>
             </div>
+
+          </div>
+          <div class="col-md-12">
             <div class="row mt-3">
               <div class="col-md-12">
-                <table class="table table-hover table-striped table-sm table-bordered">
-                  <thead class="fs-6">
-                    <th>Cod. Barras</th>
-                    <th>Codigo</th>
-                    <th>Cod. Int</th>
-                    <th>Descripcion</th>
-                    <th>Cantidad</th>
-                    <th>Med</th>
-                    <th>Accion</th>
-                  </thead>
-                  <tbody id="tbody">
-                    <tr>
-                      <td>1234567</td>
-                      <td>333333</td>
-                      <td>766767</td>
-                      <td>Producto de prueba</td>
-                      <td>23</td>
-                      <td>23 mtrs</td>
-                      <td>
-                        <button class="btn btn-danger btn-sm"><i class="fa fa-times-circle"></i></button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="card table-responsive">
+                  <table class="table table-hover table-striped table-sm table-bordered">
+                    <thead class="fs-6">
+                      <th>Cod. Barras</th>
+                      <th>Codigo</th>
+                      <th>Cod. Int</th>
+                      <th>Descripcion</th>
+                      <th>Cantidad</th>
+                      <th>Med</th>
+                      <th>Accion</th>
+                    </thead>
+                    <tbody id="tbody">
+                      {{-- <tr>
+                        <td>1234567</td>
+                        <td>333333</td>
+                        <td>766767</td>
+                        <td>Producto de prueba</td>
+                        <td>23</td>
+                        <td>23 mtrs</td>
+                        <td>
+                          <button class="btn btn-danger btn-sm"><i class="fa fa-times-circle"></i></button>
+                        </td>
+                      </tr> --}}
+                    </tbody>
+                  </table>
+
+                </div>
               </div>
             </div>
           </div>
@@ -230,7 +251,8 @@
         <div class="row">
           <div class="col-md-12">
             <br>
-            <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+            <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
+                aria-hidden="true"></i>
               Cancelar</a>
             <button class="btn btn-primary float-end" id="btn_guardar"><i class="fa fa-save" aria-hidden="true"></i>
               Guardar</button>
@@ -239,4 +261,7 @@
       </div>
     </div>
   </div>
+  @push('js-scripts')
+    <script src="{{ asset('js/guias/ingreso.js?v=') }}{{ rand() }}"></script>
+  @endpush
 @endsection

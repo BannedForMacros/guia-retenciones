@@ -35,5 +35,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
 });
 Route::controller(GuiaIngresoController::class)->group(function (){
 
+    Route::post('guiaingreso/agregarItem', 'agregarItem')->name('guiaingreso.agregarItem');
+
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
 });

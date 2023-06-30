@@ -12,7 +12,7 @@
 
   <!-- Scripts -->
   <script src="{{ asset('js/app.js') }}" defer></script>
-
+  <script src="{{ asset('assets/jquery/jquery-3.7.0.min.js') }}"></script>
   <!-- Fonts -->
   <link rel="dns-prefetch" href="//fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
@@ -20,7 +20,15 @@
   <!-- Styles -->
   <link href="{{ asset('css/app.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/fontawesome/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/select2/dist/css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/select2-bootstrap-5/select2-bootstrap-5-theme.min.css') }}">
+  
   <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+  @routes
+  <script type="text/javascript">
+    var APP_URL = {!! json_encode(url('/')) !!}
+    const _token = $('meta[name="csrf-token"]').attr('content');
+  </script>
 </head>
 
 <body>
@@ -99,6 +107,11 @@
       @yield('content')
     </main>
   </div>
+
+  <script src="{{ asset('assets/select2/dist/js/select2.full.js') }}"></script>
+  <script src="{{ asset('assets/sweetalert2/sweetalert.min.js') }}"></script>
+  @stack('js-scripts')
+
 </body>
 
 </html>
