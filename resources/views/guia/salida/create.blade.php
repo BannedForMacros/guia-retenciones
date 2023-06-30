@@ -67,17 +67,18 @@
                 <div class="row">
                   <div class="col-md-6 mb-2">
                     <label class="form-label">Vendedor</label>
-                    <select class="form-select" name="vendedor_id" id="vendedor_id">
-                      <option value="1">Vendedor 1</option>
+                    <select class="form-select select_2" name="proveedor_id" id="proveedor_id" style="width: 100%">
+                      <option value="1">Vendedor en sesion</option>
                     </select>
                   </div>
                   <div class="col-md-6 mb-2">
                     <div class="row">
                       <div class="col-md-12">
                         <label class="form-label">Proveedor</label>
-                        <select class="form-select" name="proveedor_id" id="proveedor_id">
-                          <option value="-1">No indicar</option>
-                          <option value="1">Vendedor 1</option>
+                        <select class="form-select select_2" name="proveedor_id" id="proveedor_id" style="width: 100%">
+                          @foreach ($listProveedores as $item)
+                            <option value="{{ $item->CodProveedor }}">{{ $item->NombreProveedor }}</option>
+                          @endforeach
                         </select>
                       </div>
                       <div class="col-md-12">
@@ -102,8 +103,10 @@
             <div class="row">
               <div class="col-md-12">
                 <label class="form-label">Cliente</label>
-                <select class="form-select" name="cliente_id" id="cliente_id">
-                  <option value="1">cliente 1</option>
+                <select class="form-select select_2" name="cliente_id" id="cliente_id" style="width: 100%">
+                  @foreach ($listClientes as $item)
+                    <option value="{{ $item->CodCliente }}" data-direccion="{{ $item->Direccion }}">[{{ $item->RucCliente }}] {{ $item->RazonSocial }}</option>
+                  @endforeach
                 </select>
               </div>
               <div class="col-md-12">
@@ -163,15 +166,20 @@
             <div class="row">
               <div class="col-md-8 mb-2">
                 <label class="form-label">Productos</label>
-                <select class="form-select" name="producto_id" id="producto_id">
-                  <option value="1">Producto 1</option>
+                <select class="form-select select_2" name="producto_id" id="producto_id">
+                  @foreach ($listArticulos as $item)
+                    <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
+                      data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}" data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
+                      [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
+                    </option>
+                  @endforeach
                 </select>
               </div>
-              <div class="col-md-4 mt-4">
-                <button class="btn btn-success btn-primary mt-1"><i class="fa fa-plus"></i> Agregar</button>
+              <div class="col-md-4 mt-3">
+                <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i> Agregar</button>
               </div>
             </div>
-            <div class="row">
+            <div class="row mt-2">
               <div class="col-md-12 table-responsive">
                 <table class="table table-hover table-striped table-sm table-bordered">
                   <thead>
@@ -184,7 +192,7 @@
                     <th>Accion</th>
                   </thead>
                   <tbody id="tbody">
-                    <tr>
+                    {{-- <tr>
                       <td>1234567</td>
                       <td>333333</td>
                       <td>766767</td>
@@ -194,7 +202,7 @@
                       <td>
                         <button class="btn btn-danger btn-sm"><i class="fa fa-times-circle"></i></button>
                       </td>
-                    </tr>
+                    </tr> --}}
                   </tbody>
                 </table>
               </div>
@@ -275,7 +283,8 @@
         <div class="row">
           <div class="col-md-12">
             <br>
-            <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+            <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
+                aria-hidden="true"></i>
               Cancelar</a>
             <button class="btn btn-primary float-end" id="btn_guardar"><i class="fa fa-save" aria-hidden="true"></i>
               Guardar</button>
@@ -287,4 +296,7 @@
 
     </div>
   </div>
+  @push('js-scripts')
+    <script src="{{ asset('js/guias/salida.js?v=') }}{{ rand() }}"></script>
+  @endpush
 @endsection
