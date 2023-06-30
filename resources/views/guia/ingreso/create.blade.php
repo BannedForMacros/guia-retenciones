@@ -131,7 +131,7 @@
                 <select class="form-select select_2" name="producto_id" id="producto_id">
                   @foreach ($listArticulos as $item)
                     <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
-                      data-descripcion="{{ $item->NombreArticulo }}" value="{{ $item->CodArticulo }}">
+                      data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}" data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
                       [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
                     </option>
                   @endforeach
@@ -142,7 +142,7 @@
             <div class="row">
               <div class="col-md-3">
                 <label class="form-label">Cantidad</label>
-                <input class="form-control" type="number" value="1" data-cantidad_default='1'>
+                <input class="form-control" type="number" name="cantidad" id="cantidad" value="1" data-cantidad_default='1'>
               </div>
               <div class="col-md-4 mt-4">
                 <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i>

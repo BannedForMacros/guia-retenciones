@@ -12,10 +12,13 @@ $(document).on('click', '#btnAdd', function(event) {
   event.preventDefault();
   /* Act on the event */
 
+  var cantidad = $('#cantidad').val();
   var producto_id = $('#producto_id').val();
   var codigo_barra = $('#producto_id').find(':selected').data('codigo_barra');
   var cod_plu = $('#producto_id').find(':selected').data('cod_plu');
   var descripcion = $('#producto_id').find(':selected').data('descripcion');
+  var precio_publico = $('#producto_id').find(':selected').data('precio_publico');
+  var precio_sin_igv = $('#producto_id').find(':selected').data('precio_sin_igv');
 
   console.log({producto_id});
   var items = $('#tbody tr').map(function(i, row) {
@@ -35,6 +38,11 @@ $(document).on('click', '#btnAdd', function(event) {
   formData.append('codigo_barra', codigo_barra);
   formData.append('cod_plu', cod_plu);
   formData.append('descripcion', descripcion);
+  formData.append('precio_publico', precio_publico);
+  formData.append('precio_sin_igv', precio_sin_igv);
+  formData.append('cantidad', cantidad);
+
+
   formData.append('items', JSON.stringify(items));
   agregarItem(formData);
 

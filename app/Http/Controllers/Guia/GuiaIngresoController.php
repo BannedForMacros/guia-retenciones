@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Http;
 
 class GuiaIngresoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -40,6 +44,11 @@ class GuiaIngresoController extends Controller
         $codigo_barra = $request->post('codigo_barra');
         $cod_plu = $request->post('cod_plu');
         $descripcion = $request->post('descripcion');
+        $precio_publico = $request->post('precio_publico');
+        $precio_sin_igv = $request->post('precio_sin_igv');
+        $cantidad = $request->post('cantidad');
+
+
         $items = json_decode($request->post('items'));
 
         $procede = true;
@@ -62,7 +71,7 @@ class GuiaIngresoController extends Controller
         }
 
         if ($procede == true) {
-            $cantidad = 1;
+
             $unidad = "UNI";
             $tr = "
                 <tr

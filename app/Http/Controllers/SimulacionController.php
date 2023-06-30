@@ -168,34 +168,35 @@ class SimulacionController extends Controller
         $faker = Faker::create();
         
         $products = [
-            "iPhone",
-            "Samsung Galaxy",
-            "Nike Air Max",
-            "Adidas Superstar",
-            "Sony PlayStation",
-            "Microsoft Xbox",
-            "Canon EOS",
-            "MacBook Pro",
-            "Dell XPS",
-            "LG OLED TV",
-            "Bose QuietComfort",
-            "Gucci Guilty",
-            "Chanel Coco Mademoiselle",
-            "Rolex Submariner",
-            "Levi's 501",
-            "Ray-Ban Wayfarer",
-            "Converse Chuck Taylor",
-            "L'Oréal Paris",
-            "Coca-Cola",
-            "Nutella"
+            "iPhone" => 4000,
+            "Samsung Galaxy" => 3200,
+            "Nike Air Max" => 600,
+            "Adidas Superstar" => 480,
+            "Sony PlayStation" => 1600,
+            "Microsoft Xbox" => 1400,
+            "Canon EOS" => 2400,
+            "MacBook Pro" => 6000,
+            "Dell XPS" => 5200,
+            "LG OLED TV" => 8000,
+            "Bose QuietComfort" => 1200,
+            "Gucci Guilty" => 320,
+            "Chanel Coco Mademoiselle" => 480,
+            "Rolex Submariner" => 40000,
+            "Levi's 501" => 320,
+            "Ray-Ban Wayfarer" => 600,
+            "Converse Chuck Taylor" => 240,
+            "L'Oréal Paris" => 40,
+            "Coca-Cola" => 8,
+            "Nutella" => 20
         ];
-
+        
         $articles = [];
         
-        for ($i = 0; $i < 20; $i++) {
-            $nombreArticulo =  $products[$i];
+        foreach ($products as $nombreArticulo => $precioReal) {
+            $precioSinIGV = round($precioReal / 1.18, 2);
+            
             $article = [
-                "CodArticulo" => $i+1,
+                "CodArticulo" => count($articles) + 1,
                 "NombreArticulo" => $nombreArticulo,
                 "CuentaCompra" => 0,
                 "CuentaVenta" => 0,
@@ -204,8 +205,8 @@ class SimulacionController extends Controller
                 "CodFamilia" => 0,
                 "CodUnidad" => 0,
                 "TipoMoneda" => $faker->randomElement(['string', 'string', 'string']),
-                "PrecioPublico" => 0,
-                "PrecioSinIGV" => 0,
+                "PrecioPublico" => $precioReal,
+                "PrecioSinIGV" => $precioSinIGV,
                 "CostoArticulo" => 0,
                 "ISC" => 0,
                 "IGV" => 0,
