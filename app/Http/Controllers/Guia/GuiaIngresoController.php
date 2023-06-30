@@ -24,6 +24,8 @@ class GuiaIngresoController extends Controller
      */
     public function create()
     {
+        // $listProveedores = 
+
         return view('guia.ingreso.create');
     }
 

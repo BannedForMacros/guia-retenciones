@@ -20,6 +20,7 @@
   <!-- Styles -->
   <link href="{{ asset('css/app.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/fontawesome/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 </head>
 
 <body>
@@ -46,6 +47,7 @@
 
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="{{ route('guiaingreso.create') }}">Guia de Ingreso</a>
+                <a class="dropdown-item" href="{{ route('guiasalida.create') }}">Guia de Salida</a>
               </div>
             </li>
           </ul>

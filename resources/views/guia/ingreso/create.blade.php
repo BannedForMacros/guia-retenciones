@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 <style>
-  body {
+  /* body {
     background-color: #f5f7fa !important;
-  }
+  } */
 </style>
 
 
@@ -20,7 +20,7 @@
                 <label class="form-label">Fecha Emision</label>
                 <input type="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
               </div>
-              <div class="col-md-3 mb-2">
+              <div class="col-md-3 col-sm-4 mb-2">
                 <label class="form-label">Fecha Vencimiento</label>
                 <input type="date" class="form-control">
               </div>
@@ -40,7 +40,7 @@
               <div class="col-md-7 mb-2">
                 <label class="form-label">Relacionar Documento</label>
                 <div class="row">
-                  <div class="col-md-4 mt-4">
+                  <div class="col-md-4">
                     <div class="form-check">
                       <input class="form-check-input" type="radio" name="pedido" id="pedido">
                       <label class="form-check-label" for="pedido">
@@ -55,7 +55,7 @@
                     </div>
                   </div>
                   <div class="col-md-8">
-                    <label class="form-label">Serie-Nro</label>
+                    {{-- <label class="form-label">Serie-Nro</label> --}}
                     <div class="row">
                       <div class="col-md-4">
                         <input type="text" class="form-control" name="serie" placeholder="Serie">
@@ -130,14 +130,14 @@
                   <option value="1">Producto 1</option>
                 </select>
               </div>
-              <div class="col-md-4 mt-4">
+              <div class="col-md-4 mt-3">
                 <button class="btn btn-success btn-primary mt-1"><i class="fa fa-plus"></i> Agregar</button>
               </div>
             </div>
-            <div class="row">
+            <div class="row mt-3">
               <div class="col-md-12">
                 <table class="table table-hover table-striped table-sm table-bordered">
-                  <thead>
+                  <thead class="fs-6">
                     <th>Cod. Barras</th>
                     <th>Codigo</th>
                     <th>Cod. Int</th>
