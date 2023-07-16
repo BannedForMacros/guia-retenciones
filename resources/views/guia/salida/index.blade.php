@@ -312,6 +312,6 @@
     </div>
   </div>
   @push('js-scripts')
-    <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/salida.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection

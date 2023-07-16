@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="{{ asset('assets/select2/dist/css/select2.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/select2-bootstrap-5/select2-bootstrap-5-theme.min.css') }}">
   
+  
   <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
   @routes
@@ -111,6 +112,7 @@
 
   <script src="{{ asset('assets/select2/dist/js/select2.full.js') }}"></script>
   <script src="{{ asset('assets/sweetalert2/sweetalert.min.js') }}"></script>
+  <script src="{{ asset('js/round.js') }}"></script>
   @stack('js-scripts')
 
 </body>
