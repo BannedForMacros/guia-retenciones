@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Http;
 
 class GuiaSalidaController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -19,7 +23,9 @@ class GuiaSalidaController extends Controller
      */
     public function index()
     {
-        //
+        $list = GuiaSalida::where('activo',1)->get();
+        // dd($list);
+        return view('guia.salida.index', compact('list'));
     }
 
     /**
