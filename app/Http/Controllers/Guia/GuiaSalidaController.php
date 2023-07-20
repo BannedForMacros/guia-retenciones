@@ -9,6 +9,7 @@ use Exception;
 use Faker\Provider\UserAgent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GuiaSalidaController extends Controller
 {
@@ -26,6 +27,14 @@ class GuiaSalidaController extends Controller
         $list = GuiaSalida::where('activo',1)->get();
         // dd($list);
         return view('guia.salida.index', compact('list'));
+    }
+
+    public function listarGuias(Request $request)
+    {
+        $fechaInicio = $request->post('fecha_inicio');
+        $fechaFin = $request->post('fecha_fin');
+
+        
     }
 
     /**
@@ -227,7 +236,7 @@ class GuiaSalidaController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store2(Request $request)
+    public function store(Request $request)
     {
         // dd($request->post());
         $datos = $request->post();
@@ -286,6 +295,25 @@ class GuiaSalidaController extends Controller
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);
     }
 
+    public function pdf(GuiaSalida $guia)
+    {
+
+        // dd($guia);
+        $data = array();
+        $cabecera = array(
+            'nombre_entidad', 'MILKA SUPERMERCADOS E.I.R.L',
+            'direccion_entidad', 'jr. jose sagobal 1200 BR San Sebastian',
+            'telefono_entidad', '--',
+            'ruc_entidad', '--',
+        );
+        $data['cabecera'] = $cabecera;
+        $pdf = Pdf::loadView('guia.salida.pdf', $data);
+        // $('formato', $data);
+        $pdf->setPaper('A4', 'portrait');
+        $font = $pdf->getFontMetrics()->get_font("helvetica", "bold");
+        // $pdf->getCanvas()->page_text(520, 810, "Pag. {PAGE_NUM} de {PAGE_COUNT}", $font, 10, array(0, 0, 0));
+        return $pdf->stream();
+    }
     /**
      * Display the specified resource.
      *

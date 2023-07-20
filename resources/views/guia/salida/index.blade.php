@@ -32,7 +32,7 @@
                   <td class="align-middle">{{ $item->fecha_emision }}</td>
                   <td class="align-middle">{{ $item->total_venta }}</td>
                   <td class="align-middle">
-                    <button class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</button>
+                    <a href="{{ route('guiasalida.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a>
                   </td>
                 </tr>
                     

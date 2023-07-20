@@ -22,14 +22,14 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('pedido_serie')->nullable();
             $table->string('pedido_numero')->nullable();
             $table->integer('vendedor_id')->nullable();
-            $table->integer('vendedor_nombre')->nullable();
+            $table->string('vendedor_nombre')->nullable();
             $table->integer('proveedor_id')->nullable();
             $table->string('proveedor_nombre')->nullable();
             $table->string('proveedor_ruc')->nullable();
             $table->integer('cliente_id');
             $table->string('cliente_razon_social')->nullable();
             $table->string('cliente_nro_documento')->nullable();
-            $table->string('cliente_tipo_documento_nombre')->nullable();
+            $table->string('cliente_documento_tipo_nombre')->nullable();
             $table->string('cliente_direccion')->nullable();
             $table->integer('divisa_id');
             $table->string('divisa_nombre')->nullable();
@@ -60,7 +60,7 @@ class CreateGuiaSalidasTable extends Migration
             $table->decimal('importe_sin_igv');
             $table->decimal('monto_igv');
             $table->decimal('total_venta');
-            $table->string('comentario');
+            $table->string('comentario')->nullable();
             $table->tinyInteger('activo')->default(1);
             $table->timestamps();
         });
