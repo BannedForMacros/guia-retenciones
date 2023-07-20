@@ -6,6 +6,10 @@ $(document).ready(function () {
       placeholder: $(this).data('placeholder'),
     });
     callListarArticulos();
+    callListarClientes();
+    callListarTransportistas();
+    callListarProveedores();
+    callBrevete();
   }, 300);
 });
 
@@ -49,6 +53,132 @@ var callListarArticulos = () => {
   });
 
 }
+var callListarClientes = () => {
+
+
+  $(`#cliente_id`).select2({
+    theme: "bootstrap-5",
+    containerCssClass: "select2--small",
+    dropdownCssClass: "select2--small",
+    ajax: {
+      url: route('guiasalida.listarClientes'),
+      // type: 'POST',
+      data: function (params) {
+
+        var query = {
+          term: params.term,
+          _token: _token,
+        }
+        return query;
+      },
+      dataType: 'json',
+      delay: 250,
+      processResults: function (data) {
+        // console.log(data.items);
+        return {
+          results : data.items
+          // results: $.map(data.items, function (obj) {
+            
+          //   return { id: obj.id, text: obj.name,  };
+          // })
+        };
+      },
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+
+}
+
+var callListarTransportistas = () => {
+
+  $(`#transportista_id`).select2({
+    theme: "bootstrap-5",
+    containerCssClass: "select2--small",
+    dropdownCssClass: "select2--small",
+    ajax: {
+      url: route('guiasalida.listarTransportistas'),
+      // type: 'POST',
+      data: function (params) {
+
+        var query = {
+          term: params.term,
+          _token: _token,
+        }
+        return query;
+      },
+      dataType: 'json',
+      delay: 250,
+      processResults: function (data) {
+        // console.log(data.items);
+        return {
+          results : data.items
+          // results: $.map(data.items, function (obj) {
+            
+          //   return { id: obj.id, text: obj.name,  };
+          // })
+        };
+      },
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+
+}
+var callListarProveedores = () => {
+
+  $(`#proveedor_id`).select2({
+    theme: "bootstrap-5",
+    containerCssClass: "select2--small",
+    dropdownCssClass: "select2--small",
+    ajax: {
+      url: route('guiasalida.listarProveedores'),
+      // type: 'POST',
+      data: function (params) {
+
+        var query = {
+          term: params.term,
+          _token: _token,
+        }
+        return query;
+      },
+      dataType: 'json',
+      delay: 250,
+      processResults: function (data) {
+        // console.log(data.items);
+        return {
+          results : data.items
+          // results: $.map(data.items, function (obj) {
+            
+          //   return { id: obj.id, text: obj.name,  };
+          // })
+        };
+      },
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+
+}
+
+$(document).on('change', '#cliente_id', function(event) {
+  var data = $(this).select2('data')[0];
+
+  var direccion = data.direccion;
+  $('#direccion').val(direccion);
+  // console.log({option});
+});
+$(document).on('change', '#transportista_id', function(event) {
+  var data = $(this).select2('data')[0];
+
+  var transportista_direccion = data.transportista_direccion;
+  $('#transportista_direccion').val(transportista_direccion);
+  // console.log({option});
+});
+
+var callBrevete = () => {
+  var brevete = $('#chofer_id').find(':selected').data('brevete_chofer');
+  // console.log({brevete});
+  $('#brevete').val(brevete)
+}
+
 
 $(document).on('click', '#btnAdd', function(event) {
   event.preventDefault();
@@ -243,6 +373,50 @@ $(document).on('submit', '#form_store', function(event) {
   var monto_igv = $('#monto_igv').val();
   var total_venta = $('#total_venta').val();
   var comentario = $('#comentario').val();
+  var proveedor_nombre = $('#proveedor_id').select2('data')[0].proveedor_nombre;
+  formData.append('proveedor_nombre', proveedor_nombre);
+  var proveedor_ruc = $('#proveedor_id').select2('data')[0].proveedor_ruc;
+  formData.append('proveedor_ruc', proveedor_ruc);
+  var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
+  formData.append('vendedor_nombre', vendedor_nombre);
+
+  var data_cliente = $('#cliente_id').select2('data')[0];
+  formData.append('cliente_razon_social', data_cliente.razon_social);
+  formData.append('cliente_nro_documento', data_cliente.nro_documento);
+  formData.append('cliente_documento_tipo_nombre', data_cliente.documento_tipo_nombre);
+  formData.append('cliente_direccion', data_cliente.direccion);
+
+  var divisa_nombre = $('#divisa_id').find(':selected').data('nombre');
+  formData.append('divisa_nombre', divisa_nombre);
+
+  var forma_pago_nombre = $('#forma_pago_id').find(':selected').data('nombre');
+  formData.append('forma_pago_nombre', forma_pago_nombre);
+
+  var tipo_operacion_nombre = $('#tipo_operacion_id').find(':selected').data('nombre');
+  formData.append('tipo_operacion_nombre', tipo_operacion_nombre);
+
+  var almacen_nombre = $('#codalmacen').find(':selected').data('nombre');
+  formData.append('almacen_nombre', almacen_nombre);
+  
+  var data_transportista = $('#transportista_id').select2('data')[0];
+  formData.append('transportista_ruc', data_transportista.ruc);
+  formData.append('transportista_nombre', data_transportista.nombre);
+  formData.append('transportista_direccion', data_transportista.transportista_direccion);
+  
+  var chofer_dni = $('#chofer_id').find(':selected').data('dni_chofer');
+  formData.append('chofer_dni', chofer_dni);
+  
+  var chofer_brevete = $('#chofer_id').find(':selected').data('brevete_chofer');
+  formData.append('chofer_brevete', chofer_brevete);
+  
+  var chofer_nombre = $('#chofer_id').find(':selected').data('nombre');
+  formData.append('chofer_nombre', chofer_nombre);
+  
+  var vehiculo_placa = $('#vehiculo_id').find(':selected').data('placa');
+  formData.append('vehiculo_placa', vehiculo_placa);
+  
+  var vehiculo_marca = $('#vehiculo_id').find(':selected').data('marca');
+  formData.append('vehiculo_marca', vehiculo_marca);
 
   formData.append('monto_descuento', monto_descuento);
   formData.append('importe_sin_igv', importe_sin_igv);

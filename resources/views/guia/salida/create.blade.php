@@ -68,19 +68,15 @@
                   <div class="row">
                     <div class="col-md-6 mb-2">
                       <label class="form-label">Vendedor</label>
-                      <select class="form-select select_2" name="proveedor_id" id="proveedor_id" style="width: 100%">
-                        <option value="1">{{ "{$getVendedor->apellidos} {$getVendedor->nombres}" }}</option>
+                      <select class="form-select select_2" name="vendedor_id" id="vendedor_id" style="width: 100%">
+                        <option value="{{ $getVendedor->codTrabajador }}" data-vendedor_nombre="{{ "{$getVendedor->apellidos} {$getVendedor->nombres}" }}">{{ "{$getVendedor->apellidos} {$getVendedor->nombres}" }}</option>
                       </select>
                     </div>
                     <div class="col-md-6 mb-2">
                       <div class="row">
                         <div class="col-md-12">
                           <label class="form-label">Proveedor</label>
-                          <select class="form-select select_2" name="proveedor_id" id="proveedor_id" style="width: 100%">
-                            @foreach ($listProveedores as $item)
-                              <option value="{{ $item->CodProveedor }}">{{ $item->NombreProveedor }}</option>
-                            @endforeach
-                          </select>
+                          <select class="form-select select_2" name="proveedor_id" id="proveedor_id" style="width: 100%"></select>
                         </div>
                         <div class="col-md-12" hidden>
                           <div class="form-check mt-2">
@@ -105,14 +101,11 @@
                 <div class="col-md-12">
                   <label class="form-label">Cliente</label>
                   <select class="form-select select_2" name="cliente_id" id="cliente_id" style="width: 100%">
-                    @foreach ($listClientes as $item)
-                      <option value="{{ $item->CodCliente }}" data-direccion="{{ $item->Direccion }}">[{{ $item->RucCliente }}] {{ $item->RazonSocial }}</option>
-                    @endforeach
                   </select>
                 </div>
                 <div class="col-md-12">
                   <label class="form-label">Direccion</label>
-                  <input type="text" class="form-control" placeholder="Direccion del cliente">
+                  <input type="text" class="form-control"  name="direccion" id="direccion" placeholder="Direccion del cliente">
                 </div>
               </div>
             </div>
@@ -123,14 +116,14 @@
                     <div class="col-md-6">
                       <label class="form-label">Divisa</label>
                       <select class="form-select" name="divisa_id" id="divisa_id">
-                        <option value="1">divisa 1</option>
+                        <option value="1" data-nombre="divisa 1">divisa 1</option>
                       </select>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">F Pago</label>
                       <select class="form-select" name="forma_pago_id" id="forma_pago_id">
                         @foreach ($listFormasPago as $item)
-                          <option value="{{ $item->codFormaPago }}">{{ $item->descripcion }}</option>
+                          <option value="{{ $item->codFormaPago }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
                         @endforeach
                       </select>
                     </div>
@@ -152,7 +145,7 @@
                       <select class="form-select" name="tipo_operacion_id" id="tipo_operacion_id">
                         @foreach ($listTipoOperacion as $item)
                           @if ($item->ingresoSalida == 'Salida')
-                            <option value="{{ $item->tipoOperacion }}">{{ $item->descripcion }}</option>
+                            <option value="{{ $item->tipoOperacion }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
                           @endif
                         @endforeach
                       </select>
@@ -161,11 +154,76 @@
                       <label class="form-label">Almacen</label>
                       <select class="form-select" name="codalmacen" id="codalmacen">
                         @foreach ($listAlmacenes as $item)
-                          <option value="{{ $item->codAlmacen }}">{{ $item->descripcion }}</option>
+                          <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
                         @endforeach
                       </select>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-md-6">
+              <h5>Datos transporte</h5>
+              <div class="row">
+                <div class="col-md-12">
+                  <label class="form-label">Transportista</label>
+                  <select class="form-select" name="transportista_id" id="transportista_id" style="width: 100%"></select>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">Direccion</label>
+                  <input type="text" class="form-control" id="transportista_direccion" name="transportista_direccion" >
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <label class="form-label">Chofer</label>
+                  <select name="chofer_id" id="chofer_id" class="form-select">
+                    @foreach ($listChoferes as $item)
+                      <option data-dni_chofer="{{ $item->dniChofer }}" data-brevete_chofer="{{ $item->breveteChofer }}" data-nombre="{{ $item->nombreChofer }}">{{ $item->nombreChofer }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Brevete</label>
+                  <input type="text" class="form-control" name="brevete" id="brevete">
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <label class="form-label">Vehiculo</label>
+                  <select name="vehiculo_id" id="vehiculo_id" class="form-select">
+                    @foreach ($listVehiculos as $item)
+                      <option data-placa="{{ $item->placaVehiculo }}" data-marca="{{ $item->marcaVehiculo }}" >Placa: {{ $item->placaVehiculo }} - Marca: {{ $item->marcaVehiculo }}</option>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="row mt-4">
+                <div class="col-md-12">
+                  <label class="form-label">Motivo Traslado</label>
+                  <select class="form-select" name="motivo_traslado_id" id="motivo_traslado_id">
+                    <option value="1">Envio Equipaje</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <label class="form-label">Partida</label>
+                  <input type="text" class="form-control" name="partida">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Llegada</label>
+                  <input type="text" class="form-control" name="llegada">
+                </div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-md-6">
+                  <label class="form-label">Comprobante Pago</label>
+                  <input type="text" class="form-control" name="comprobante_pago">
                 </div>
               </div>
             </div>
@@ -179,7 +237,7 @@
             <div class="row">
               <div class="col-md-8 mb-2">
                 <label class="form-label">Productos</label>
-                <select class="form-select select_2" name="producto_id" id="producto_id">
+                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%">
                   @foreach ($listArticulos as $item)
                     <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
                       data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}" data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
@@ -302,7 +360,7 @@
             <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
                 aria-hidden="true"></i>
               Cancelar</a>
-            <button class="btn btn-primary float-end" form="form_store"><i class="fa fa-save" aria-hidden="true"></i>Guardar</button>
+            <button class="btn btn-primary float-end" form="form_store"><i class="fa fa-save" aria-hidden="true"></i> Guardar</button>
           </div>
         </div>
 

@@ -44,14 +44,21 @@ class GuiaSalidaController extends Controller
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
         $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
-        $getVendedor = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=1')->object()->trabajador;
+        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=1')->object()->trabajador;
+        $getVendedor = $listVendedores[0];
+        // dd($getVendedor);
+        // dd($getVendedor);
         // dd($listAlmacenes);
         // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
         $listArticulos = array();
-        $listClientes = Http::post(route('simulacion.ObtenerClientes'), [])->object();
+        // $listClientes = Http::post(route('simulacion.ObtenerClientes'), [])->object();
+        $listClientes = [];
         // dd($listClientes);
+        $listVehiculos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerVehiculo', ['valor' => '', 'tipo' => 4])->object()->vehiculos;
+        $listChoferes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerChoferes', ['nombrechofer' => ''])->object()->choferes;
+        // dd($listChoferes);
 
-        return view('guia.salida.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'getVendedor'));
+        return view('guia.salida.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'getVendedor', 'listVehiculos', 'listChoferes'));
     }
 
     public function listarArticulos(Request $request)
@@ -77,6 +84,78 @@ class GuiaSalidaController extends Controller
 
         return response()->json(['items' => $items]);
     }
+
+    public function listarProveedores(Request $request)
+    {
+        $valor = trim($request->get('term'));
+        $tipo = 3;//busqueda por razon social
+        // dd($request->all());
+        if (strlen($valor) > 2) {
+            $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', 
+                ['valor' => $valor, 'tipo' => $tipo]
+            )->object()->proveedores;
+            
+        }
+
+        // dd($listItems);
+        $items = array();
+        foreach ($listItems as $item) {
+
+            $items[] = (object) array('id' => $item->codProveedor, 'text' => "[{$item->ruc}] {$item->nombreproveedor}", 'proveedor_nombre' => $item->nombreproveedor, 'proveedor_ruc' => $item->ruc);
+        }
+
+        return response()->json(['items' => $items]);
+    }
+    public function listarClientes(Request $request)
+    {
+        $valor = trim($request->get('term'));
+        $tipo = 4;//busqueda por razon social
+        // dd($request->all());
+        if (strlen($valor) > 2) {
+            $listClientes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerCliente', 
+                ['valor' => $valor, 'tipo' => $tipo]
+            )->object()->cliente;
+            
+        }
+
+        // dd($listClientes);
+        $items = array();
+        foreach ($listClientes as $item) {
+            $tipo_documento = $item->tipoDocumentoIdentidad;
+            $nro_documento = $item->dni;
+            $documento_tipo_nombre = 'DNI';
+            if ($tipo_documento == '') {
+                $documento_tipo_nombre = 'RUC';
+                $nro_documento = trim($item->rucCliente);
+            }
+            $items[] = (object) array('id' => $item->codCliente, 'text' => "[{$nro_documento}] {$item->razonSocial}", 'direccion' => $item->direccion, 'razon_social' => $item->razonSocial, 'nro_documento' => $nro_documento, 'documento_tipo_nombre' => $documento_tipo_nombre );
+        }
+
+        return response()->json(['items' => $items]);
+    }
+
+    public function listarTransportistas(Request $request)
+    {
+        $valor = trim($request->get('term'));
+        $tipo = 1;//busqueda por nombre
+        // dd($request->all());
+        if (strlen($valor) >= 1) {
+            $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTransportista', 
+                ['valor' => $valor, 'tipo' => $tipo]
+            )->object()->transportistas;
+            
+        }
+
+        // dd($listItems);
+        $items = array();
+        foreach ($listItems as $item) {
+            $items[] = (object) array('id' => $item->codTransportista, 'text' => "[{$item->rucTransportista}] {$item->nombreTransportista}", 'transportista_direccion' => $item->direccionTransportista, 'ruc' => $item->rucTransportista, 'nombre' => $item->nombreTransportista );
+        }
+
+        return response()->json(['items' => $items]);
+    }
+
+
 
     public function agregarItem(Request $request)
     {
@@ -148,7 +227,7 @@ class GuiaSalidaController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store2(Request $request)
     {
         // dd($request->post());
         $datos = $request->post();

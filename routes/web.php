@@ -33,6 +33,9 @@ Route::controller(GuiaSalidaController::class)->group(function (){
 
     Route::post('guiasalida/agregarItem', 'agregarItem')->name('guiasalida.agregarItem');
     Route::get('guiasalida/listarArticulos', 'listarArticulos')->name('guiasalida.listarArticulos');
+    Route::get('guiasalida/listarClientes', 'listarClientes')->name('guiasalida.listarClientes');
+    Route::get('guiasalida/listarTransportistas', 'listarTransportistas')->name('guiasalida.listarTransportistas');
+    Route::get('guiasalida/listarProveedores', 'listarProveedores')->name('guiasalida.listarProveedores');
     Route::post('guiasalida/store', 'store')->name('guiasalida.store');
 
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
