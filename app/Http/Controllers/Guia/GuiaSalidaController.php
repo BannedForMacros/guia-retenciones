@@ -10,6 +10,8 @@ use Faker\Provider\UserAgent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Luecano\NumeroALetras\NumeroALetras;
+use Illuminate\Support\Str;
 
 class GuiaSalidaController extends Controller
 {
@@ -300,13 +302,39 @@ class GuiaSalidaController extends Controller
 
         // dd($guia);
         $data = array();
-        $cabecera = array(
-            'nombre_entidad', 'MILKA SUPERMERCADOS E.I.R.L',
-            'direccion_entidad', 'jr. jose sagobal 1200 BR San Sebastian',
-            'telefono_entidad', '--',
-            'ruc_entidad', '--',
+        $cabecera = (object) array(
+            'nombre_entidad' => 'MILKA SUPERMERCADOS E.I.R.L',
+            'direccion_entidad' => 'jr. jose sagobal 1200 BR San Sebastian',
+            'telefono_entidad' => '--',
+            'ruc_entidad' => '20491576902',
         );
         $data['cabecera'] = $cabecera;
+
+        $data['documento'] = $guia;
+        // dd($guia);
+
+
+        $formatter = new NumeroALetras();
+        $texto_moneda = 'soles';
+        $total_letras = $formatter->toInvoice($guia->total_venta, 2, $texto_moneda);
+        $total_letras = Str::upper($total_letras);
+
+        $data['guia'] = (object) array(
+            'texto_moneda' => $texto_moneda, 
+            'concepto' => '-', 
+            'monto' => '0.00',
+            'total_letras' => $total_letras, 
+            'nombre_cajero' => 'demo', 
+            'total_venta_gravada' => $guia->importe_sin_igv,
+            'total_igv' => $guia->monto_igv,
+            'total' => $guia->total_venta,
+        );
+
+        $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
+        // dd($detalle);
+        $data['detalle'] = $detalle;
+
+
         $pdf = Pdf::loadView('guia.salida.pdf', $data);
         // $('formato', $data);
         $pdf->setPaper('A4', 'portrait');

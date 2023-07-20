@@ -127,7 +127,7 @@
     <table style="margin-top: -6.5rem; width: 100%">
       <tr>
         <td style="text-align: center; width: 32rem;">
-          <img src={{ url('img/cu/logoweb.png') }} class="logo floatLeft" width="230">
+          <img src={{ url('img/logo.png') }} class="logo floatLeft" width="230">
           <table class="table_rounded" style="width: 100%; height: 5rem; font-size: 10px">
             <tbody>
               <tr>
@@ -153,7 +153,7 @@
                 <td style="text-align: center; font-size: 22px">GUIA DE SALIDA</td>
               </tr>
               <tr>
-                {{-- <td style="text-align: center; font-size: 14px; ">E L E C T R O N I C A</td> --}}
+                <td style="text-align: center; font-size: 14px; ">E L E C T R O N I C A</td>
               </tr>
               <tr>
                 <td><br></td>
@@ -181,13 +181,13 @@
     <table class="table_rounded" style="width: 100%">
       <tbody>
         <tr>
-          <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->razon_social }}</td>
-          <td><b>DNI:</b>{{ $documento->numero_documento_identidad }}</td>
+          <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->cliente_razon_social }}</td>
+          <td><b>{{ $documento->cliente_documento_tipo_nombre }}:</b>{{ $documento->cliente_nro_documento }}</td>
         </tr>
         <tr>
           <td style="width: 36rem"><b>Fecha Emision:</b>
             {{ $carbon::parse($documento->fecha_hora_emision)->format('d/m/Y H:i:s') }}</td>
-          <td><b>Direccion:</b> {{ $documento->direccion }}</td>
+          <td><b>Direccion:</b> {{ $documento->cliente_direccion }}</td>
         </tr>
         {{-- <tr>
           <td style="width: 36rem"><b>Tipo Doc. Ref:</b> {{ $documentoReferencia->documento_tipo_nombre }}</td>
@@ -209,12 +209,15 @@
         <th style="height: 1.8rem; width: 6rem">Monto</th>
       </thead>
       <tbody>
-        <tr style="text-align: center;" class="table_det">
-          <td>1 UNI</td>
-          <td>--</td>
-          <td>{{ $guia->concepto }}</td>
-          <td>{{ $guia->monto }}</td>
-        </tr>
+        @foreach ($detalle as $item)
+          <tr style="text-align: center;" class="table_det">
+            <td>{{ $item->cantidad }} UNI</td>
+            <td>{{ $item->codarticulo }}</td>
+            <td>{{ $item->descripcion }}</td>
+            <td>{{ $item->importe }}</td>
+          </tr>
+            
+        @endforeach
 
       </tbody>
     </table>
@@ -253,7 +256,7 @@
           <td style="width: 14rem">
 
           </td>
-          <td style="width: 16rem" style="display: none">
+          <td style="width: 16rem" >
             <table style="border-spacing: 0;width: 100%; font-size: 10px">
               <tbody style="text-align: right">
                 <tr>
@@ -297,7 +300,7 @@
               <tbody>
                 <tr>
                   <td>
-                    <span>Consulte comprobante en (https://clinicaunion/comprobante/32212)</span><br>
+                    <span>Consulte comprobante en (https://supermercadosmila/comprobante/32212)</span><br>
                     <span>Resumen: 1OzT6N9sCcEhSxmBxPt/KEeqRSI=</span><br>
                     <span>Representación Impresa de la BOLETA DE VENTA ELECTRÓNICA.</span><br>
                   </td>
