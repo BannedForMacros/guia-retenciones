@@ -10,35 +10,35 @@
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-md-12">
-        <h5><i class="fa fa-list"></i> Guia de Salida Generadas</h5>
-        
-        <div class="row mt-4">
+        <div class="row">
           <div class="col-md-12">
-            <table class="table table-hover table-striped table-sm table-bordered">
-              <thead>
-                <th>Condicion</th>
-                <th>Serie</th>
-                <th>Cliente</th>
-                <th>Fecha Emision</th>
-                <th>Importe</th>
-                <th>Accion</th>
-              </thead>
-              <tbody>
-                @foreach ($list as $item)
-                <tr>
-                  <td class="align-middle">Generada</td>
-                  <td class="align-middle">F00{{ $item->serie }}-{{$item->numero}}</td>
-                  <td class="align-middle">{{ $item->cliente_id }}</td>
-                  <td class="align-middle">{{ $item->fecha_emision }}</td>
-                  <td class="align-middle">{{ $item->total_venta }}</td>
-                  <td class="align-middle">
-                    <a href="{{ route('guiasalida.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a>
-                  </td>
-                </tr>
-                    
-                @endforeach
-              </tbody>
-            </table>
+            <h5><i class="fa fa-list"></i> Guia de Salida Generadas
+            <a href="{{ route('guiasalida.create') }}" class="btn btn-primary btn-sm float-end"><i class="fa fa-plus"></i> Nueva</a></h5>
+
+          </div>
+        </div>
+
+        <form name="form_busqueda" id="form_busqueda">
+        <div class="row">
+            @csrf
+            <div class="col-md-3">
+              <label class="form-label">Fecha Inicio</label>
+              <input class="form-control" type="date" name="fecha_inicio" id="fecha_inicio" value="{{ date('Y-m-d') }}">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Fecha Fin</label>
+              <input class="form-control" type="date" name="fecha_fin" id="fecha_fin" value="{{ date('Y-m-d') }}">
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-success mt-3"><i class="fa fa-search"></i> Buscar</button>
+            </div>
+
+          </div>
+        </form>
+
+        <div class="row mt-4">
+          <div class="col-md-12" id="resultados">
+
           </div>
         </div>
       </div>

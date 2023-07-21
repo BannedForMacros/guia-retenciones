@@ -16,7 +16,7 @@ class CreateGuiaSalidasTable extends Migration
         Schema::create('guia_salidas', function (Blueprint $table) {
             $table->id();
             $table->string('serie');
-            $table->string('numero');
+            $table->integer('numero');
             $table->date('fecha_emision');
             $table->string('hora_emision');
             $table->string('pedido_serie')->nullable();

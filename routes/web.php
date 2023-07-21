@@ -36,6 +36,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::get('guiasalida/listarClientes', 'listarClientes')->name('guiasalida.listarClientes');
     Route::get('guiasalida/listarTransportistas', 'listarTransportistas')->name('guiasalida.listarTransportistas');
     Route::get('guiasalida/listarProveedores', 'listarProveedores')->name('guiasalida.listarProveedores');
+    Route::post('guiasalida/listar', 'listar')->name('guiasalida.listar');
     Route::get('guiasalida/pdf/{guia}', 'pdf')->name('guiasalida.pdf');
     Route::post('guiasalida/store', 'store')->name('guiasalida.store');
 

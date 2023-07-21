@@ -26,17 +26,19 @@ class GuiaSalidaController extends Controller
      */
     public function index()
     {
-        $list = GuiaSalida::where('activo',1)->get();
+        // $list = GuiaSalida::where('activo',1)->get();
         // dd($list);
-        return view('guia.salida.index', compact('list'));
+        return view('guia.salida.index');
     }
 
-    public function listarGuias(Request $request)
+    public function listar(Request $request)
     {
         $fechaInicio = $request->post('fecha_inicio');
         $fechaFin = $request->post('fecha_fin');
 
-        
+        $list = GuiaSalida::all();
+        // dd($list);
+        return view('guia.salida.tabla', compact('list'));
     }
 
     /**

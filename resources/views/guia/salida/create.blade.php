@@ -333,8 +333,8 @@
 
             <div class="row">
               <div class="col-md-12">
-                <div class="row mt-4">
-                  <div class="col-md-5">
+                <div class="row mt-4" hidden>
+                  <div class="col-md-5" >
                     <div class="form-check mt-2">
                       <input class="form-check-input" type="checkbox" value="" id="descuento_porcentual">
                       <label class="form-check-label" for="descuento_porcentual">
@@ -357,7 +357,7 @@
         <div class="row">
           <div class="col-md-12">
             <br>
-            <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
+            <a type="button" href="{{ route('guiasalida.index') }}" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
                 aria-hidden="true"></i>
               Cancelar</a>
             <button class="btn btn-primary float-end" form="form_store"><i class="fa fa-save" aria-hidden="true"></i> Guardar</button>
