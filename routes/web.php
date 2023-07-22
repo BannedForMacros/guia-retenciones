@@ -39,12 +39,16 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::post('guiasalida/listar', 'listar')->name('guiasalida.listar');
     Route::get('guiasalida/pdf/{guia}', 'pdf')->name('guiasalida.pdf');
     Route::post('guiasalida/store', 'store')->name('guiasalida.store');
-
+    
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
 });
 Route::controller(GuiaIngresoController::class)->group(function (){
-
+    
     Route::post('guiaingreso/agregarItem', 'agregarItem')->name('guiaingreso.agregarItem');
+    Route::get('guiaingreso/listarProveedores', 'listarProveedores')->name('guiaingreso.listarProveedores');
+    Route::get('guiaingreso/listarArticulos', 'listarArticulos')->name('guiaingreso.listarArticulos');
+    Route::post('guiaingreso/listar', 'listar')->name('guiaingreso.listar');
+    Route::get('guiaingreso/pdf/{guia}', 'pdf')->name('guiaingreso.pdf');
 
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
 });

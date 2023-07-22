@@ -23,6 +23,12 @@
   <link rel="stylesheet" href="{{ asset('assets/select2/dist/css/select2.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/select2-bootstrap-5/select2-bootstrap-5-theme.min.css') }}">
   
+  <link rel="stylesheet" href="{{ asset('assets/DataTables/datatables.min.css') }}">
+  <link rel="stylesheet"
+    href="{{ asset('assets/DataTables/DataTables-1.13.1/css/dataTables.bootstrap5.min.css') }}">
+  <link rel="stylesheet"
+    href="{{ asset('assets/DataTables/Responsive-2.4.0/css/responsive.bootstrap5.min.css') }}">
+
   
   <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
@@ -112,6 +118,13 @@
 
   <script src="{{ asset('assets/select2/dist/js/select2.full.js') }}"></script>
   <script src="{{ asset('assets/sweetalert2/sweetalert.min.js') }}"></script>
+
+  <script src="{{ asset('assets/DataTables/datatables.min.js') }}"></script>
+  <script src="{{ asset('assets/DataTables/DataTables-1.13.1/js/dataTables.bootstrap5.min.js') }}"></script>
+  <script src="{{ asset('assets/DataTables/Responsive-2.4.0/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ asset('assets/DataTables/Responsive-2.4.0/js/responsive.bootstrap5.min.js') }}"></script>
+  <script src="{{ asset('assets/js/data_table_es.js') }}"></script>
+
   <script src="{{ asset('js/round.js') }}"></script>
   @stack('js-scripts')
 

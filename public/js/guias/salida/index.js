@@ -25,6 +25,11 @@ var listar = function(formData){
     dataType: 'html',
     success: function(response){
       $('#resultados').html(response);
+
+      $('#tabla_guias').DataTable({
+        responsive: true,
+        language: DataTable_Spanish
+      });
     }
   };
   $.ajax(options);

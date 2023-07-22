@@ -53,6 +53,7 @@ var callListarArticulos = () => {
   });
 
 }
+
 var callListarClientes = () => {
 
 
@@ -123,6 +124,7 @@ var callListarTransportistas = () => {
   });
 
 }
+
 var callListarProveedores = () => {
 
   $(`#proveedor_id`).select2({
@@ -165,6 +167,7 @@ $(document).on('change', '#cliente_id', function(event) {
   $('#direccion').val(direccion);
   // console.log({option});
 });
+
 $(document).on('change', '#transportista_id', function(event) {
   var data = $(this).select2('data')[0];
 
@@ -178,7 +181,6 @@ var callBrevete = () => {
   // console.log({brevete});
   $('#brevete').val(brevete)
 }
-
 
 $(document).on('click', '#btnAdd', function(event) {
   event.preventDefault();
@@ -441,7 +443,6 @@ $(document).on('submit', '#form_store', function(event) {
     }
   })
 });
-
 
 var store = function(formData){
   var options = {

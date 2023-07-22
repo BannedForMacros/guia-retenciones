@@ -10,6 +10,7 @@ use Faker\Provider\UserAgent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
 
@@ -36,7 +37,7 @@ class GuiaSalidaController extends Controller
         $fechaInicio = $request->post('fecha_inicio');
         $fechaFin = $request->post('fecha_fin');
 
-        $list = GuiaSalida::all();
+        $list = DB::table('guia_salidas')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->get();
         // dd($list);
         return view('guia.salida.tabla', compact('list'));
     }
@@ -71,7 +72,10 @@ class GuiaSalidaController extends Controller
         $listChoferes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerChoferes', ['nombrechofer' => ''])->object()->choferes;
         // dd($listChoferes);
 
-        return view('guia.salida.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'getVendedor', 'listVehiculos', 'listChoferes'));
+        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        // dd($listSeries);
+
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'getVendedor', 'listVehiculos', 'listChoferes'));
     }
 
     public function listarArticulos(Request $request)
@@ -251,10 +255,25 @@ class GuiaSalidaController extends Controller
         $msj = "Guia de Salida registrada";
         $msj_tipo = "success";
         $log = "";
-        $datos['numero'] = '0001';
         $datos['fecha_emision'] = date('Y-m-d');
         $datos['hora_emision'] = date('H:i');
         $url_redirect = route('guiasalida.index');
+        
+        $getLast = GuiaSalida::orderBy('id', 'desc')->first();
+        $numero = 1;
+
+        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        foreach ($listSeries as $item) {
+            if ($item->numserie == $datos['serie']) {
+                $numero = ($item->utlimovalor) +1;
+            }
+        }
+
+        // if ($getLast != null) {
+        //     $numero = intval($getLast->numero)+1;
+        // }
+        $datos['numero'] = $numero;
+
 
         try {
             $guia = GuiaSalida::create($datos);

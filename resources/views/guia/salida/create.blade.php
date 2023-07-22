@@ -24,7 +24,9 @@
                         <div class="col-md-6 mb-2">
                           <label class="form-label">Serie</label>
                           <select class="form-select" name="serie" id="serie">
-                            <option value="1">0001</option>
+                            @foreach ($listSeries as $item)
+                              <option value="{{ $item->numserie }}">{{ $item->numserie }}</option>
+                            @endforeach
                           </select>
                         </div>
                         <div class="col-md-6 mb-2">

@@ -195,6 +195,7 @@
         </tr> --}}
         <tr>
           <td style="width: 36rem"><b>Tipo Moneda:</b> {{ $guia->texto_moneda }}</td>
+          <td ><b>Tipo Operacion:</b> {{ $documento->tipo_operacion_nombre }}</td>
         </tr>
         <tr></tr>
       </tbody>

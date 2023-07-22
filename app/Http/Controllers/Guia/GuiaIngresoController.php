@@ -3,8 +3,14 @@
 namespace App\Http\Controllers\Guia;
 
 use App\Http\Controllers\Controller;
+use App\Models\GuiaIngreso;
+use App\Models\GuiaIngresoDetalle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use Luecano\NumeroALetras\NumeroALetras;
+use Illuminate\Support\Str;
 
 class GuiaIngresoController extends Controller
 {
@@ -19,9 +25,17 @@ class GuiaIngresoController extends Controller
      */
     public function index()
     {
-        
+        return view('guia.ingreso.index');
     }
+    public function listar(Request $request)
+    {
+        $fechaInicio = $request->post('fecha_inicio');
+        $fechaFin = $request->post('fecha_fin');
 
+        $list = DB::table('guia_ingresos')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->get();
+        // dd($list);
+        return view('guia.salida.tabla', compact('list'));
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -29,13 +43,16 @@ class GuiaIngresoController extends Controller
      */
     public function create()
     {
-        $listProveedores = Http::post(route('simulacion.ObtenerProveedores'), [])->object();
-        $listFormasPago = Http::post(route('simulacion.ObtenerFormasPago'), [])->object();
-        $listTipoOperacion = Http::post(route('simulacion.ObtenerOperaciones'), [])->object();
-        $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
-        $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
+        $listProveedores = [];
+        $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
+        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;;
+        $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
+        $listArticulos = [];
         // dd($listArticulos);
-        return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos'));
+        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=1')->object()->trabajador;
+        $getVendedor = $listVendedores[0];
+        return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'getVendedor'));
     }
 
     public function agregarItem(Request $request)
@@ -93,6 +110,50 @@ class GuiaIngresoController extends Controller
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'tr' => $tr]);
     }
 
+    public function listarProveedores(Request $request)
+    {
+        $valor = trim($request->get('term'));
+        $tipo = 3;//busqueda por razon social
+        // dd($request->all());
+        if (strlen($valor) > 2) {
+            $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', 
+                ['valor' => $valor, 'tipo' => $tipo]
+            )->object()->proveedores;
+        }
+
+        // dd($listItems);
+        $items = array();
+        foreach ($listItems as $item) {
+
+            $items[] = (object) array('id' => $item->codProveedor, 'text' => "[{$item->ruc}] {$item->nombreproveedor}", 'proveedor_nombre' => $item->nombreproveedor, 'proveedor_ruc' => $item->ruc);
+        }
+
+        return response()->json(['items' => $items]);
+    }
+
+    public function listarArticulos(Request $request)
+    {
+        $valor = trim($request->get('term'));
+        $tipoconsulta = 4;
+        $codestacion = $request->get('codestacion');
+        $codalmacen = $request->get('codalmacen');
+        $codlistaprecio = $request->get('codlistaprecio');
+        // dd($request->all());
+        if (strlen($valor) > 2) {
+            $listArticulos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerArticulo', 
+                ['valor' => $valor, 'tipoconsulta' => $tipoconsulta, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio]
+            )->object()->articulos;
+            
+        }
+
+        // dd($listArticulos);
+        $items = array();
+        foreach ($listArticulos as $item) {
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV );
+        }
+
+        return response()->json(['items' => $items]);
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -102,9 +163,78 @@ class GuiaIngresoController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        // dd($request->post());
+        $datos = $request->post();
+        $detalle = json_decode($request->post('detalle'));
+        unset($datos['detalle']);
+        // dd($datos);
+        $procede = true;
+        $msj = "Guia de Ingreso registrada";
+        $msj_tipo = "success";
+        $log = "";
+        $datos['fecha_emision'] = date('Y-m-d');
+        $datos['hora_emision'] = date('H:i');
+        $url_redirect = route('guiaingreso.index');
+        $datos['serie']= 1;
+        
+        // $getLast = GuiaSalida::orderBy('id', 'desc')->first();
+        $numero = 1;
 
+        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        foreach ($listSeries as $item) {
+            if ($item->numserie == $datos['serie']) {
+                $numero = ($item->utlimovalor) +1;
+            }
+        }
+
+        // if ($getLast != null) {
+        //     $numero = intval($getLast->numero)+1;
+        // }
+        $datos['numero'] = $numero;
+
+
+        try {
+            $guia = GuiaIngreso::create($datos);
+        } catch (Exception $e) {
+            //throw $th;
+            dd($e);
+            $procede = false;
+            $msj = "No se pudo registrar la Guia de Salida";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        // dd($guia);
+        if ($procede == true) {
+            foreach ($detalle as $item) {
+
+                if ($procede == true) {
+                    $guiaDetalle = new GuiaIngresoDetalle();
+                    $guiaDetalle->guia_ingreso_id = $guia->id;
+                    $guiaDetalle->codarticulo = $item->codarticulo;
+                    $guiaDetalle->precio = $item->precio;
+                    $guiaDetalle->cantidad = $item->cantidad;
+                    $guiaDetalle->importe = $item->importe;
+                    $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
+                    $guiaDetalle->monto_descuento = $item->monto_descuento;
+                    $guiaDetalle->descripcion = $item->descripcion;
+
+                    try {
+                        $guiaDetalle->save();
+                    } catch (Exception $e) {
+                        //throw $th;
+                        dd($e);
+                        $procede = false;
+                        $msj = "No se pudo registrar el detalle";
+                        $msj_tipo = "error";
+                        $log = "{$e}";
+                    }
+                }
+            }
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);
+    }
     /**
      * Display the specified resource.
      *
@@ -115,7 +245,51 @@ class GuiaIngresoController extends Controller
     {
         //
     }
+    public function pdf(GuiaIngreso $guia)
+    {
 
+        // dd($guia);
+        $data = array();
+        $cabecera = (object) array(
+            'nombre_entidad' => 'MILKA SUPERMERCADOS E.I.R.L',
+            'direccion_entidad' => 'jr. jose sagobal 1200 BR San Sebastian',
+            'telefono_entidad' => '--',
+            'ruc_entidad' => '20491576902',
+        );
+        $data['cabecera'] = $cabecera;
+
+        $data['documento'] = $guia;
+        // dd($guia);
+
+
+        $formatter = new NumeroALetras();
+        $texto_moneda = 'soles';
+        $total_letras = $formatter->toInvoice($guia->total_venta, 2, $texto_moneda);
+        $total_letras = Str::upper($total_letras);
+
+        $data['guia'] = (object) array(
+            'texto_moneda' => $texto_moneda, 
+            'concepto' => '-', 
+            'monto' => '0.00',
+            'total_letras' => $total_letras, 
+            'nombre_cajero' => 'demo', 
+            'total_venta_gravada' => $guia->importe_sin_igv,
+            'total_igv' => $guia->monto_igv,
+            'total' => $guia->total_venta,
+        );
+
+        $detalle = GuiaIngresoDetalle::where('guia_ingreso_id', $guia->id)->get();
+        // dd($detalle);
+        $data['detalle'] = $detalle;
+
+
+        $pdf = Pdf::loadView('guia.ingreso.pdf', $data);
+        // $('formato', $data);
+        $pdf->setPaper('A4', 'portrait');
+        $font = $pdf->getFontMetrics()->get_font("helvetica", "bold");
+        // $pdf->getCanvas()->page_text(520, 810, "Pag. {PAGE_NUM} de {PAGE_COUNT}", $font, 10, array(0, 0, 0));
+        return $pdf->stream();
+    }
     /**
      * Show the form for editing the specified resource.
      *
