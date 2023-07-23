@@ -58,8 +58,8 @@ class GuiaSalidaController extends Controller
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
         $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
-        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=1')->object()->trabajador;
-        $getVendedor = $listVendedores[0];
+        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+        // $getVendedor = $listVendedores[0];
         // dd($getVendedor);
         // dd($getVendedor);
         // dd($listAlmacenes);
@@ -75,7 +75,7 @@ class GuiaSalidaController extends Controller
         $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
         // dd($listSeries);
 
-        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'getVendedor', 'listVehiculos', 'listChoferes'));
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes'));
     }
 
     public function listarArticulos(Request $request)

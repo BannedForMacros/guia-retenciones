@@ -34,7 +34,7 @@ class GuiaIngresoController extends Controller
 
         $list = DB::table('guia_ingresos')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->get();
         // dd($list);
-        return view('guia.salida.tabla', compact('list'));
+        return view('guia.ingreso.tabla', compact('list'));
     }
     /**
      * Show the form for creating a new resource.
@@ -50,9 +50,9 @@ class GuiaIngresoController extends Controller
         // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
         $listArticulos = [];
         // dd($listArticulos);
-        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=1')->object()->trabajador;
-        $getVendedor = $listVendedores[0];
-        return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'getVendedor'));
+        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+        // $getVendedor = $listVendedores[0];
+        return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'listVendedores'));
     }
 
     public function agregarItem(Request $request)

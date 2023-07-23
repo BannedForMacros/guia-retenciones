@@ -24,7 +24,10 @@
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Contacto</label>
                   <select class="form-select" name="vendedor_id" id="vendedor_id" style="width: 100%">
-                    <option value="{{ $getVendedor->codTrabajador }}" data-vendedor_nombre="{{ "{$getVendedor->apellidos} {$getVendedor->nombres}" }}">{{ "{$getVendedor->apellidos} {$getVendedor->nombres}" }}</option>
+                    @foreach ($listVendedores as $item)
+                    <option value="{{ $item->codTrabajador }}" data-vendedor_nombre="{{ "{$item->apellidos} {$item->nombres}" }}">{{ "{$item->apellidos} {$item->nombres}" }}</option>
+                        
+                    @endforeach
                   </select>
                 </div>
                 <div class="col-md-3 mb-2">
