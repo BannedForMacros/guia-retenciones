@@ -10,6 +10,7 @@ $(document).ready(function () {
     callListarTransportistas();
     callListarProveedores();
     callBrevete();
+    callSetMotivoTraslado();
   }, 300);
 });
 
@@ -65,9 +66,10 @@ var callListarClientes = () => {
       url: route('guiasalida.listarClientes'),
       // type: 'POST',
       data: function (params) {
-
+        var tipo_busqueda_cliente = $('#tipo_busqueda_cliente').val();
         var query = {
           term: params.term,
+          tipo_busqueda_cliente: tipo_busqueda_cliente,
           _token: _token,
         }
         return query;
@@ -135,9 +137,10 @@ var callListarProveedores = () => {
       url: route('guiasalida.listarProveedores'),
       // type: 'POST',
       data: function (params) {
-
+        var tipo = $('#tipo_busqueda_proveedor').val();
         var query = {
           term: params.term,
+          tipo: tipo,
           _token: _token,
         }
         return query;
@@ -369,6 +372,8 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('detalle', JSON.stringify(items));
 
   // console.log({items});
+  var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
+  formData.append('codestacion', codestacion)
 
   var monto_descuento = $('#monto_descuento').val();
   var importe_sin_igv = $('#importe_sin_igv').val();
@@ -467,3 +472,23 @@ var store = function(formData){
   };
   $.ajax(options);
 };
+
+$(document).on('change', '#tipo_operacion_id', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  callSetMotivoTraslado();
+
+});
+
+var callSetMotivoTraslado = () => {
+  
+  var data = $('#tipo_operacion_id').find(':selected').data();
+  if (data.codigo_motivo_traslado == '') {
+    $('#motivo_traslado_id').html(`<option value='-1' >No tiene motivos en Operaciones</option>`);
+    
+  }else{
+    $('#motivo_traslado_id').html(`<option value='${data.codigo_motivo_traslado}' >${data.nombre_motivo_traslado}</option>`);
+  }
+
+}

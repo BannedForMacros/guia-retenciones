@@ -1,5 +1,5 @@
 @inject('carbon', 'Carbon\Carbon')
-<table class="table table-hover table-striped table-sm table-bordered" id="tabla_guias">
+<table class="table table-hover table-striped table-sm table-bordered" id="tabla_guias" style="width: 100%">
   <thead>
     <th>Condicion</th>
     <th>Serie</th>

@@ -34,8 +34,17 @@
                           <input type="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
                         </div>
                         <div class="col-md-6 mb-2">
-                          <label class="form-label">Estado</label>
-                          <input type="text" class="form-control" readonly value="GENERADA">
+                          {{-- <label class="form-label">Estado</label> --}}
+                          <label class="form-label">Enviar a sunat</label>
+                          {{-- <input type="text" class="form-control" readonly value="GENERADA"> --}}
+                          <select class="form-select" name="envio_sunat" id="envio-sunat">
+                            <option value="0">No</option>
+                            <option value="1">Si</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Comprobante Pago</label>
+                          <input type="text" class="form-control" name="comprobante_pago">
                         </div>
                       </div>
                     </div>
@@ -68,7 +77,7 @@
                 </div>
                 <div class="col-md-6">
                   <div class="row">
-                    <div class="col-md-6 mb-2">
+                    <div class="col-md-10 mb-2">
                       <label class="form-label">Vendedor</label>
                       <select class="form-select select_2" name="vendedor_id" id="vendedor_id" style="width: 100%">
                         @foreach ($listVendedores as $item)
@@ -77,11 +86,21 @@
                         @endforeach
                       </select>
                     </div>
-                    <div class="col-md-6 mb-2">
+                    <div class="col-md-10 mb-2">
                       <div class="row">
                         <div class="col-md-12">
                           <label class="form-label">Proveedor</label>
-                          <select class="form-select select_2" name="proveedor_id" id="proveedor_id" style="width: 100%"></select>
+                          <div class="row g-2">
+                            <div class="col-md-3">
+                              <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
+                                <option value="3">Razon Social</option>
+                                <option value="2">RUC</option>
+                              </select>
+                            </div>
+                            <div class="col-md-9">
+                              <select class="form-select" id="proveedor_id" name="proveedor_id" data-placeholder="Buscar un proveedor"></select>
+                            </div>
+                          </div>
                         </div>
                         <div class="col-md-12" hidden>
                           <div class="form-check mt-2">
@@ -105,8 +124,18 @@
               <div class="row">
                 <div class="col-md-12">
                   <label class="form-label">Cliente</label>
-                  <select class="form-select select_2" name="cliente_id" id="cliente_id" style="width: 100%">
-                  </select>
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <select id="tipo_busqueda_cliente" class="form-select">
+                        <option value="4">Nombre</option>
+                        <option value="2">RUC</option>
+                        <option value="3">Documento</option>
+                      </select>
+                    </div>
+                    <div class="col-md-9">
+                      <select class="form-select" name="cliente_id" id="cliente_id" style="width: 100%" data-placeholder="Buscar Cliente"></select>
+                    </div>
+                  </div>
                 </div>
                 <div class="col-md-12">
                   <label class="form-label">Direccion</label>
@@ -121,7 +150,7 @@
                     <div class="col-md-6">
                       <label class="form-label">Divisa</label>
                       <select class="form-select" name="divisa_id" id="divisa_id">
-                        <option value="1" data-nombre="divisa 1">divisa 1</option>
+                        <option value="1" data-nombre="Soles">Soles</option>
                       </select>
                     </div>
                     <div class="col-md-6">
@@ -150,7 +179,7 @@
                       <select class="form-select" name="tipo_operacion_id" id="tipo_operacion_id">
                         @foreach ($listTipoOperacion as $item)
                           @if ($item->ingresoSalida == 'Salida')
-                            <option value="{{ $item->tipoOperacion }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
+                            <option value="{{ $item->tipoOperacion }}" data-codigo_motivo_traslado="{{ $item->motivotraslado }}" data-nombre_motivo_traslado="{{ $item->descriMotivotraslado }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
                           @endif
                         @endforeach
                       </select>
@@ -169,18 +198,39 @@
             </div>
           </div>
           <div class="row mt-2">
+            <h5>Datos transporte</h5>
             <div class="col-md-6">
-              <h5>Datos transporte</h5>
               <div class="row">
                 <div class="col-md-12">
                   <label class="form-label">Transportista</label>
-                  <select class="form-select" name="transportista_id" id="transportista_id" style="width: 100%"></select>
+                  <select class="form-select" name="transportista_id" id="transportista_id" style="width: 100%" data-placeholder="Seleccionar un Transportista"></select>
                 </div>
                 <div class="col-md-12">
                   <label class="form-label">Direccion</label>
-                  <input type="text" class="form-control" id="transportista_direccion" name="transportista_direccion" >
+                  <input type="text" class="form-control" id="transportista_direccion" name="transportista_direccion" placeholder="Direccion del Transportista">
                 </div>
               </div>
+
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label">Motivo Traslado</label>
+                  <select class="form-select" name="motivo_traslado_id" id="motivo_traslado_id">
+                    <option value="1">Envio Equipaje</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Vehiculo</label>
+                  <select name="vehiculo_id" id="vehiculo_id" class="form-select">
+                    @foreach ($listVehiculos as $item)
+                      <option data-placa="{{ $item->placaVehiculo }}" data-marca="{{ $item->marcaVehiculo }}" >Placa: {{ $item->placaVehiculo }} - Marca: {{ $item->marcaVehiculo }}</option>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
+
               <div class="row mt-2">
                 <div class="col-md-6">
                   <label class="form-label">Chofer</label>
@@ -195,40 +245,65 @@
                   <input type="text" class="form-control" name="brevete" id="brevete">
                 </div>
               </div>
-              <div class="row mt-2">
+
+            </div>
+          </div>
+
+
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <h5>Datos Partida</h5>
+              <div class="row mt-3 mb-2">
                 <div class="col-md-6">
-                  <label class="form-label">Vehiculo</label>
-                  <select name="vehiculo_id" id="vehiculo_id" class="form-select">
-                    @foreach ($listVehiculos as $item)
-                      <option data-placa="{{ $item->placaVehiculo }}" data-marca="{{ $item->marcaVehiculo }}" >Placa: {{ $item->placaVehiculo }} - Marca: {{ $item->marcaVehiculo }}</option>
+                  <label class="form-label">Departamento</label>
+                  <select class="form-select ubigeo mt-1" data-tipo_busqueda="2" data-tipo_ubigeo="partida" name="partida_departamento" id="partida_departamento">
+                    @foreach ($listUbigeos as $item)
+                      <option value="{{ $item->codUbigeo }}">{{ $item->descripcion }}</option>
                     @endforeach
                   </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Provincia</label>
+                  <select class="form-select mt-1 ubigeo" data-tipo_busqueda="3" data-tipo_ubigeo="partida" name="partida_provincia" id="partida_provincia"></select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Distrito</label>
+                  <select class="form-select mt-1 ubigeo" name="ubigeo_partida" data-tipo_ubigeo="partida" id="partida_distrito"></select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <label class="form-label">Direccion Partida</label>
+                  <input type="text" class="form-control" name="direccion_partida" placeholder="Direccion de Partida">
                 </div>
               </div>
             </div>
             <div class="col-md-6">
-              <div class="row mt-4">
-                <div class="col-md-12">
-                  <label class="form-label">Motivo Traslado</label>
-                  <select class="form-select" name="motivo_traslado_id" id="motivo_traslado_id">
-                    <option value="1">Envio Equipaje</option>
+
+              <h5>Datos Llegada</h5>
+              <div class="row mt-3 mb-2">
+                <div class="col-md-6">
+                  <label class="form-label">Departamento</label>
+                  <select class="form-select ubigeo mt-1" data-tipo_busqueda="2" data-tipo_ubigeo="llegada" name="llegada_departamento" id="llegada_departamento">
+                    @foreach ($listUbigeos as $item)
+                      <option value="{{ $item->codUbigeo }}">{{ $item->descripcion }}</option>
+                    @endforeach
                   </select>
                 </div>
-              </div>
-              <div class="row mt-2">
                 <div class="col-md-6">
-                  <label class="form-label">Partida</label>
-                  <input type="text" class="form-control" name="partida">
+                  <label class="form-label">Provincia</label>
+                  <select class="form-select mt-1 ubigeo" data-tipo_busqueda="3" data-tipo_ubigeo="llegada" name="llegada_provincia" id="llegada_provincia"></select>
                 </div>
                 <div class="col-md-6">
+                  <label class="form-label">Distrito</label>
+                  <select class="form-select mt-1 ubigeo" name="ubigeo_llegada" data-tipo_ubigeo="llegada" id="llegada_distrito"></select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
                   <label class="form-label">Llegada</label>
-                  <input type="text" class="form-control" name="llegada">
-                </div>
-              </div>
-              <div class="row mt-1">
-                <div class="col-md-6">
-                  <label class="form-label">Comprobante Pago</label>
-                  <input type="text" class="form-control" name="comprobante_pago">
+                  <input type="text" class="form-control" name="direccion_llegada" placeholder="Direccion de llegada">
                 </div>
               </div>
             </div>
@@ -241,8 +316,8 @@
           <div class="col-md-12">
             <div class="row">
               <div class="col-md-8 mb-2">
-                <label class="form-label">Productos</label>
-                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%">
+                <label class="form-label">Articulo</label>
+                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%" data-placeholder="Indicar un Articulo">
                   @foreach ($listArticulos as $item)
                     <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
                       data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}" data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
@@ -376,5 +451,6 @@
   </div>
   @push('js-scripts')
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/salida/ubigeo.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection
