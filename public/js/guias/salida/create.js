@@ -380,18 +380,27 @@ $(document).on('submit', '#form_store', function(event) {
   var monto_igv = $('#monto_igv').val();
   var total_venta = $('#total_venta').val();
   var comentario = $('#comentario').val();
-  var proveedor_nombre = $('#proveedor_id').select2('data')[0].proveedor_nombre;
-  formData.append('proveedor_nombre', proveedor_nombre);
-  var proveedor_ruc = $('#proveedor_id').select2('data')[0].proveedor_ruc;
-  formData.append('proveedor_ruc', proveedor_ruc);
+  var data_proveedor = $('#proveedor_id').select2('data')[0];
+  
+  // console.log({data_proveedor});
+  if (data_proveedor != null) {
+    // console.log('indefinido proveedor');
+    var proveedor_nombre = data_proveedor.proveedor_nombre;
+    formData.append('proveedor_nombre', proveedor_nombre);
+    var proveedor_ruc = data_proveedor.proveedor_ruc;
+    formData.append('proveedor_ruc', proveedor_ruc);
+  }
   var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
   formData.append('vendedor_nombre', vendedor_nombre);
 
   var data_cliente = $('#cliente_id').select2('data')[0];
-  formData.append('cliente_razon_social', data_cliente.razon_social);
-  formData.append('cliente_nro_documento', data_cliente.nro_documento);
-  formData.append('cliente_documento_tipo_nombre', data_cliente.documento_tipo_nombre);
-  formData.append('cliente_direccion', data_cliente.direccion);
+  if (data_cliente != null) {
+    
+    formData.append('cliente_razon_social', data_cliente.razon_social);
+    formData.append('cliente_nro_documento', data_cliente.nro_documento);
+    formData.append('cliente_documento_tipo_nombre', data_cliente.documento_tipo_nombre);
+    formData.append('cliente_direccion', data_cliente.direccion);
+  }
 
   var divisa_nombre = $('#divisa_id').find(':selected').data('nombre');
   formData.append('divisa_nombre', divisa_nombre);
@@ -406,9 +415,12 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('almacen_nombre', almacen_nombre);
   
   var data_transportista = $('#transportista_id').select2('data')[0];
-  formData.append('transportista_ruc', data_transportista.ruc);
-  formData.append('transportista_nombre', data_transportista.nombre);
-  formData.append('transportista_direccion', data_transportista.transportista_direccion);
+  if (data_transportista != null) {
+    formData.append('transportista_ruc', data_transportista.ruc);
+    formData.append('transportista_nombre', data_transportista.nombre);
+    formData.append('transportista_direccion', data_transportista.transportista_direccion);
+    
+  }
   
   var chofer_dni = $('#chofer_id').find(':selected').data('dni_chofer');
   formData.append('chofer_dni', chofer_dni);
@@ -431,23 +443,100 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('total_venta', total_venta);
   formData.append('comentario', comentario);
 
+  var peso_bruto_total = $('#peso_bruto_total').val();
+  formData.append('peso_bruto_total', peso_bruto_total);
+
+  var motivo_traslado_id = $('#motivo_traslado_id').val();
+  var descripcion_motivo_traslado = $('#motivo_traslado_id').find(':selected').text();
+  if (motivo_traslado_id == '-1') {
+    var descripcion_motivo_traslado = '';
+  }
+
+  formData.append('descripcion_motivo_traslado', descripcion_motivo_traslado);
   // new Response(formData).text().then(console.log)
   // store(formData);
-  Swal.fire({
-    html: `<b>¿Desea registrar esta Guia de Salida?</b>`,
-    icon: "warning",
-    showCancelButton: !0,
-    confirmButtonText: "Si, Registrar",
-    cancelButtonText: "No, cancelar!",
 
-    // reverseButtons: !0
-  }).then((result) => {
-    if (result.isConfirmed) {
-      store(formData);
-
+  var procede_store = true;
+  var msj_store = '';
+  console.log(formData.get('proveedor_nombre'));
+  if (formData.get('proveedor_nombre') == null) {
+    procede_store = false;
+    msj_store = 'Debe indicar un proveedor';
+  }
+  
+  if (procede_store == true) {
+    if (formData.get('cliente_razon_social') == null) {
+      procede_store = false;
+      msj_store = 'Debe indicar un cliente';
     }
-  })
+  }
+
+  if (procede_store == true) {
+    if (formData.get('transportista_nombre') == null) {
+      procede_store = false;
+      msj_store = 'Debe indicar un transportista';
+    }
+  }
+
+
+  if (procede_store == true) {
+    if (items.length <= 0) {
+      procede_store = false;
+      msj_store = 'Debe indicar articulos en la guia';
+    }
+  }
+
+  if (procede_store == true) {
+    if (peso_bruto_total == '') {
+      procede_store = false;
+      msj_store = 'Debe indicar el Peso Total';
+    }
+  }
+
+  if (procede_store == true) {
+    Swal.fire({
+      html: `<b>¿Desea registrar esta Guia de Salida?</b>`,
+      icon: "warning",
+      showCancelButton: !0,
+      confirmButtonText: "Si, Registrar",
+      cancelButtonText: "No, cancelar!",
+  
+      // reverseButtons: !0
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // store(formData);
+        modalStore(formData);
+  
+      }
+    })
+  } else {
+      Swal.fire({
+        html: msj_store,
+        icon: 'error'
+      })
+
+  }
+
+
+
 });
+
+var modalStore = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.modalStore'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'html',
+    success: function(response){
+      $('#modales').html(response);
+      $('#modalStore').modal('show');
+      store(formData);
+    }
+  };
+  $.ajax(options);
+};
 
 var store = function(formData){
   var options = {
@@ -458,16 +547,39 @@ var store = function(formData){
     contentType: false,
     dataType: 'json',
     success: function(response){
-      Swal.fire({
-        html: response.msj,
-        icon: response.msj_tipo,
-      }).then((result) => {
-        if (result) {
-          if (response.procede == true) {
-            window.location.href = response.url_redirect;
-          }
-        }
-      })
+      // Swal.fire({
+      //   html: response.msj,
+      //   icon: response.msj_tipo,
+      // }).then((result) => {
+      //   if (result) {
+      //     if (response.procede == true) {
+      //       window.location.href = response.url_redirect;
+      //     }
+      //   }
+      // })
+
+      $('#li_store').html(response.msj);
+
+      if (response.procede == true) {
+        formData.append('id', response.id);
+        facturacionElectronica(formData);
+      }
+
+    }
+  };
+  $.ajax(options);
+};
+
+var facturacionElectronica = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.facturacionElectronica'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      $('#li_facturacion').html(response.msj);
     }
   };
   $.ajax(options);
@@ -485,10 +597,25 @@ var callSetMotivoTraslado = () => {
   
   var data = $('#tipo_operacion_id').find(':selected').data();
   if (data.codigo_motivo_traslado == '') {
-    $('#motivo_traslado_id').html(`<option value='-1' >No tiene motivos en Operaciones</option>`);
+    $('#motivo_traslado_id').html(`<option value='-1' >Sin motivo</option>`);
     
   }else{
     $('#motivo_traslado_id').html(`<option value='${data.codigo_motivo_traslado}' >${data.nombre_motivo_traslado}</option>`);
   }
 
+  var tipo_operacion_id = $('#tipo_operacion_id').val();
+  console.log({tipo_operacion_id});
+  if (tipo_operacion_id == 12) {
+    $('#div_almacen_unico').hide();
+    $('#div_almacene_transferencia').show();
+    
+    console.log('mostramos origen y destino');
+  } else {
+    
+    $('#div_almacen_unico').show();
+    $('#div_almacene_transferencia').hide();
+    console.log('mostramos solo un almacen');
+  }
+
 }
+

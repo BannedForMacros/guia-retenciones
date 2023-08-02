@@ -47,6 +47,7 @@ class GuiaIngresoController extends Controller
         $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
         $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;;
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        // dd($listAlmacenes);
         // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
         $listArticulos = [];
         // dd($listArticulos);
@@ -113,7 +114,7 @@ class GuiaIngresoController extends Controller
     public function listarProveedores(Request $request)
     {
         $valor = trim($request->get('term'));
-        $tipo = 3;//busqueda por razon social
+        $tipo = $request->get('tipo');//busqueda por razon social
         // dd($request->all());
         if (strlen($valor) > 2) {
             $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', 
@@ -155,6 +156,8 @@ class GuiaIngresoController extends Controller
         return response()->json(['items' => $items]);
     }
 
+
+
     /**
      * Store a newly created resource in storage.
      *
@@ -178,12 +181,12 @@ class GuiaIngresoController extends Controller
         $datos['serie']= 1;
         
         // $getLast = GuiaSalida::orderBy('id', 'desc')->first();
-        $numero = 1;
-
         $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        // dd($listSeries);
         foreach ($listSeries as $item) {
             if ($item->numserie == $datos['serie']) {
-                $numero = ($item->utlimovalor) +1;
+                $numero = intval($item->ultimoValormarket) + 1;
+                $serie = $item->numserie;
             }
         }
 
@@ -191,18 +194,98 @@ class GuiaIngresoController extends Controller
         //     $numero = intval($getLast->numero)+1;
         // }
         $datos['numero'] = $numero;
+        $datos['serie'] = $serie;
+        // dd([$numero, $serie]);
+        $anio_actual = date('Y');
 
+        foreach ($detalle as $item) {
+            $body_detalle[] = array(
+                "anioGuia" => $anio_actual,
+                "cantidad" => $item->cantidad,
+                "codArticulo" => $item->codarticulo,
+                "estadoProceso" => "0",
+                "importeDetalle" => $item->importe,
+                "item" => 1,
+                "numSerie" => $datos['serie'],
+                "numeroGuia" => $datos['numero'],
+                "precio" => $item->precio,
+                "tipoGuia" => "N",
+                "unidadMedida" => 1
+            );
+        }
+        $body = [
+            "anioGuiaRemision" => $anio_actual,
+            "breveteChofer" => null,
+            "codAlmacen" => $datos['codalmacen'],
+            "codAlmacenDestino" => null,
+            "codAlmacenOrigen" => null,
+            "codCliente" => null,
+            "codEstacion" => $datos['codestacion'],
+            "codListaPrecio" => null,
+            "codProveedor" => $datos['proveedor_id'],
+            "codtrabajador" => $datos['vendedor_id'],
+            "comentario" => $datos['comentario'],
+            "descuento" => $datos['monto_descuento'],
+            "detalle" => $body_detalle,
+            "direccionllegada" =>null,
+            "direccionpartida" => null,
+            "dnichofer" => null,
+            "estadoProceso" => "0",
+            "fechaEmision" => $datos['fecha_emision'],
+            "formapago" => $datos['forma_pago_id'],
+            "igv" => $datos['monto_igv'],
+            "modalidadTransporte" => "18",
+            "nombreTransportista" => null,
+            "nombrechofer" => null,
+            "numSerie" => $datos['serie'],
+            "seriefactura" => $datos['pedido_serie'],
+            "numeroFactura" => 159,
+            "numeroGuia" => $datos['numero'],
+            "placavehiculo" => null,
+            "rucTransportista" => null,
+            "tipoGuia" => "N", //N->ingreso; A->Salida
+            "tipoOperacion" => $datos['tipo_operacion_id'],
+            "tipomonda" => 1,
+            "totalVenta" => $datos['total_venta'],
+            "ubigeollegada" => null,
+            "ubigeopartida" => null,
+            "valorVenta" => $datos['importe_sin_igv']
+        ];
+        dd($body);
 
         try {
-            $guia = GuiaIngreso::create($datos);
+            $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
+            // dd($storeRemoto);
+            if ($storeRemoto->exito == false) {
+                $procede = false;
+                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+            }
         } catch (Exception $e) {
             //throw $th;
             dd($e);
             $procede = false;
-            $msj = "No se pudo registrar la Guia de Salida";
+            $msj = "No se pudo registrar remotamente";
             $msj_tipo = "error";
             $log = "{$e}";
         }
+        
+
+
+        if ($procede == true) {
+
+            try {
+                $guia = GuiaIngreso::create($datos);
+            } catch (Exception $e) {
+                //throw $th;
+                dd($e);
+                $procede = false;
+                $msj = "No se pudo registrar la Guia de Salida";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+            
+        }
+
 
         // dd($guia);
         if ($procede == true) {
@@ -264,6 +347,7 @@ class GuiaIngresoController extends Controller
 
         $formatter = new NumeroALetras();
         $texto_moneda = 'soles';
+        // dd($guia->total_venta);
         $total_letras = $formatter->toInvoice($guia->total_venta, 2, $texto_moneda);
         $total_letras = Str::upper($total_letras);
 

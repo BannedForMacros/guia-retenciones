@@ -3,6 +3,7 @@
 <style>
   body {
     background-color: #f5f7fa !important;
+    padding-right: 0 !important
   }
 </style>
 
@@ -98,7 +99,7 @@
                               </select>
                             </div>
                             <div class="col-md-9">
-                              <select class="form-select" id="proveedor_id" name="proveedor_id" data-placeholder="Buscar un proveedor"></select>
+                              <select class="form-select" id="proveedor_id" name="proveedor_id" data-placeholder="Buscar un proveedor" style="width: 100%"></select>
                             </div>
                           </div>
                         </div>
@@ -138,7 +139,7 @@
                   </div>
                 </div>
                 <div class="col-md-12">
-                  <label class="form-label">Direccion</label>
+                  <label class="form-label mt-1">Direccion</label>
                   <input type="text" class="form-control"  name="direccion" id="direccion" placeholder="Direccion del cliente">
                 </div>
               </div>
@@ -161,7 +162,7 @@
                         @endforeach
                       </select>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-12 mt-2">
                       <label class="form-label">Lista Precio</label>
                       <select class="form-select" name="codlistaprecio" id="codlistaprecio">
                         @foreach ($listPrecios as $item)
@@ -184,7 +185,7 @@
                         @endforeach
                       </select>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-12 mt-2" id="div_almacen_unico">
                       <label class="form-label">Almacen</label>
                       <select class="form-select" name="codalmacen" id="codalmacen">
                         @foreach ($listAlmacenes as $item)
@@ -192,6 +193,25 @@
                         @endforeach
                       </select>
                     </div>
+                    <div class="mt-2" id="div_almacene_transferencia" style="display: none">
+                      <div class="col-md-12">
+                        <label class="form-label">Almacen Origen</label>
+                        <select class="form-select" name="codAlmacenOrigen" id="codAlmacenOrigen">
+                          @foreach ($listAlmacenes as $item)
+                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
+                          @endforeach
+                        </select>
+                      </div>
+                      <div class="col-md-12">
+                        <label class="form-label">Almacen Destino</label>
+                        <select class="form-select" name="codAlmacenDestino" id="codAlmacenDestino">
+                          @foreach ($listAlmacenes as $item)
+                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
+                          @endforeach
+                        </select>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -384,9 +404,13 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-md-10">
+              <div class="col-md-8">
                 <label class="form-label">Comentario</label>
                 <textarea class="form-control" name="comentario" id="comentario" rows="2"></textarea>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Peso total (Kg)</label>
+                <input type="number" class="form-control" name="peso_bruto_total" id="peso_bruto_total">
               </div>
             </div>
 
@@ -448,6 +472,7 @@
       </div>
 
     </div>
+    <div id="modales"></div>
   </div>
   @push('js-scripts')
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>

@@ -58,10 +58,10 @@
                       {{-- <label class="form-label">Serie-Nro</label> --}}
                       <div class="row">
                         <div class="col-md-4">
-                          <input type="text" class="form-control" name="serie" placeholder="Serie">
+                          <input type="text" class="form-control" name="pedido_serie" placeholder="Serie">
                         </div>
                         <div class="col-md-8">
-                          <input type="text" class="form-control" name="numero" placeholder="Numero">
+                          <input type="text" class="form-control" name="pedido_numero" placeholder="Numero">
                         </div>
                       </div>
                     </div>
@@ -74,13 +74,19 @@
             </div>
             <div class="col-md-6">
               <div class="row">
-                <div class="col-md-12 mb-2">
-                  <label class="form-label">Proveedores</label>
-                  <select class="form-select select_2" name="proveedor_id" id="proveedor_id">
-                    @foreach ($listProveedores as $item)
-                      <option value="{{ $item->CodProveedor }}">{{ $item->NombreProveedor }}</option>
-                    @endforeach
-                  </select>
+                <div class="col-md-12">
+                  <label class="form-label">Proveedor</label>
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
+                        <option value="3">Razon Social</option>
+                        <option value="2">RUC</option>
+                      </select>
+                    </div>
+                    <div class="col-md-9">
+                      <select class="form-select" id="proveedor_id" name="proveedor_id" data-placeholder="Buscar un proveedor"></select>
+                    </div>
+                  </div>
                 </div>
               </div>
   
@@ -88,7 +94,7 @@
                 <div class="col-md-3 mb-2">
                   <label class="form-label">Divisa</label>
                   <select class="form-select" name="divisa_id" id="divisa_id">
-                    <option value="1">Divisa 1</option>
+                    <option value="1">Soles</option>
                   </select>
                 </div>
                 <div class="col-md-6 mb-2">
@@ -120,7 +126,7 @@
                   <label class="form-label">Almacen</label>
                   <select class="form-select" name="codalmacen" id="codalmacen">
                     @foreach ($listAlmacenes as $item)
-                      <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
+                      <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" data-codestacion="{{ $item->codEstacion }}" >{{ $item->descripcion }}</option>
                     @endforeach
                   </select>
                 </div>

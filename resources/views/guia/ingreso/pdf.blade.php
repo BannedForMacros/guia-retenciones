@@ -288,7 +288,7 @@
 
     {{-- tabla de consulta y qr --}}
 
-    <table style="width: 100%; font-size: 10px; margin-top: 10px">
+    <table style="width: 100%; font-size: 10px; margin-top: 10px; display: none" >
       <tbody>
         <tr>
           <td style="width: 50rem;">

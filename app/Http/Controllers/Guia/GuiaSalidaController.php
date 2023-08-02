@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Guia;
 
 use App\Http\Controllers\Controller;
+use App\Models\FacturacionEnvio;
 use App\Models\GuiaSalida;
 use App\Models\GuiaSalidaDetalle;
+use App\Models\Parametro;
 use Exception;
 use Faker\Provider\UserAgent;
 use Illuminate\Http\Request;
@@ -39,6 +41,12 @@ class GuiaSalidaController extends Controller
 
         $list = DB::table('guia_salidas')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->get();
         // dd($list);
+        foreach ($list as $key => $value) {
+            if ($value->envio_id != null) {
+                $getEnvio = FacturacionEnvio::find($value->envio_id);
+                // dd($getEnvio->pdf417);
+            }
+        }
         return view('guia.salida.tabla', compact('list'));
     }
 
@@ -268,6 +276,12 @@ class GuiaSalidaController extends Controller
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'tr' => $tr]);
     }
+
+    public function modalStore(Request $request)
+    {
+        return view('guia.salida.modal-store');
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -280,6 +294,15 @@ class GuiaSalidaController extends Controller
         // dd($request->post());
         $datos = $request->post();
         $detalle = json_decode($request->post('detalle'));
+        if ($datos['tipo_operacion_id'] == 12) {
+            $datos['codalmacen'] = '';
+        }else{
+            $datos['codAlmacenOrigen'] = '';
+            $datos['codAlmacenDestino'] = '';
+        }
+        if ($datos['peso_bruto_total'] == '') {
+            $datos['peso_bruto_total'] = 0;
+        }
         unset($datos['detalle']);
         // dd($datos);
         $procede = true;
@@ -287,11 +310,12 @@ class GuiaSalidaController extends Controller
         $msj_tipo = "success";
         $log = "";
         $datos['fecha_emision'] = date('Y-m-d');
-        $datos['hora_emision'] = date('H:i');
+        $datos['hora_emision'] = date('H:i:s');
         $url_redirect = route('guiasalida.index');
         
         $getLast = GuiaSalida::orderBy('id', 'desc')->first();
         $numero = 1;
+        $id = null;
 
         $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
         // dd($listSeries);
@@ -310,7 +334,7 @@ class GuiaSalidaController extends Controller
         
         $anio_actual = date('Y');
         
-        $msj = "Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}";
+        $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
         
         foreach ($detalle as $item) {
             $body_detalle[] = array(
@@ -323,7 +347,7 @@ class GuiaSalidaController extends Controller
                 "numSerie" => $datos['serie'],
                 "numeroGuia" => $datos['numero'],
                 "precio" => $item->precio,
-                "tipoGuia" => "N",
+                "tipoGuia" => "A",
                 "unidadMedida" => 1
             );
         }
@@ -339,7 +363,7 @@ class GuiaSalidaController extends Controller
         //         "numSerie" => 1,
         //         "numeroGuia" => 125,
         //         "precio" => 100,
-        //         "tipoGuia" => "N",
+        //         "tipoGuia" => "A",
         //         "unidadMedida" => 1
         //     ]
         // ]
@@ -348,8 +372,8 @@ class GuiaSalidaController extends Controller
             "anioGuiaRemision" => $anio_actual,
             "breveteChofer" => $datos['brevete'],
             "codAlmacen" => $datos['codalmacen'],
-            "codAlmacenDestino" => $datos['codalmacen'],
-            "codAlmacenOrigen" => $datos['codalmacen'],
+            "codAlmacenDestino" => $datos['codAlmacenDestino'],
+            "codAlmacenOrigen" => $datos['codAlmacenOrigen'],
             "codCliente" => $datos['cliente_id'],
             "codEstacion" => $datos['codestacion'],
             "codListaPrecio" => $datos['codlistaprecio'],
@@ -374,7 +398,7 @@ class GuiaSalidaController extends Controller
             "numeroGuia" => $datos['numero'],
             "placavehiculo" => $datos['vehiculo_placa'],
             "rucTransportista" => $datos['transportista_ruc'],
-            "tipoGuia" => "1",
+            "tipoGuia" => "A", //N->ingreso; A->Salida
             "tipoOperacion" => $datos['tipo_operacion_id'],
             "tipomonda" => 1,
             "totalVenta" => $datos['total_venta'],
@@ -383,9 +407,16 @@ class GuiaSalidaController extends Controller
             "valorVenta" => $datos['importe_sin_igv']
         ];
 
+        // dd(json_encode($body));
+        // dd($body);
+
         try {
             $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
             // dd($storeRemoto);
+            if ($storeRemoto->exito == false) {
+                $procede = false;
+                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+            }
         } catch (Exception $e) {
             //throw $th;
             dd($e);
@@ -411,6 +442,7 @@ class GuiaSalidaController extends Controller
 
         // dd($guia);
         if ($procede == true) {
+            $id = $guia->id;
             foreach ($detalle as $item) {
 
                 if ($procede == true) {
@@ -438,8 +470,205 @@ class GuiaSalidaController extends Controller
             }
         }
 
+        if ($procede == true) {
+            if ($datos['envio_sunat'] == 1) {
+                $msj = "{$msj} <button class='btn btn-sm btn-success'><i class='fa fa-external-link'></i> Ver</button>";
+            }
+        }
 
-        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);
+        // dd($msj);
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect, 'id' => $id]);
+    }
+
+    public function facturacionElectronica(Request $request)
+    {
+        $id = $request->post('id');
+        $guia = GuiaSalida::find($id);
+
+        $ruc_emisor = Parametro::find(2)->valor;
+        $razon_social_emisor = Parametro::find(3)->valor;
+
+        $cliente_documento_tipo = 6;
+        if ($guia->cliente_documento_tipo_nombre == 'DNI') {
+            $cliente_documento_tipo = 1;
+        }
+
+        $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
+        // dd($detalle);
+        $nro = 1;
+        foreach ($detalle as $item) {
+            $body_detalle[] = array(
+                'Correlativo' => $nro++,
+                "CodigoItem" => "{$item->codarticulo}",
+                "Descripcion" => "{$item->descripcion}",
+                "UnidadMedida" => "NIU",
+                "Cantidad" => $item->cantidad,
+                "LineaReferencia" => 1
+            );
+        }
+
+        // [
+        //     [
+        //         "Correlativo" => 1,
+        //         "CodigoItem" => "ENTREGA DE EQUIPO",
+        //         "Descripcion" => "ENTREGA DE EQUIPO",
+        //         "UnidadMedida" => "NIU",
+        //         "Cantidad" => 1,
+        //         "LineaReferencia" => 1
+        //     ]
+        // ]
+
+        $body = [
+            // "IdDocumento" => "T001-00000070",
+            "IdDocumento" => "T00{$guia->serie}-{$guia->numero}",
+            "FechaEmision" => "{$guia->fecha_emision}",
+            "HoraEmision" => "{$guia->hora_emision}",
+            "TipoDocumento" => "09",
+            "Glosa" => $guia->comentario,
+            "Remitente" => [
+                // "NroDocumento" => "20369872274",
+                "NroDocumento" => $ruc_emisor,
+                "TipoDocumento" => "6",
+                // "NombreRazonSocial" => "Franco Supermercado E.I.R.L."
+                "NombreRazonSocial" => $razon_social_emisor
+            ],
+            "Destinatario" => [
+                // "NroDocumento" => "20369872274",
+                "NroDocumento" => $guia->cliente_nro_documento,
+                // "TipoDocumento" => "6",
+                "TipoDocumento" => "{$cliente_documento_tipo}",
+                // "NombreRazonSocial" => "Luis Ordoñez Villacorta"
+                "NombreRazonSocial" => $guia->cliente_razon_social
+            ],
+            "Proveedor" => [
+                "NroDocumento" => $guia->proveedor_ruc,
+                "TipoDocumento" => 6,
+                "NombreRazonSocial" => $guia->proveedor_nombre
+            ],
+            "DocumentoRelacionado" => [
+                // "descripcion" => "Factura",
+                "descripcion" => "",
+                // "nrorucemisor" => "20117332714",
+                "nrorucemisor" => "",
+                "NroDocumento" => "",
+                // "TipoDocumento" => "01"
+                "TipoDocumento" => ""
+            ],
+            // "CodigoMotivoTraslado" => "01",
+            "CodigoMotivoTraslado" => "{$guia->motivo_traslado_id}",
+            // "DescripcionMotivoTraslado" => "VENTA",
+            "DescripcionMotivoTraslado" => $guia->descripcion_motivo_traslado,
+            // "PesoBrutoTotal" => 1,
+            "PesoBrutoTotal" => $guia->peso_bruto_total,
+            "UnidadPesobrutototal" => "KGM",
+            // "UnidadPesobrutototal" => "",
+            "NroPallets" => 0,
+            "ModalidadTraslado" => "01",
+            // "FechaInicioTraslado" => "2023-06-02",
+            "FechaInicioTraslado" => $guia->fecha_emision,
+            "RucTransportista" => "{$guia->transportista_ruc}",
+            "RazonSocialTransportista" => "{$guia->transportista_nombre}",
+            "NroPlacaVehiculo" => $guia->vehiculo_placa,
+            "NroDocumentoConductor" => "{$guia->chofer_dni}",
+            "NombresdelConductor" => "{$guia->chofer_nombre}",
+            "NrolicenciaConductor" => "{$guia->chofer_brevete}",
+            "DireccionPartida" => [
+                "Ubigeo" => "{$guia->ubigeo_partida}",
+                "DireccionCompleta" => "{$guia->direccion_partida}",
+                "codigoanexo" => ""
+            ],
+            "DireccionLlegada" => [
+                "Ubigeo" => "{$guia->ubigeo_llegada}",
+                "DireccionCompleta" => "{$guia->direccion_llegada}",
+                "codigoanexo" => ""
+            ],
+            "NumeroContenedor" => "",
+            "Nropresintocontenedor" => "",
+            "CodigoPuerto" => "",
+            "VehiculoM1L" => 0,
+            "BienesATransportar" => $body_detalle
+        ]; 
+        
+        // dd($body);
+        
+        $url_button = route('guiasalida.pdf', ['guia'=> $guia->id]);
+        
+        $procede = true;
+        $msj = "Guia electronica emitida correctamente  <br><a class='btn btn-success' href='{$url_button}' target='_blank'><i class='fa fa-external-link'></i> ver</a>";
+        $msj_tipo = "";
+        $log = "";
+
+        $credencial = Parametro::find(1)->valor;
+        try {
+            $send = Http::withHeaders(['Credencial' => $credencial])
+                        ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
+            // dd($send);
+        } catch (Exception $e) {
+            //throw $th;
+            // dd($e);
+            $procede = false;
+            $msj = "Ocurrio un error en el envio a sunat";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        if ($procede == true) {
+            try {
+                $store = new FacturacionEnvio();
+                $store->tabla = 'guia_salidas';
+                $store->registro_id = $id;
+                $store->trama_json = json_encode($body);
+                $store->codigo_hash = $send->CodigoHash;
+                $store->codigo_qr = $send->CodigoQr;
+                $store->pdf417 = $send->pdf417;
+                $store->exito = $send->Exito;
+                $store->mensaje_error = $send->MensajeError;
+                $store->pila = $send->Pila;
+                // dd($store);
+                $store->save();
+            } catch (Exception $e) {
+                //throw $th;
+                // dd($e);
+                $procede = false;
+                $msj = "Ocurrio un error al guardar la respuesta del envio";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+        }
+
+        if ($procede == true) {//actulizamos el id del envio en la tabla original
+
+            $guia->envio_id = $store->id;
+            
+            try {
+
+                $guia->save();
+
+            } catch (Exception $e) {
+                //throw $th;
+                dd($e);
+                $procede = false;
+                $msj = "Ocurrio un error al actualizar el envio en la guia";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+        }
+
+        if ($procede == true) {//obtener PDF y XML
+
+            // $bodyConsulta = array(
+            //     'token' => 'W6quxyHjJnAF268qPLXd16VdBVJvVAcQxpzP1Uek0j5/6IPkpk6yqyPB9sQRN+Ks',
+            //     'serie' => "T{$guia->serie}-{$guia->numero}",
+            //     'tipodocumentoconsulta' => '09',
+            //     'fecha' => $guia->fecha_emision,
+            //     'tipodocumentorespuesta' => 'PDF'
+            // );
+
+            // $getPdf = Http::post('http://testdbfact.dbperulab.com/webPSE/ConsultaDocumentoElectronico', []);
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
 
     public function pdf(GuiaSalida $guia)

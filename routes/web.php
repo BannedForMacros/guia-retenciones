@@ -17,7 +17,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // return view('welcome');
+    if (Auth::check()) {
+        // dd('hola');
+        return view('home');
+        // return route('home');
+    }
+    return view('auth.login');
 });
 
 Auth::routes();
@@ -39,7 +45,9 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::post('guiasalida/listar', 'listar')->name('guiasalida.listar');
     Route::post('guiasalida/listarUbigeos', 'listarUbigeos')->name('guiasalida.listarUbigeos');
     Route::get('guiasalida/pdf/{guia}', 'pdf')->name('guiasalida.pdf');
+    Route::post('guiasalida/modalStore', 'modalStore')->name('guiasalida.modalStore');
     Route::post('guiasalida/store', 'store')->name('guiasalida.store');
+    Route::post('guiasalida/facturacionElectronica', 'facturacionElectronica')->name('guiasalida.facturacionElectronica');
     
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
 });

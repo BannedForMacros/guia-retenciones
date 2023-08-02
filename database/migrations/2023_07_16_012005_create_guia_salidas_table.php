@@ -55,6 +55,8 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('vehiculo_placa')->nullable();
             $table->string('vehiculo_marca')->nullable();
 
+            $table->string('motivo_traslado_id')->nullable();
+            $table->string('descripcion_motivo_traslado')->nullable();
             $table->string('modalidad_traslado')->nullable();
 
             // ubigeos
@@ -67,10 +69,14 @@ class CreateGuiaSalidasTable extends Migration
             $table->decimal('importe_sin_igv');
             $table->decimal('monto_igv');
             $table->decimal('total_venta');
+            $table->decimal('peso_bruto_total');
 
-            $table->tinyInteger('envio_sunat');
-
+            
             $table->string('comentario')->nullable();
+            
+            $table->tinyInteger('envio_sunat');
+            $table->integer('envio_id')->nullable();
+            $table->integer('facturacion_estado')->nullable();
             $table->tinyInteger('activo')->default(1);
             $table->timestamps();
         });

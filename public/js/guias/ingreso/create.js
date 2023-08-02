@@ -140,9 +140,10 @@ var callListarProveedores = () => {
       url: route('guiaingreso.listarProveedores'),
       // type: 'POST',
       data: function (params) {
-
+        var tipo = $('#tipo_busqueda_proveedor').val();
         var query = {
           term: params.term,
+          tipo: tipo,
           _token: _token,
         }
         return query;
@@ -283,6 +284,8 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('detalle', JSON.stringify(items));
 
   // console.log({items});
+  var codestacion = $('#codalmacen').find(':selected').data('codestacion');
+  formData.append('codestacion', codestacion)
 
   var monto_descuento = $('#monto_descuento').val();
   var importe_sin_igv = $('#importe_sin_igv').val();
