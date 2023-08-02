@@ -251,7 +251,7 @@ class GuiaIngresoController extends Controller
             "ubigeopartida" => null,
             "valorVenta" => $datos['importe_sin_igv']
         ];
-        dd($body);
+        // dd($body);
 
         try {
             $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();

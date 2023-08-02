@@ -292,10 +292,16 @@ $(document).on('submit', '#form_store', function(event) {
   var monto_igv = $('#monto_igv').val();
   var total_venta = $('#total_venta').val();
   var comentario = $('#comentario').val();
-  var proveedor_nombre = $('#proveedor_id').select2('data')[0].proveedor_nombre;
-  formData.append('proveedor_nombre', proveedor_nombre);
-  var proveedor_ruc = $('#proveedor_id').select2('data')[0].proveedor_ruc;
-  formData.append('proveedor_ruc', proveedor_ruc);
+  var data_proveedor = $('#proveedor_id').select2('data')[0];
+  
+  if (data_proveedor != null) {
+    
+    var proveedor_nombre = data_proveedor.proveedor_nombre;
+    formData.append('proveedor_nombre', proveedor_nombre);
+    var proveedor_ruc = data_proveedor.proveedor_ruc;
+    formData.append('proveedor_ruc', proveedor_ruc);
+  }
+
   var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
   formData.append('vendedor_nombre', vendedor_nombre);
 
@@ -319,20 +325,45 @@ $(document).on('submit', '#form_store', function(event) {
 
   // new Response(formData).text().then(console.log)
   // store(formData);
-  Swal.fire({
-    html: `<b>¿Desea registrar esta Guia de Ingreso?</b>`,
-    icon: "warning",
-    showCancelButton: !0,
-    confirmButtonText: "Si, Registrar",
-    cancelButtonText: "No, cancelar!",
 
-    // reverseButtons: !0
-  }).then((result) => {
-    if (result.isConfirmed) {
-      store(formData);
+  var procede_store = true;
+  var msj_store = '';
+  console.log(formData.get('proveedor_nombre'));
+  if (formData.get('proveedor_nombre') == null) {
+    procede_store = false;
+    msj_store = 'Debe indicar un proveedor';
+  }
 
+  if (procede_store == true) {
+    if (items.length <= 0) {
+      procede_store = false;
+      msj_store = 'Debe indicar articulos en la guia';
     }
-  })
+  }
+
+  if (procede_store == true) {
+    Swal.fire({
+      html: `<b>¿Desea registrar esta Guia de Ingreso?</b>`,
+      icon: "warning",
+      showCancelButton: !0,
+      confirmButtonText: "Si, Registrar",
+      cancelButtonText: "No, cancelar!",
+  
+      // reverseButtons: !0
+    }).then((result) => {
+      if (result.isConfirmed) {
+        store(formData);
+  
+      }
+    })
+    
+  } else {
+    Swal.fire({
+      html: msj_store,
+      icon: 'error'
+    })
+  }
+  
 });
 
 var store = function(formData){
