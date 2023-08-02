@@ -561,8 +561,11 @@ var store = function(formData){
       $('#li_store').html(response.msj);
 
       if (response.procede == true) {
-        formData.append('id', response.id);
-        facturacionElectronica(formData);
+        if (formData.get('envio_sunat') == 1) {
+          formData.append('id', response.id);
+          facturacionElectronica(formData);
+          
+        }
       }
 
     }
