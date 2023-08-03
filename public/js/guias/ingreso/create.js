@@ -26,13 +26,15 @@ var callListarArticulos = () => {
         var codalmacen = $('#codalmacen').val();
         var codlistaprecio = $('#codlistaprecio').val();
         var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
-
+        var tipo = $('#tipo_busqueda_articulo').val();
+        
         var query = {
           term: params.term,
           _token: _token,
           codalmacen: codalmacen,
           codlistaprecio: codlistaprecio,
           codestacion: codestacion,
+          tipo: tipo,
         }
         return query;
       },

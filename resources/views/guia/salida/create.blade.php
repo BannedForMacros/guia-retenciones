@@ -43,7 +43,7 @@
                             <option value="1">Si</option>
                           </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" hidden>
                           <label class="form-label">Comprobante Pago</label>
                           <input type="text" class="form-control" name="comprobante_pago">
                         </div>
@@ -130,7 +130,7 @@
                       <select id="tipo_busqueda_cliente" class="form-select">
                         <option value="4">Nombre</option>
                         <option value="2">RUC</option>
-                        <option value="3">Documento</option>
+                        <option value="3">DNI</option>
                       </select>
                     </div>
                     <div class="col-md-9">
@@ -334,9 +334,17 @@
         <div class="row mt-4">
           <h5><i class="fa fa-list"></i> Detalle</h5>
           <div class="col-md-12">
+            <label class="form-label">Articulo</label>
             <div class="row">
+              <div class="col-md-2">
+                <select class="form-select" id="tipo_busqueda_articulo">
+                  <option value="1">Codigo Barras</option>
+                  <option value="2">Codigo Articulo</option>
+                  <option value="3">Codigo Interno</option>
+                  <option value="4">Descripcion</option>
+                </select>
+              </div>
               <div class="col-md-8 mb-2">
-                <label class="form-label">Articulo</label>
                 <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%" data-placeholder="Indicar un Articulo">
                   @foreach ($listArticulos as $item)
                     <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
@@ -346,7 +354,7 @@
                   @endforeach
                 </select>
               </div>
-              <div class="col-md-4 mt-3">
+              <div class="col-md-2 mt-3">
                 <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i> Agregar</button>
               </div>
             </div>

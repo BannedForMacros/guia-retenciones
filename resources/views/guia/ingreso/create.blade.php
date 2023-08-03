@@ -142,9 +142,17 @@
           <h5><i class="fa fa-list"></i> Detalle</h5>
           <div class="col-md-12">
             <div class="row">
+              <label class="form-label">Productos</label>
+              <div class="col-md-2">
+                <select class="form-select" id="tipo_busqueda_articulo">
+                  <option value="1">Codigo Barras</option>
+                  <option value="2">Codigo Articulo</option>
+                  <option value="3">Codigo Interno</option>
+                  <option value="4">Descripcion</option>
+                </select>
+              </div>
               <div class="col-md-8 mb-2">
-                <label class="form-label">Productos</label>
-                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%">
+                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%" data-placeholder="Buscar un articulo">
                   @foreach ($listArticulos as $item)
                     <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
                       data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}" data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">

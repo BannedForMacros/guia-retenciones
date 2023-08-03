@@ -91,12 +91,16 @@ class GuiaSalidaController extends Controller
     public function listarArticulos(Request $request)
     {
         $valor = trim($request->get('term'));
-        $tipoconsulta = 4;
+        $tipoconsulta = $request->post('tipo');
         $codestacion = $request->get('codestacion');
         $codalmacen = $request->get('codalmacen');
         $codlistaprecio = $request->get('codlistaprecio');
-        // dd($request->all());
-        if (strlen($valor) > 2) {
+        $maximo = 0;
+        if ($tipoconsulta == 4) {
+            $maximo = 3;
+        }
+        
+        if (strlen($valor) > $maximo) {
             $listArticulos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerArticulo', 
                 ['valor' => $valor, 'tipoconsulta' => $tipoconsulta, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio]
             )->object()->articulos;
