@@ -1,7 +1,11 @@
 $(document).ready(function () {
+  var id_continua = $('#id_continua').val();
   setTimeout(() => {
-    callListarUbigeos('partida_departamento');
-    callListarUbigeos('llegada_departamento');
+    if (id_continua == '') {
+      callListarUbigeos('partida_departamento');
+      callListarUbigeos('llegada_departamento');
+      
+    }
   }, 300);
 });
 

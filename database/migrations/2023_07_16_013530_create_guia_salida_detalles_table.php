@@ -17,8 +17,11 @@ class CreateGuiaSalidaDetallesTable extends Migration
             $table->id();
             $table->integer('guia_salida_id');
             $table->string('codarticulo');
+            $table->string('codigo_barra')->nullable();
             $table->string('descripcion');
-            $table->decimal('precio');
+            $table->decimal('precio')->comment('precio para mostrar en factura');
+            $table->decimal('precio_publico')->nullable();
+            $table->decimal('precio_sin_igv')->nullable();
             $table->integer('cantidad');
             $table->decimal('importe');
             $table->decimal('porcentaje_descuento');

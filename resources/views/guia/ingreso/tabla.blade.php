@@ -10,17 +10,32 @@
   </thead>
   <tbody>
     @foreach ($list as $item)
-    <tr>
-      <td class="align-middle">Generada</td>
-      <td class="align-middle">{{ $item->serie }}-{{$item->numero}}</td>
-      <td class="align-middle">{{ $item->proveedor_nombre }}</td>
-      <td class="align-middle">{{ $carbon::parse($item->fecha_emision)->format('d/m/Y') }}</td>
-      <td class="align-middle">{{ $item->total_venta }}</td>
-      <td class="align-middle">
-        <a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a>
-      </td>
-    </tr>
-        
+      <tr>
+        <td class="align-middle">{{ $item->estado_nombre }}</td>
+        <td class="align-middle">{{ $item->serie }}-{{ $item->numero }}</td>
+        <td class="align-middle">{{ $item->proveedor_nombre }}</td>
+        <td class="align-middle">{{ $carbon::parse($item->fecha_emision)->format('d/m/Y') }}</td>
+        <td class="align-middle">{{ $item->total_venta }}</td>
+        <td class="align-middle">
+          {{-- <a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a> --}}
+
+          <!-- Example split danger button -->
+          <div class="btn-group btn-group-sm">
+            <a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a>
+            <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+              {{-- <li><hr class="dropdown-divider"></li> --}}
+              @if ($item->guia_estado_id == 4)
+              <li><a class="dropdown-item" href="{{ route('guiaingreso.continuar', ['guia'=>$item->id]) }}"><i class="fa fa-edit"></i> Continuar</a></li>
+                  
+              @endif
+            </ul>
+          </div>
+        </td>
+      </tr>
     @endforeach
   </tbody>
 </table>

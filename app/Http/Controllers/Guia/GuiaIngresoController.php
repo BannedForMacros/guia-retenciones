@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Guia;
 
 use App\Http\Controllers\Controller;
+use App\Models\GuiaEstado;
 use App\Models\GuiaIngreso;
 use App\Models\GuiaIngresoDetalle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
@@ -32,7 +34,10 @@ class GuiaIngresoController extends Controller
         $fechaInicio = $request->post('fecha_inicio');
         $fechaFin = $request->post('fecha_fin');
 
-        $list = DB::table('guia_ingresos')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->get();
+        $list = DB::table('guia_ingresos')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->where('activo', 1)->get();
+        foreach ($list as $key => $value) {
+            $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
+        }
         // dd($list);
         return view('guia.ingreso.tabla', compact('list'));
     }
@@ -52,9 +57,45 @@ class GuiaIngresoController extends Controller
         $listArticulos = [];
         // dd($listArticulos);
         $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+
+        // foreach ($listVendedores as $key => $value) {
+        //     $listVendedores[$key]->selected = '';
+        // }
         // $getVendedor = $listVendedores[0];
         return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'listVendedores'));
     }
+
+    public function continuar(GuiaIngreso $guia)
+    {
+        // dd($guia);
+        $listProveedores = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', ['valor' => $guia->proveedor_id, 'tipo' => 1])->object()->proveedores;
+        // dd($listProveedores);
+
+        $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
+        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;;
+        $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        // dd($listAlmacenes);
+        // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
+        $listArticulos = [];
+        // dd($listArticulos);
+        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+        // dd($listVendedores);
+
+        foreach ($listVendedores as $key => $value) {
+            $selected = "";
+            if ($value->codTrabajador == $guia->vendedor_id) {
+                $selected = "selected";
+            }
+
+            $listVendedores[$key]->selected = $selected;
+        }
+
+        $detalle = GuiaIngresoDetalle::where('guia_ingreso_id', $guia->id)->get();
+        // dd($detalle);
+        
+        return view('guia.ingreso.create', compact('guia','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'listVendedores', 'detalle'));
+    }
+
 
     public function agregarItem(Request $request)
     {
@@ -107,9 +148,11 @@ class GuiaIngresoController extends Controller
                 <tr
                     data-producto_id = '{$producto_id}'
                     data-precio_unitario = {$precio_publico}
+                    data-precio_publico = {$precio_publico}
                     data-precio_sin_igv='{$precio_sin_igv}'
                     data-descripcion = '{$descripcion}'
                     data-codigo = '{$cod_plu}'
+                    data-codigo_barra = '{$codigo_barra}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -186,8 +229,6 @@ class GuiaIngresoController extends Controller
         return response()->json(['items' => $items]);
     }
 
-
-
     /**
      * Store a newly created resource in storage.
      *
@@ -196,9 +237,15 @@ class GuiaIngresoController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->post());
         $datos = $request->post();
+        $id_continuar = $request->post('id_continuar');
+        // dd($request->post());
+        if ($id_continuar == '') {
+            unset($datos['id']);
+        }
+        // dd($datos);
         $detalle = json_decode($request->post('detalle'));
+        $guardar_avance = ($datos['guardar_avance'] == 'true') ? true : false ;
         unset($datos['detalle']);
         // dd($datos);
         $procede = true;
@@ -209,6 +256,11 @@ class GuiaIngresoController extends Controller
         $datos['hora_emision'] = date('H:i');
         $url_redirect = route('guiaingreso.index');
         $datos['serie']= 1;
+        $guia_estado_id = 1;
+        if ($guardar_avance == true) {
+            $guia_estado_id = 4;
+        }
+        $datos['guia_estado_id'] = $guia_estado_id;
         
         // $getLast = GuiaSalida::orderBy('id', 'desc')->first();
         $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
@@ -283,21 +335,48 @@ class GuiaIngresoController extends Controller
         ];
         // dd($body);
 
-        try {
-            $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
-            // dd($storeRemoto);
-            if ($storeRemoto->exito == false) {
+        if ($id_continuar != null) {
+            // dd('desactivamos el activo anterior');
+            $guia_avance = GuiaIngreso::find($id_continuar);
+            $guia_avance->activo = 0;
+            try {
+                $guia_avance->save();
+            } catch (Exception $e) {
+                //throw $th;
                 $procede = false;
-                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+                $msj = "No se pudo limpiar la guia guardada";
+                $msj_tipo = "error";
+                $log = "{$e}";
             }
-        } catch (Exception $e) {
-            //throw $th;
-            dd($e);
-            $procede = false;
-            $msj = "No se pudo registrar remotamente";
-            $msj_tipo = "error";
-            $log = "{$e}";
         }
+
+        if ($procede == true) {
+            
+            if ($guardar_avance == false) {
+                try {
+                    $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
+                    // dd($storeRemoto);
+                    if ($storeRemoto->exito == false) {
+                        $procede = false;
+                        $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+                    }
+                } catch (Exception $e) {
+                    //throw $th;
+                    dd($e);
+                    $procede = false;
+                    $msj = "No se pudo registrar remotamente";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+                }
+                
+            }
+        }
+
+        if ($guardar_avance == true) {
+            $datos['numero'] = null;
+            $datos['serie'] = null;
+        }
+
         
 
 
@@ -331,6 +410,9 @@ class GuiaIngresoController extends Controller
                     $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
                     $guiaDetalle->descripcion = $item->descripcion;
+                    $guiaDetalle->precio_publico = $item->precio_publico;
+                    $guiaDetalle->precio_sin_igv = $item->precio_sin_igv;
+                    $guiaDetalle->codigo_barra = $item->codigo_barra;
 
                     try {
                         $guiaDetalle->save();

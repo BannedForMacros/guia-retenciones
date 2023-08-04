@@ -15,8 +15,8 @@ class CreateGuiaIngresosTable extends Migration
     {
         Schema::create('guia_ingresos', function (Blueprint $table) {
             $table->id();
-            $table->string('serie');
-            $table->integer('numero');
+            $table->string('serie')->nullable();
+            $table->integer('numero')->nullable();
             $table->date('fecha_emision');
             $table->string('hora_emision');
             $table->integer('relacion')->nullable()->comment('1->pedido;2->recepcion');
@@ -43,6 +43,8 @@ class CreateGuiaIngresosTable extends Migration
             $table->decimal('monto_igv');
             $table->decimal('total_venta');
             $table->string('comentario')->nullable();
+            $table->integer('guia_estado_id');
+
             $table->tinyInteger('activo')->default(1);
             $table->timestamps();
         });

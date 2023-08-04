@@ -11,6 +11,8 @@ $(document).ready(function () {
     callListarProveedores();
     callBrevete();
     callSetMotivoTraslado();
+
+    calcularTotales();
   }, 300);
 });
 
@@ -172,6 +174,12 @@ $(document).on('change', '#cliente_id', function(event) {
   var direccion = data.direccion;
   $('#direccion').val(direccion);
   // console.log({option});
+  console.log({data});
+  
+  $('#cliente_razon_social').val(data.razon_social);
+  $('#cliente_nro_documento').val(data.nro_documento);
+  $('#cliente_documento_tipo_nombre').val(data.documento_tipo_nombre);
+  $('#cliente_direccion').val(direccion);
 });
 
 $(document).on('change', '#transportista_id', function(event) {
@@ -179,6 +187,8 @@ $(document).on('change', '#transportista_id', function(event) {
 
   var transportista_direccion = data.transportista_direccion;
   $('#transportista_direccion').val(transportista_direccion);
+  $('#transportista_ruc').val(data.ruc);
+  $('#transportista_nombre').val(data.nombre);
   // console.log({option});
 });
 
@@ -313,8 +323,6 @@ var calcularTotales = () => {
   var base_calculo = $('#base_calculo').val();
 
   var items = $('#tbody tr').map(function(i, row) {
-
-
       return {
         'producto_id' : $(this).data('producto_id'),
         'cantidad' :  $(this).find('input[name=cantidad]').val(),
@@ -368,6 +376,14 @@ $(document).on('submit', '#form_store', function(event) {
   event.preventDefault();
   /* Act on the event */
 
+  callStore();
+
+});
+
+
+var callStore = (guardar_avance = false) => {
+
+
   var formElement = document.getElementById("form_store");
   var formData = new FormData(formElement);
 
@@ -382,6 +398,9 @@ $(document).on('submit', '#form_store', function(event) {
       'monto_descuento' : $(this).find('input[name=monto_descuento]').val(),
       'descripcion' : $(this).data('descripcion'),
       'codigo' : $(this).data('codigo'),
+      'precio_publico' : $(this).data('precio_publico'),
+      'precio_sin_igv' : $(this).data('precio_sin_igv'),
+      'codigo_barra' : $(this).data('codigo_barra'),
 
     };
   }).get();
@@ -399,25 +418,26 @@ $(document).on('submit', '#form_store', function(event) {
   var comentario = $('#comentario').val();
   var data_proveedor = $('#proveedor_id').select2('data')[0];
   
-  // console.log({data_proveedor});
-  if (data_proveedor != null) {
-    // console.log('indefinido proveedor');
-    var proveedor_nombre = data_proveedor.proveedor_nombre;
-    formData.append('proveedor_nombre', proveedor_nombre);
-    var proveedor_ruc = data_proveedor.proveedor_ruc;
-    formData.append('proveedor_ruc', proveedor_ruc);
-  }
+  
+  // if (data_proveedor != null) {
+
+  //   var proveedor_nombre = data_proveedor.proveedor_nombre;
+  //   formData.append('proveedor_nombre', proveedor_nombre);
+  //   var proveedor_ruc = data_proveedor.proveedor_ruc;
+  //   formData.append('proveedor_ruc', proveedor_ruc);
+  // }
+
   var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
   formData.append('vendedor_nombre', vendedor_nombre);
 
   var data_cliente = $('#cliente_id').select2('data')[0];
-  if (data_cliente != null) {
+  // if (data_cliente != null) {
     
-    formData.append('cliente_razon_social', data_cliente.razon_social);
-    formData.append('cliente_nro_documento', data_cliente.nro_documento);
-    formData.append('cliente_documento_tipo_nombre', data_cliente.documento_tipo_nombre);
-    formData.append('cliente_direccion', data_cliente.direccion);
-  }
+  //   formData.append('cliente_razon_social', data_cliente.razon_social);
+  //   formData.append('cliente_nro_documento', data_cliente.nro_documento);
+  //   formData.append('cliente_documento_tipo_nombre', data_cliente.documento_tipo_nombre);
+  //   formData.append('cliente_direccion', data_cliente.direccion);
+  // }
 
   var divisa_nombre = $('#divisa_id').find(':selected').data('nombre');
   formData.append('divisa_nombre', divisa_nombre);
@@ -432,12 +452,12 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('almacen_nombre', almacen_nombre);
   
   var data_transportista = $('#transportista_id').select2('data')[0];
-  if (data_transportista != null) {
-    formData.append('transportista_ruc', data_transportista.ruc);
-    formData.append('transportista_nombre', data_transportista.nombre);
-    formData.append('transportista_direccion', data_transportista.transportista_direccion);
+  // if (data_transportista != null) {
+  //   formData.append('transportista_ruc', data_transportista.ruc);
+  //   formData.append('transportista_nombre', data_transportista.nombre);
+  //   formData.append('transportista_direccion', data_transportista.transportista_direccion);
     
-  }
+  // }
   
   var chofer_dni = $('#chofer_id').find(':selected').data('dni_chofer');
   formData.append('chofer_dni', chofer_dni);
@@ -462,6 +482,18 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('monto_igv', monto_igv);
   formData.append('total_venta', total_venta);
   formData.append('comentario', comentario);
+  formData.append('guardar_avance', guardar_avance);
+
+
+  formData.append('ubigeo_partida_departamento', $('#partida_departamento').val());
+  formData.append('ubigeo_partida_provincia', $('#partida_provincia').val());
+  formData.append('ubigeo_partida_distrito', $('#partida_distrito').val());
+
+
+  formData.append('ubigeo_llegada_departamento', $('#llegada_departamento').val());
+  formData.append('ubigeo_llegada_provincia', $('#llegada_provincia').val());
+  formData.append('ubigeo_llegada_distrito', $('#llegada_distrito').val());
+
 
   var peso_bruto_total = $('#peso_bruto_total').val();
   formData.append('peso_bruto_total', peso_bruto_total);
@@ -473,26 +505,26 @@ $(document).on('submit', '#form_store', function(event) {
   }
 
   formData.append('descripcion_motivo_traslado', descripcion_motivo_traslado);
-  // new Response(formData).text().then(console.log)
+  new Response(formData).text().then(console.log)
   // store(formData);
 
   var procede_store = true;
   var msj_store = '';
   console.log(formData.get('proveedor_nombre'));
-  if (formData.get('proveedor_nombre') == null) {
+  if (formData.get('proveedor_nombre') == '') {
     procede_store = false;
     msj_store = 'Debe indicar un proveedor';
   }
   
   if (procede_store == true) {
-    if (formData.get('cliente_razon_social') == null) {
+    if (formData.get('cliente_razon_social') == '') {
       procede_store = false;
       msj_store = 'Debe indicar un cliente';
     }
   }
 
   if (procede_store == true) {
-    if (formData.get('transportista_nombre') == null) {
+    if (formData.get('transportista_nombre') == '') {
       procede_store = false;
       msj_store = 'Debe indicar un transportista';
     }
@@ -514,8 +546,15 @@ $(document).on('submit', '#form_store', function(event) {
   }
 
   if (procede_store == true) {
+
+    var msj_guardado = `<b>¿Desea registrar esta Guia de Salida?</b>`;
+    if (guardar_avance == true) {
+      msj_guardado = `<b>¿Desea guardar el avance de esta Guia de Salida?</b>`;
+      
+    }
+
     Swal.fire({
-      html: `<b>¿Desea registrar esta Guia de Salida?</b>`,
+      html: msj_guardado,
       icon: "warning",
       showCancelButton: !0,
       confirmButtonText: "Si, Registrar",
@@ -537,8 +576,15 @@ $(document).on('submit', '#form_store', function(event) {
 
   }
 
+}
 
+$(document).on('change', '#proveedor_id', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  var data_proveedor = $('#proveedor_id').select2('data')[0];
 
+  $('#proveedor_nombre').val(data_proveedor.proveedor_nombre);
+  $('#proveedor_ruc').val(data_proveedor.proveedor_ruc);
 });
 
 var modalStore = function(formData){
@@ -669,4 +715,10 @@ $(document).on('change', '#base_calculo', function(event) {
 
   calcularTotales();
 
+});
+
+$(document).on('click', '#btnGuardarAvance', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callStore(true);
 });

@@ -15,8 +15,8 @@ class CreateGuiaSalidasTable extends Migration
     {
         Schema::create('guia_salidas', function (Blueprint $table) {
             $table->id();
-            $table->string('serie');
-            $table->integer('numero');
+            $table->string('serie')->nullable();
+            $table->integer('numero')->nullable();
             $table->date('fecha_emision');
             $table->string('hora_emision');
             $table->string('pedido_serie')->nullable();
@@ -60,9 +60,18 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('modalidad_traslado')->nullable();
 
             // ubigeos
+
+            $table->string('ubigeo_partida_departamento')->nullable();
+            $table->string('ubigeo_partida_provincia')->nullable();
+            $table->string('ubigeo_partida_distrito')->nullable();
             $table->string('ubigeo_partida')->nullable();
             $table->text('direccion_partida')->nullable();
+
+
             $table->string('ubigeo_llegada')->nullable();
+            $table->string('ubigeo_llegada_departamento')->nullable();
+            $table->string('ubigeo_llegada_provincia')->nullable();
+            $table->string('ubigeo_llegada_distrito')->nullable();
             $table->text('direccion_llegada')->nullable();
 
             $table->decimal('monto_descuento');
@@ -72,6 +81,8 @@ class CreateGuiaSalidasTable extends Migration
             $table->decimal('peso_bruto_total');
             $table->integer('base_calculo');
             
+            $table->integer('guia_estado_id');
+
             $table->string('comentario')->nullable();
             
             $table->tinyInteger('envio_sunat');

@@ -1,4 +1,5 @@
 $(document).ready(function () {
+
   setTimeout(() => {
     $('.select_2').select2({
       theme: "bootstrap-5",
@@ -8,6 +9,8 @@ $(document).ready(function () {
 
     callListarProveedores();
     callListarArticulos();
+
+    calcularTotales();
 
   }, 300);
 });
@@ -171,6 +174,19 @@ var callListarProveedores = () => {
 
 }
 
+$(document).on('change', '#proveedor_id', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  var data = $('#proveedor_id').select2('data')[0];
+  console.log({data});
+
+  $('#proveedor_nombre').val(data.proveedor_nombre);
+  $('#proveedor_ruc').val(data.proveedor_ruc);
+});
+
+
+
+
 $(document).on('click', '.delete_item', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -281,6 +297,12 @@ $(document).on('submit', '#form_store', function(event) {
   event.preventDefault();
   /* Act on the event */
 
+  callStore();
+
+});
+
+var callStore = (guardar_avance = false) => {
+
   var formElement = document.getElementById("form_store");
   var formData = new FormData(formElement);
 
@@ -295,7 +317,10 @@ $(document).on('submit', '#form_store', function(event) {
       'monto_descuento' : $(this).find('input[name=monto_descuento]').val(),
       'descripcion' : $(this).data('descripcion'),
       'codigo' : $(this).data('codigo'),
-
+      'precio_publico' : $(this).data('precio_publico'),
+      'precio_sin_igv' : $(this).data('precio_sin_igv'),
+      'codigo_barra' : $(this).data('codigo_barra'),
+      
     };
   }).get();
 
@@ -311,14 +336,17 @@ $(document).on('submit', '#form_store', function(event) {
   var total_venta = $('#total_venta').val();
   var comentario = $('#comentario').val();
   var data_proveedor = $('#proveedor_id').select2('data')[0];
-  
+  var data_proveedor_2 = $('#proveedor_id').data();
+
+  console.log({data_proveedor, data_proveedor_2});
   if (data_proveedor != null) {
     
     var proveedor_nombre = data_proveedor.proveedor_nombre;
-    formData.append('proveedor_nombre', proveedor_nombre);
+    formData.append('proveedor_nombre', $('#proveedor_nombre').val());
     var proveedor_ruc = data_proveedor.proveedor_ruc;
-    formData.append('proveedor_ruc', proveedor_ruc);
+    formData.append('proveedor_ruc', $('#proveedor_ruc').val());
   }
+  new Response(formData).text().then(console.log)
 
   var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
   formData.append('vendedor_nombre', vendedor_nombre);
@@ -343,6 +371,7 @@ $(document).on('submit', '#form_store', function(event) {
   formData.append('monto_igv', monto_igv);
   formData.append('total_venta', total_venta);
   formData.append('comentario', comentario);
+  formData.append('guardar_avance', guardar_avance);
 
   // new Response(formData).text().then(console.log)
   // store(formData);
@@ -363,8 +392,13 @@ $(document).on('submit', '#form_store', function(event) {
   }
 
   if (procede_store == true) {
+    var msj_guardado = `<b>¿Desea registrar esta Guia de Ingreso?</b>`;
+    if (guardar_avance == true) {
+      msj_guardado = `<b>¿Desea guardar el avance de esta Guia de Ingreso?</b>`;
+      
+    }
     Swal.fire({
-      html: `<b>¿Desea registrar esta Guia de Ingreso?</b>`,
+      html: msj_guardado,
       icon: "warning",
       showCancelButton: !0,
       confirmButtonText: "Si, Registrar",
@@ -385,7 +419,10 @@ $(document).on('submit', '#form_store', function(event) {
     })
   }
   
-});
+
+
+}
+
 
 var store = function(formData){
   var options = {
@@ -447,4 +484,10 @@ $(document).on('change', '#base_calculo', function(event) {
 
   calcularTotales();
 
+});
+
+$(document).on('click', '#btnGuardarAvance', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callStore(true);
 });

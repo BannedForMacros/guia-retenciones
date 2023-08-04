@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guia;
 
 use App\Http\Controllers\Controller;
 use App\Models\FacturacionEnvio;
+use App\Models\GuiaEstado;
 use App\Models\GuiaSalida;
 use App\Models\GuiaSalidaDetalle;
 use App\Models\Parametro;
@@ -39,13 +40,14 @@ class GuiaSalidaController extends Controller
         $fechaInicio = $request->post('fecha_inicio');
         $fechaFin = $request->post('fecha_fin');
 
-        $list = DB::table('guia_salidas')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->get();
+        $list = DB::table('guia_salidas')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->where('activo',1)->get();
         // dd($list);
         foreach ($list as $key => $value) {
             if ($value->envio_id != null) {
                 $getEnvio = FacturacionEnvio::find($value->envio_id);
                 // dd($getEnvio->pdf417);
             }
+            $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
         }
         return view('guia.salida.tabla', compact('list'));
     }
@@ -57,7 +59,8 @@ class GuiaSalidaController extends Controller
      */
     public function create()
     {
-        $listProveedores = Http::post(route('simulacion.ObtenerProveedores'), [])->object();
+        $listProveedores = [];
+        // dd(count($listProveedores));
         // $listFormasPago = Http::post(route('simulacion.ObtenerFormasPago'), [])->object();
         $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
         // $listTipoOperacion = Http::post(route('simulacion.ObtenerOperaciones'), [])->object();
@@ -85,7 +88,135 @@ class GuiaSalidaController extends Controller
         $listUbigeos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
         // dd($listUbigeos);
 
-        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeos'));
+        $listUbigeosDepartamentoPartida = $listUbigeos;
+        $listUbigeosProvinciaPartida = [];
+        $listUbigeosDistritoPartida = [];
+
+        $listUbigeosDepartamentoLlegada = $listUbigeos;
+        $listUbigeosProvinciaLlegada = [];
+        $listUbigeosDistritoLlegada = [];
+
+
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada'));
+    }
+
+    public function continuar(GuiaSalida $guia)
+    {
+        $listProveedores = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', ['valor' => $guia->proveedor_id, 'tipo' => 1])->object()->proveedores;
+
+        $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
+
+        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
+
+        $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
+        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+
+        $listArticulos = array();
+
+        $listClientes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerCliente', ['valor' => $guia->cliente_id, 'tipo' => 1])->object()->cliente;
+        // dd($listClientes);
+
+        foreach ($listClientes as $key => $item) {
+            $tipo_documento = $item->tipoDocumentoIdentidad;
+            $nro_documento = $item->dni;
+            if ($tipo_documento == '') {
+                $nro_documento = trim($item->rucCliente);
+            }
+            $listClientes[$key]->texto_cliente = "[{$nro_documento}] {$item->razonSocial}";
+        }
+
+
+        $listVehiculos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerVehiculo', ['valor' => '', 'tipo' => 4])->object()->vehiculos;
+        $listChoferes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerChoferes', ['nombrechofer' => ''])->object()->choferes;
+
+        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        
+        foreach ($listVendedores as $key => $value) {
+            $selected = "";
+            if ($value->codTrabajador == $guia->vendedor_id) {
+                $selected = "selected";
+            }
+
+            $listVendedores[$key]->selected = $selected;
+        }
+
+        
+        $listTransportistas = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTransportista', ['valor' => $guia->transportista_ruc, 'tipo' => 3])->object()->transportistas;
+        foreach ($listTransportistas as $key => $value) {
+            $listTransportistas[$key]->texto_transportista = "[{$value->rucTransportista}] {$value->nombreTransportista}";
+        }
+        // dd($listTransportistas);
+        
+        // dd($guia);
+        
+        // ubigeos de partida
+        $listUbigeosDepartamentoPartida = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        
+        foreach ($listUbigeosDepartamentoPartida as $key => $value) {
+            $selected = '';
+            if (trim($value->codUbigeo) == $guia->ubigeo_partida_departamento) {
+                $selected = "selected";
+            }
+            $listUbigeosDepartamentoPartida[$key]->selected = $selected; 
+        }
+        // dd($guia->ubigeo_partida_provincia);
+        $listUbigeosProvinciaPartida = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_partida_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
+        // dd($listUbigeosProvinciaPartida);
+        foreach ($listUbigeosProvinciaPartida as $key => $value) {
+            $selected = "";
+            if (trim($value->codUbigeo) == $guia->ubigeo_partida_provincia) {
+                $selected = "selected";
+            }
+            $listUbigeosProvinciaPartida[$key]->selected = $selected;
+        }
+        $listUbigeosDistritoPartida = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_partida_provincia, 'tipoConsulta' => 3 ])->object()->ubigeos;
+        // dd($listUbigeosDistritoPartida);
+        foreach ($listUbigeosDistritoPartida as $key => $value) {
+            $selected = "";
+            if (trim($value->codUbigeo) == $guia->ubigeo_partida_distrito) {
+                $selected = "selected";
+            }
+            $listUbigeosDistritoPartida[$key]->selected = $selected;
+        }
+
+        // dd($listUbigeosDepartamentoPartida);
+        // ubigeos de legada
+        $listUbigeosDepartamentoLlegada = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        
+        foreach ($listUbigeosDepartamentoLlegada as $key => $value) {
+            $selected = '';
+            if (trim($value->codUbigeo) == $guia->ubigeo_llegada_departamento) {
+                $selected = "selected";
+            }
+            $listUbigeosDepartamentoLlegada[$key]->selected = $selected; 
+        }
+
+
+        $listUbigeosProvinciaLlegada = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_llegada_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
+        // dd($listUbigeosProvinciaLlegada);
+        foreach ($listUbigeosProvinciaLlegada as $key => $value) {
+            $selected = "";
+            if (trim($value->codUbigeo) == $guia->ubigeo_llegada_provincia) {
+                $selected = "selected";
+            }
+            $listUbigeosProvinciaLlegada[$key]->selected = $selected;
+        }
+
+        $listUbigeosDistritoLlegada = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_llegada_provincia, 'tipoConsulta' => 3 ])->object()->ubigeos;
+        // dd($listUbigeosDistritoLlegada);
+        foreach ($listUbigeosDistritoLlegada as $key => $value) {
+            $selected = "";
+            if (trim($value->codUbigeo) == $guia->ubigeo_llegada_distrito) {
+                $selected = "selected";
+            }
+            $listUbigeosDistritoLlegada[$key]->selected = $selected;
+        }
+
+
+        $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
+
+        return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada'));
     }
 
     public function listarArticulos(Request $request)
@@ -141,6 +272,7 @@ class GuiaSalidaController extends Controller
 
         return response()->json(['items' => $items]);
     }
+
     public function listarClientes(Request $request)
     {
         $valor = trim($request->get('term'));
@@ -267,14 +399,15 @@ class GuiaSalidaController extends Controller
             }
             
 
-
             $tr = "
                 <tr
                     data-producto_id = '{$producto_id}'
                     data-precio_unitario = {$precio_publico}
+                    data-precio_publico = {$precio_publico}
                     data-precio_sin_igv='{$precio_sin_igv}'
                     data-descripcion = '{$descripcion}'
                     data-codigo = '{$cod_plu}'
+                    data-codigo_barra = '{$codigo_barra}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -312,7 +445,11 @@ class GuiaSalidaController extends Controller
     {
         // dd($request->post());
         $datos = $request->post();
+        $id_continuar = $request->post('id_continua');
+
         $detalle = json_decode($request->post('detalle'));
+        $guardar_avance = ($datos['guardar_avance'] == 'true') ? true : false ;
+        // dd($guardar_avance);
         if ($datos['tipo_operacion_id'] == 12) {
             $datos['codalmacen'] = '';
         }else{
@@ -331,6 +468,11 @@ class GuiaSalidaController extends Controller
         $datos['fecha_emision'] = date('Y-m-d');
         $datos['hora_emision'] = date('H:i:s');
         $url_redirect = route('guiasalida.index');
+        $guia_estado_id = 1;
+        if ($guardar_avance == true) {
+            $guia_estado_id = 4;
+        }
+        $datos['guia_estado_id'] = $guia_estado_id;
         
         $getLast = GuiaSalida::orderBy('id', 'desc')->first();
         $numero = 1;
@@ -353,7 +495,7 @@ class GuiaSalidaController extends Controller
         
         $anio_actual = date('Y');
         
-        $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
+        
         
         foreach ($detalle as $item) {
             $body_detalle[] = array(
@@ -428,22 +570,55 @@ class GuiaSalidaController extends Controller
 
         // dd(json_encode($body));
         // dd($body);
+        // dd($guardar_avance);
 
-        try {
-            $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
-            // dd($storeRemoto);
-            if ($storeRemoto->exito == false) {
+        if ($id_continuar != null) {
+            // dd('desactivamos el activo anterior');
+            $guia_avance = GuiaSalida::find($id_continuar);
+            $guia_avance->activo = 0;
+            try {
+                $guia_avance->save();
+            } catch (Exception $e) {
+                //throw $th;
                 $procede = false;
-                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+                $msj = "No se pudo limpiar la guia guardada";
+                $msj_tipo = "error";
+                $log = "{$e}";
             }
-        } catch (Exception $e) {
-            //throw $th;
-            dd($e);
-            $procede = false;
-            $msj = "No se pudo registrar remotamente";
-            $msj_tipo = "error";
-            $log = "{$e}";
         }
+
+
+        if ($procede == true) {
+            if ($guardar_avance == false) {
+                
+                try {
+                    $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
+                    // dd($storeRemoto);
+                    if ($storeRemoto->exito == false) {
+                        $procede = false;
+                        $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+                    }
+                } catch (Exception $e) {
+                    //throw $th;
+                    dd($e);
+                    $procede = false;
+                    $msj = "No se pudo registrar remotamente";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+                }
+                
+            }
+            $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
+            
+        }
+
+        if ($guardar_avance == true) {
+            // dd('holap');
+            $datos['numero'] = null;
+            $datos['serie'] = null;
+            $msj = "<b>Avance de Guia de Salida registrada </b>";
+        }
+        // dd($datos);
         
         if ($procede == true) {
             
@@ -474,6 +649,9 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
                     $guiaDetalle->descripcion = $item->descripcion;
+                    $guiaDetalle->precio_publico = $item->precio_publico;
+                    $guiaDetalle->precio_sin_igv = $item->precio_sin_igv;
+                    $guiaDetalle->codigo_barra = $item->codigo_barra;
 
                     try {
                         $guiaDetalle->save();
