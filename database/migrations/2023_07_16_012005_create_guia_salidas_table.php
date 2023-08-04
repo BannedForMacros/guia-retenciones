@@ -70,7 +70,7 @@ class CreateGuiaSalidasTable extends Migration
             $table->decimal('monto_igv');
             $table->decimal('total_venta');
             $table->decimal('peso_bruto_total');
-
+            $table->integer('base_calculo');
             
             $table->string('comentario')->nullable();
             

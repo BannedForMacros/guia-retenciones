@@ -121,7 +121,11 @@ class GuiaSalidaController extends Controller
         $valor = trim($request->get('term'));
         $tipo = $request->get('tipo');//busqueda por razon social
         // dd($request->all());
-        if (strlen($valor) > 2) {
+        $maximo = 0;
+        if ($tipo == 3) {
+            $maximo = 2;
+        }
+        if (strlen($valor) > $maximo) {
             $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', 
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->proveedores;
@@ -226,6 +230,7 @@ class GuiaSalidaController extends Controller
         $precio_sin_igv = $request->post('precio_sin_igv');
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
+        $base_clalculo = $request->post('base_calculo');
 
 
         $items = json_decode($request->post('items'));
@@ -254,11 +259,20 @@ class GuiaSalidaController extends Controller
             $inputCantidad = "<input class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$cantidad}'></input>";
             $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='0'></input>";
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
+            $span_precio = $precio_publico;
             $importe = $cantidad * $precio_publico;
+            if ($base_clalculo == 1) {
+                $span_precio = $precio_sin_igv;
+                $importe = $cantidad * $precio_sin_igv;
+            }
+            
+
+
             $tr = "
                 <tr
                     data-producto_id = '{$producto_id}'
                     data-precio_unitario = {$precio_publico}
+                    data-precio_sin_igv='{$precio_sin_igv}'
                     data-descripcion = '{$descripcion}'
                     data-codigo = '{$cod_plu}'
                 >
@@ -266,7 +280,7 @@ class GuiaSalidaController extends Controller
                     <td class='align-middle'>{$producto_id}</td>
                     <td class='align-middle'>{$cod_plu}</td>
                     <td class='align-middle'>{$descripcion}</td>
-                    <td class='align-middle'><span name='span_precio'>{$precio_publico}</span></td>
+                    <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
                     <td class='align-middle'>{$inputCantidad}</td>
                     <td class='align-middle'>{$unidad}</td>
                     <td class='align-middle'><span name='span_importe'>{$importe}</span></td>

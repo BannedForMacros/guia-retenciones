@@ -27,7 +27,7 @@ var callListarArticulos = () => {
         var codlistaprecio = $('#codlistaprecio').val();
         var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
         var tipo = $('#tipo_busqueda_articulo').val();
-        
+
         var query = {
           term: params.term,
           _token: _token,
@@ -69,6 +69,8 @@ $(document).on('click', '#btnAdd', function(event) {
   var descripcion = data.descripcion;
   var precio_publico = data.precio_publico;
   var precio_sin_igv = data.precio_sin_igv;
+  
+  var base_calculo = $('#base_calculo').val();
 
   console.log({producto_id});
   var items = $('#tbody tr').map(function(i, row) {
@@ -91,6 +93,7 @@ $(document).on('click', '#btnAdd', function(event) {
   formData.append('precio_publico', precio_publico);
   formData.append('precio_sin_igv', precio_sin_igv);
   formData.append('cantidad', cantidad);
+  formData.append('base_calculo', base_calculo);
 
 
   formData.append('items', JSON.stringify(items));
@@ -101,7 +104,7 @@ $(document).on('click', '#btnAdd', function(event) {
 var agregarItem = function(formData){
   var options = {
     type: 'POST',
-    url: route('guiasalida.agregarItem'),
+    url: route('guiaingreso.agregarItem'),
     data:formData,
     processData: false,
     contentType: false,
@@ -184,7 +187,8 @@ $(document).on('keyup', '.input_cantidad_tr', function(event) {
 
   var cantidad = $(this).val();
   var precio = $(this).parent().parent().find('span[name=span_precio]').text();
-  var importe = parseInt(cantidad) * parseFloat(precio);
+  // var importe = parseInt(cantidad) * parseFloat(precio);
+  var importe = round((parseInt(cantidad) * parseFloat(precio)),2);
   $(this).parent().parent().find('span[name=span_importe]').html(importe)
   
   setTimeout(() => {
@@ -220,15 +224,21 @@ $(document).on('keyup', '.input_porcentaje_descuento_tr', function(event) {
 
 var calcularTotales = () => {
 
-  var items = $('#tbody tr').map(function(i, row) {
-    return {
-      'producto_id' : $(this).data('producto_id'),
-      'cantidad' :  $(this).find('input[name=cantidad]').val(),
-      'importe' :  $(this).find('span[name=span_importe]').text(),
-      'porcentaje_descuento' :  $(this).find('input[name=porcentaje_descuento]').val(),
-      'monto_descuento' :  $(this).find('input[name=monto_descuento]').val(),
+  var base_calculo = $('#base_calculo').val();
 
-    };
+  var items = $('#tbody tr').map(function(i, row) {
+    var bonificacion = $(this).find('input[name=bonificacion]').prop('checked');
+    // console.log({bonificacion});
+    if (bonificacion == false) {
+      return {
+        'producto_id' : $(this).data('producto_id'),
+        'cantidad' :  $(this).find('input[name=cantidad]').val(),
+        'importe' :  $(this).find('span[name=span_importe]').text(),
+        'porcentaje_descuento' :  $(this).find('input[name=porcentaje_descuento]').val(),
+        'monto_descuento' :  $(this).find('input[name=monto_descuento]').val(),
+  
+      };
+    }
   }).get();
 
   var total_items = items.length;
@@ -248,12 +258,18 @@ var calcularTotales = () => {
     }
   });
 
-  importe_sin_igv = round((total_venta / 1.18),2);
-  monto_igv = round((importe_sin_igv * 0.18),2);
+  total_venta = round(total_venta,2)
+  importe_sin_igv = total_venta;
+
+  if (base_calculo == 2) {
+    importe_sin_igv = round((total_venta / 1.18),2);
+    monto_igv = round((importe_sin_igv * 0.18),2);
+  }
+
 
   $('#total_items').val(total_items)
   $('#total_cantidad').val(total_cantidad)
-  $('#total_venta').val(round(total_venta,2))
+  $('#total_venta').val(total_venta)
   $('#importe_sin_igv').val(importe_sin_igv)
   $('#monto_igv').val(monto_igv)
   $('#monto_descuento').val(round(monto_descuento,2))
@@ -318,6 +334,9 @@ $(document).on('submit', '#form_store', function(event) {
 
   var almacen_nombre = $('#codalmacen').find(':selected').data('nombre');
   formData.append('almacen_nombre', almacen_nombre);
+  
+  var base_calculo = $('#base_calculo').val();
+  formData.append('base_calculo', base_calculo);
   
   formData.append('monto_descuento', monto_descuento);
   formData.append('importe_sin_igv', importe_sin_igv);
@@ -391,3 +410,41 @@ var store = function(formData){
   };
   $.ajax(options);
 };
+
+$(document).on('change', '.bonificacion', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  calcularTotales();
+
+});
+
+$(document).on('change', '#base_calculo', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  var base_calculo = $(this).val();
+
+  console.log({base_calculo});
+
+  $('#tbody tr').map(function(i, row) {
+    // console.log($(this).data());
+    var cantidad = $(this).find('input[name=cantidad]').val();
+
+    var precio_unitario = $(this).data('precio_unitario');
+    if (base_calculo == 1) {
+      var precio_unitario = $(this).data('precio_sin_igv');
+    }
+
+    
+    $(this).find('span[name=span_precio]').html(precio_unitario);
+    
+    var importe = round((parseFloat(precio_unitario) * cantidad),2);
+    
+    $(this).find('span[name=span_importe]').html(importe);
+
+  })
+
+  calcularTotales();
+
+});

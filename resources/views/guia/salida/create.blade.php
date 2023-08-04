@@ -96,6 +96,7 @@
                               <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
                                 <option value="3">Razon Social</option>
                                 <option value="2">RUC</option>
+                                <option value="1">Codigo</option>
                               </select>
                             </div>
                             <div class="col-md-9">
@@ -405,18 +406,18 @@
               </div>
               <div class="col-md-3">
                 <label class="form-label">Base Calculo</label>
-                <select class="form-select" name="base_caluclo" id="base_calculo">
+                <select class="form-select" name="base_calculo" id="base_calculo">
                   <option value="2">Con IGV</option>
-                  {{-- <option value="1">Sin IGV</option> --}}
+                  <option value="1">Sin IGV</option>
                 </select>
               </div>
             </div>
-            <div class="row">
+            <div class="row mt-2">
               <div class="col-md-8">
                 <label class="form-label">Comentario</label>
                 <textarea class="form-control" name="comentario" id="comentario" rows="2"></textarea>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-4 ">
                 <label class="form-label">Peso total (Kg)</label>
                 <input type="number" class="form-control" name="peso_bruto_total" id="peso_bruto_total">
               </div>

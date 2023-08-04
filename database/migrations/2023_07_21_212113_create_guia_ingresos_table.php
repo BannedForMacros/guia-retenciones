@@ -36,7 +36,7 @@ class CreateGuiaIngresosTable extends Migration
             $table->string('codalmacen');
             $table->string('almacen_nombre')->nullable();
             $table->text('condiciones')->nullable();
-
+            $table->integer('base_calculo');
 
             $table->decimal('monto_descuento');
             $table->decimal('importe_sin_igv');

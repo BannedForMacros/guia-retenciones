@@ -81,6 +81,7 @@
                       <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
                         <option value="3">Razon Social</option>
                         <option value="2">RUC</option>
+                        <option value="1">Codigo</option>
                       </select>
                     </div>
                     <div class="col-md-9">
@@ -178,6 +179,7 @@
                     <th class="text-center">Uni</th>
                     <th class="text-center">Importe</th>
                     <th class="text-center" style="width: 4rem">Descto</th>
+                    <th class="text-center">Bonificacion</th>
                     <th class="text-center">Accion</th>
                   </thead>
                   <tbody id="tbody">
@@ -249,9 +251,9 @@
                   </div> --}}
                   <div class="col-md-3">
                     <label class="form-label">Base Calculo</label>
-                    <select class="form-select" name="base_caluclo" id="base_calculo">
-                      {{-- <option value="1">Sin IGV</option> --}}
+                    <select class="form-select" name="base_calculo" id="base_calculo">
                       <option value="2">Con IGV</option>
+                      <option value="1">Sin IGV</option>
                     </select>
                   </div>
                 </div>
@@ -264,7 +266,7 @@
         <div class="row">
           <div class="col-md-12">
             <br>
-            <a type="button" href="#" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
+            <a type="button" href="{{ route('guiaingreso.index') }}" class="btn btn-danger float-start"><i class="fa fa-arrow-left"
                 aria-hidden="true"></i>
               Cancelar</a>
             <button type="submit" form="form_store" class="btn btn-primary float-end" ><i class="fa fa-save" aria-hidden="true"></i>

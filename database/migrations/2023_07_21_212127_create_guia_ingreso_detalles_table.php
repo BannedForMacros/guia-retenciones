@@ -23,6 +23,7 @@ class CreateGuiaIngresoDetallesTable extends Migration
             $table->decimal('importe');
             $table->decimal('porcentaje_descuento');
             $table->decimal('monto_descuento');
+            $table->tinyInteger('bonificacion')->default(0);
             $table->tinyInteger('activo')->default(1);
             $table->timestamps();
         });

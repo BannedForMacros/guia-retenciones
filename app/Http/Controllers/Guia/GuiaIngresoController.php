@@ -64,8 +64,9 @@ class GuiaIngresoController extends Controller
         $descripcion = $request->post('descripcion');
         $precio_publico = $request->post('precio_publico');
         $precio_sin_igv = $request->post('precio_sin_igv');
-        $cantidad = $request->post('cantidad');
-
+        // $cantidad = $request->post('cantidad');
+        $cantidad = 1;
+        $base_clalculo = $request->post('base_calculo');
 
         $items = json_decode($request->post('items'));
 
@@ -83,7 +84,6 @@ class GuiaIngresoController extends Controller
                         $msj = "<b>No puede repetir el producto</b>";
                         $msj_tipo = "error";
                     }
-                    
                 }
             }
         }
@@ -91,17 +91,39 @@ class GuiaIngresoController extends Controller
         if ($procede == true) {
 
             $unidad = "UNI";
+            $inputCantidad = "<input class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$cantidad}'></input>";
+            $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='0'></input>";
+            $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
+            $importe = $cantidad * $precio_publico;
+            $span_precio = $precio_publico;
+
+            if ($base_clalculo == 1) {
+                $span_precio = $precio_sin_igv;
+                $importe = $cantidad * $precio_sin_igv;
+            }
+
+
             $tr = "
                 <tr
                     data-producto_id = '{$producto_id}'
+                    data-precio_unitario = {$precio_publico}
+                    data-precio_sin_igv='{$precio_sin_igv}'
+                    data-descripcion = '{$descripcion}'
+                    data-codigo = '{$cod_plu}'
                 >
-                    <td>{$codigo_barra}</td>
-                    <td>{$producto_id}</td>
-                    <td>{$cod_plu}</td>
-                    <td>{$descripcion}</td>
-                    <td>{$cantidad}</td>
-                    <td>{$unidad}</td>
-                    <td>
+                    <td class='align-middle'>{$codigo_barra}</td>
+                    <td class='align-middle'>{$producto_id}</td>
+                    <td class='align-middle'>{$cod_plu}</td>
+                    <td class='align-middle'>{$descripcion}</td>
+                    <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
+                    <td class='align-middle'>{$inputCantidad}</td>
+                    <td class='align-middle'>{$unidad}</td>
+                    <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
+                    <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
+                    <td class='align-middle' style='text-align:center'>
+                        <input class='bonificacion' type='checkbox' name='bonificacion' >
+                    </td>
+                    <td class='align-middle text-center'>
                         <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
                     </td>
                 </tr>
@@ -116,7 +138,11 @@ class GuiaIngresoController extends Controller
         $valor = trim($request->get('term'));
         $tipo = $request->get('tipo');//busqueda por razon social
         // dd($request->all());
-        if (strlen($valor) > 2) {
+        $maximo = 0;
+        if ($tipo == 3) {
+            $maximo = 2;
+        }
+        if (strlen($valor) > $maximo) {
             $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', 
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->proveedores;
