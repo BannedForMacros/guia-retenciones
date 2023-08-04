@@ -228,7 +228,7 @@ class GuiaSalidaController extends Controller
         $codlistaprecio = $request->get('codlistaprecio');
         $maximo = 0;
         if ($tipoconsulta == 4) {
-            $maximo = 3;
+            $maximo = 2;
         }
         
         if (strlen($valor) > $maximo) {
