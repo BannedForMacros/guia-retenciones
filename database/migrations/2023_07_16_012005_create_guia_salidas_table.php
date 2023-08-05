@@ -23,14 +23,18 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('pedido_numero')->nullable();
             $table->integer('vendedor_id')->nullable();
             $table->string('vendedor_nombre')->nullable();
+
+            $table->tinyInteger('indicar_proveedor')->default(0);
             $table->integer('proveedor_id')->nullable();
             $table->string('proveedor_nombre')->nullable();
             $table->string('proveedor_ruc')->nullable();
-            $table->integer('cliente_id');
+
+            $table->integer('cliente_id')->nullable();
             $table->string('cliente_razon_social')->nullable();
             $table->string('cliente_nro_documento')->nullable();
             $table->string('cliente_documento_tipo_nombre')->nullable();
             $table->string('cliente_direccion')->nullable();
+
             $table->integer('divisa_id');
             $table->string('divisa_nombre')->nullable();
             $table->integer('forma_pago_id');

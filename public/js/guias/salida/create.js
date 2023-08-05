@@ -508,18 +508,25 @@ var callStore = (guardar_avance = false) => {
   new Response(formData).text().then(console.log)
   // store(formData);
 
+  var indicar_proveedor = $('#indicar_proveedor').prop('checked');
   var procede_store = true;
   var msj_store = '';
   console.log(formData.get('proveedor_nombre'));
-  if (formData.get('proveedor_nombre') == '') {
-    procede_store = false;
-    msj_store = 'Debe indicar un proveedor';
+  if (indicar_proveedor == true) {
+    if (formData.get('proveedor_nombre') == '') {
+      procede_store = false;
+      msj_store = 'Debe indicar un proveedor';
+    }
+    
   }
   
   if (procede_store == true) {
-    if (formData.get('cliente_razon_social') == '') {
-      procede_store = false;
-      msj_store = 'Debe indicar un cliente';
+    if (indicar_proveedor == false) {
+      if (formData.get('cliente_razon_social') == '') {
+        procede_store = false;
+        msj_store = 'Debe indicar un cliente';
+      }
+      
     }
   }
 
@@ -722,3 +729,19 @@ $(document).on('click', '#btnGuardarAvance', function(event) {
   /* Act on the event */
   callStore(true);
 });
+
+$(document).on('change', '#indicar_proveedor', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  var status = $(this).prop('checked');
+  if (status == true) {
+    $('#div_proveedor').show();
+    $('#div_cliente').hide();
+  } else {
+    $('#div_proveedor').hide();
+    $('#div_cliente').show();
+    
+  }
+});
+

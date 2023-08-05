@@ -181,8 +181,14 @@
     <table class="table_rounded" style="width: 100%">
       <tbody>
         <tr>
-          <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->cliente_razon_social }}</td>
-          <td><b>{{ $documento->cliente_documento_tipo_nombre }}:</b>{{ $documento->cliente_nro_documento }}</td>
+          @if ($documento->indicar_proveedor == 1)
+            <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->proveedor_nombre }}</td>
+            <td><b>RUC:</b>{{ $documento->proveedor_ruc }}</td>
+          @endif
+          @if ($documento->indicar_proveedor == 0)
+            <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->cliente_razon_social }}</td>
+            <td><b>{{ $documento->cliente_documento_tipo_nombre }}:</b>{{ $documento->cliente_nro_documento }}</td>
+          @endif
         </tr>
         <tr>
           <td style="width: 36rem"><b>Fecha Emision:</b>
@@ -195,7 +201,7 @@
         </tr> --}}
         <tr>
           <td style="width: 36rem"><b>Tipo Moneda:</b> {{ $guia->texto_moneda }}</td>
-          <td ><b>Tipo Operacion:</b> {{ $documento->tipo_operacion_nombre }}</td>
+          <td><b>Tipo Operacion:</b> {{ $documento->tipo_operacion_nombre }}</td>
         </tr>
         <tr></tr>
       </tbody>
@@ -217,7 +223,6 @@
             <td>{{ $item->descripcion }}</td>
             <td>{{ $item->importe }}</td>
           </tr>
-            
         @endforeach
 
       </tbody>
@@ -257,7 +262,7 @@
           <td style="width: 14rem">
 
           </td>
-          <td style="width: 16rem" >
+          <td style="width: 16rem">
             <table style="border-spacing: 0;width: 100%; font-size: 10px">
               <tbody style="text-align: right">
                 <tr>
@@ -292,7 +297,7 @@
 
     {{-- tabla de consulta y qr --}}
 
-    <table style="width: 100%; font-size: 10px; margin-top: 10px; display: none" >
+    <table style="width: 100%; font-size: 10px; margin-top: 10px; display: none">
       <tbody>
         <tr>
           <td style="width: 50rem;">

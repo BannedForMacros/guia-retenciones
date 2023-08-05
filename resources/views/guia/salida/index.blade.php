@@ -23,13 +23,21 @@
             @csrf
             <div class="col-md-3">
               <label class="form-label">Fecha Inicio</label>
-              <input class="form-control" type="date" name="fecha_inicio" id="fecha_inicio" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
+              <input class="form-control fecha" data-tipo='inicio' type="date" name="fecha_inicio" id="fecha_inicio" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
             </div>
             <div class="col-md-3">
               <label class="form-label">Fecha Fin</label>
-              <input class="form-control" type="date" name="fecha_fin" id="fecha_fin" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}">
+              <input class="form-control fecha" data-tipo='fin' type="date" name="fecha_fin" id="fecha_fin" value="{{ date('Y-m-d') }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-1">
+              <label class="form-label">Serie</label>
+              <input type="text" class="form-control" name="serie" placeholder="Nro Serie">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Numero</label>
+              <input type="text" class="form-control" name="numero" placeholder="Nro guia">
+            </div>
+            <div class="col-md-2">
               <button class="btn btn-success mt-3"><i class="fa fa-search"></i> Buscar</button>
             </div>
 

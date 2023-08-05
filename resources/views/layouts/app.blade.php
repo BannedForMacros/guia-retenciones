@@ -123,6 +123,10 @@
   <script src="{{ asset('assets/DataTables/DataTables-1.13.1/js/dataTables.bootstrap5.min.js') }}"></script>
   <script src="{{ asset('assets/DataTables/Responsive-2.4.0/js/dataTables.responsive.min.js') }}"></script>
   <script src="{{ asset('assets/DataTables/Responsive-2.4.0/js/responsive.bootstrap5.min.js') }}"></script>
+  
+  <script src="{{ asset('assets/momentjs/momentjs.js') }}"></script>
+  <script src="{{ asset('assets/momentjs/moment-with-locales.js') }}"></script>
+  
   <script src="{{ asset('assets/js/data_table_es.js') }}"></script>
 
   <script src="{{ asset('js/round.js') }}"></script>

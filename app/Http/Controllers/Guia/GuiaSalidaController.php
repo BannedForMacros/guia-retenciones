@@ -39,9 +39,20 @@ class GuiaSalidaController extends Controller
     {
         $fechaInicio = $request->post('fecha_inicio');
         $fechaFin = $request->post('fecha_fin');
+        $serie = $request->post('serie');
+        $numero = $request->post('numero');
 
-        $list = DB::table('guia_salidas')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->where('activo',1)->get();
-        // dd($list);
+        $consulta = DB::table('guia_salidas')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->where('activo',1);
+
+        if ($serie != '') {
+            $consulta = $consulta->where('serie', $serie);
+        }
+        if ($numero != '') {
+            $consulta = $consulta->where('numero', $numero);
+        }
+
+        $list = $consulta->get();
+        
         foreach ($list as $key => $value) {
             if ($value->envio_id != null) {
                 $getEnvio = FacturacionEnvio::find($value->envio_id);
@@ -64,7 +75,8 @@ class GuiaSalidaController extends Controller
         // $listFormasPago = Http::post(route('simulacion.ObtenerFormasPago'), [])->object();
         $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
         // $listTipoOperacion = Http::post(route('simulacion.ObtenerOperaciones'), [])->object();
-        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
+        // $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
+        $listTipoOperacion = [];
         // dd($listTipoOperacion);
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
@@ -88,6 +100,7 @@ class GuiaSalidaController extends Controller
         $listUbigeos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
         // dd($listUbigeos);
 
+        // $listUbigeosDepartamentoPartida = $listUbigeos;
         $listUbigeosDepartamentoPartida = $listUbigeos;
         $listUbigeosProvinciaPartida = [];
         $listUbigeosDistritoPartida = [];
@@ -95,6 +108,7 @@ class GuiaSalidaController extends Controller
         $listUbigeosDepartamentoLlegada = $listUbigeos;
         $listUbigeosProvinciaLlegada = [];
         $listUbigeosDistritoLlegada = [];
+        
 
 
         return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada'));
@@ -449,6 +463,7 @@ class GuiaSalidaController extends Controller
 
         $detalle = json_decode($request->post('detalle'));
         $guardar_avance = ($datos['guardar_avance'] == 'true') ? true : false ;
+        $datos['indicar_proveedor'] = ($datos['indicar_proveedor'] ?? '' == 'on') ? true : false ;
         // dd($guardar_avance);
         if ($datos['tipo_operacion_id'] == 12) {
             $datos['codalmacen'] = '';
@@ -535,7 +550,7 @@ class GuiaSalidaController extends Controller
             "codAlmacen" => $datos['codalmacen'],
             "codAlmacenDestino" => $datos['codAlmacenDestino'],
             "codAlmacenOrigen" => $datos['codAlmacenOrigen'],
-            "codCliente" => $datos['cliente_id'],
+            "codCliente" => $datos['cliente_id'] ?? '',
             "codEstacion" => $datos['codestacion'],
             "codListaPrecio" => $datos['codlistaprecio'],
             "codProveedor" => $datos['proveedor_id'],

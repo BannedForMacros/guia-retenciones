@@ -35,3 +35,28 @@ var listar = function(formData){
   $.ajax(options);
 };
 
+$(document).on('change', '.fecha', function(event) {
+  var tipo = $(this).data('tipo');
+
+  var fecha_inicio = $('#fecha_inicio').val();
+  
+  var fecha_fin = $('#fecha_fin').val();
+
+  if (tipo == 'inicio') {
+    
+    if (fecha_inicio > fecha_fin) {
+      // igualar = true;
+      $('#fecha_fin').val(fecha_inicio)
+    }
+  }
+  if (tipo == 'fin') {
+    
+    if (fecha_inicio > fecha_fin) {
+      // igualar = true;
+      $('#fecha_inicio').val(fecha_fin)
+    }
+  }
+
+  // console.log({tipo, fecha_inicio, fecha_fin});
+
+});

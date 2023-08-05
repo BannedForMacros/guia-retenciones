@@ -33,8 +33,21 @@ class GuiaIngresoController extends Controller
     {
         $fechaInicio = $request->post('fecha_inicio');
         $fechaFin = $request->post('fecha_fin');
+        $serie = $request->post('serie');
+        $numero = $request->post('numero');
 
-        $list = DB::table('guia_ingresos')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->where('activo', 1)->get();
+        $consulta = DB::table('guia_ingresos')->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])->where('activo', 1);
+        
+        if ($serie != '') {
+            $consulta = $consulta->where('serie', $serie);
+        }
+        if ($numero != '') {
+            $consulta = $consulta->where('numero', $numero);
+        }
+        
+        $list = $consulta->get();
+
+
         foreach ($list as $key => $value) {
             $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
         }
@@ -50,7 +63,7 @@ class GuiaIngresoController extends Controller
     {
         $listProveedores = [];
         $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
-        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;;
+        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
         // dd($listAlmacenes);
         // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();

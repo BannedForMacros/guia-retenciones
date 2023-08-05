@@ -93,39 +93,14 @@
                     <div class="col-md-10 mb-2">
                       <div class="row">
                         <div class="col-md-12">
-                          <label class="form-label">Proveedor</label>
-                          <div class="row g-2">
-                            <div class="col-md-3">
-                              <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
-                                <option value="3">Razon Social</option>
-                                <option value="2">RUC</option>
-                                <option value="1">Codigo</option>
-                              </select>
-                            </div>
-                            <div class="col-md-9">
-                              <select class="form-select" id="proveedor_id" name="proveedor_id"
-                                data-placeholder="Buscar un proveedor" style="width: 100%">
-                                @if (count($listProveedores) > 0)
-                                  @foreach ($listProveedores as $item)
-                                    <option value="{{ $item->codProveedor }}">
-                                      {{ "[{$item->ruc}] {$item->nombreproveedor}" }}</option>
-                                  @endforeach
-                                @endif
-                              </select>
-                            </div>
-                            <input type="hidden" name="proveedor_nombre" id="proveedor_nombre"
-                              value="{{ $guia->proveedor_nombre ?? '' }}">
-                            <input type="hidden" name="proveedor_ruc" id="proveedor_ruc"
-                              value="{{ $guia->proveedor_ruc ?? '' }}">
+                          <h5>Otros Datos</h5>
+                          <div class="form-check">
+                            <input class="form-check-input" id="indicar_proveedor" name="indicar_proveedor" type="checkbox"  
+                              {{ (($guia->indicar_proveedor ?? 0) == 1) ? 'checked' : '' ; }}
+                            />
+                            <label class="form-check-label" for="indicar_proveedor">Proveedor</label>
                           </div>
-                        </div>
-                        <div class="col-md-12" hidden>
-                          <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" value="guia_valodada" id="guia_valorada">
-                            <label class="form-check-label" for="guia_valorada">
-                              Guia Valorada
-                            </label>
-                          </div>
+
                         </div>
                       </div>
                     </div>
@@ -137,8 +112,8 @@
           </div>
           <div class="row mt-2">
             <div class="col-md-6">
-              <h5>Datos el Cliente</h5>
-              <div class="row">
+              <div class="row" id="div_cliente" style="display: {{ (($guia->indicar_proveedor ?? 0) == 0) ? '' : 'none' ; }}">
+                <h5>Datos el Cliente</h5>
                 <div class="col-md-12">
                   <label class="form-label">Cliente</label>
                   <div class="row g-2">
@@ -176,6 +151,46 @@
                     placeholder="Direccion del cliente">
                 </div>
               </div>
+
+              <div class="row" id="div_proveedor" style="display:  style="display: {{ (($guia->indicar_proveedor ?? 0) == 1) ? '' : 'none' ; }}"">
+                <h5>Proveedor</h5>
+                <div class="col-md-12">
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
+                        <option value="3">Razon Social</option>
+                        <option value="2">RUC</option>
+                        <option value="1">Codigo</option>
+                      </select>
+                    </div>
+                    <div class="col-md-9">
+                      <select class="form-select" id="proveedor_id" name="proveedor_id"
+                        data-placeholder="Buscar un proveedor" style="width: 100%">
+                        @if (count($listProveedores) > 0)
+                          @foreach ($listProveedores as $item)
+                            <option value="{{ $item->codProveedor }}">
+                              {{ "[{$item->ruc}] {$item->nombreproveedor}" }}</option>
+                          @endforeach
+                        @endif
+                      </select>
+                    </div>
+                    <input type="hidden" name="proveedor_nombre" id="proveedor_nombre"
+                      value="{{ $guia->proveedor_nombre ?? '' }}">
+                    <input type="hidden" name="proveedor_ruc" id="proveedor_ruc"
+                      value="{{ $guia->proveedor_ruc ?? '' }}">
+                  </div>
+                </div>
+                <div class="col-md-12" hidden>
+                  <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" value="guia_valodada" id="guia_valorada">
+                    <label class="form-check-label" for="guia_valorada">
+                      Guia Valorada
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+
             </div>
             <div class="col-md-6">
               <div class="row">
