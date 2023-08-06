@@ -11,7 +11,8 @@ $(document).ready(function () {
     callListarProveedores();
     callBrevete();
     callSetMotivoTraslado();
-
+    callIndicarProveedor();
+    
     calcularTotales();
   }, 300);
 });
@@ -733,7 +734,11 @@ $(document).on('click', '#btnGuardarAvance', function(event) {
 $(document).on('change', '#indicar_proveedor', function(event) {
   event.preventDefault();
   /* Act on the event */
+  callIndicarProveedor();
+});
 
+var callIndicarProveedor = () => {
+  
   var status = $(this).prop('checked');
   if (status == true) {
     $('#div_proveedor').show();
@@ -743,5 +748,4 @@ $(document).on('change', '#indicar_proveedor', function(event) {
     $('#div_cliente').show();
     
   }
-});
-
+}

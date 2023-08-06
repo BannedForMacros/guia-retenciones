@@ -13,7 +13,7 @@
     <tr>
       <td class="align-middle">{{ $item->estado_nombre}}</td>
       <td class="align-middle">{{ $item->serie }}-{{$item->numero}}</td>
-      <td class="align-middle">{{ $item->proveedor_nombre }}</td>
+      <td class="align-middle">{{ $item->texto_razon_social }}</td>
       <td class="align-middle">{{ $carbon::parse($item->fecha_emision)->format('d/m/Y') }}</td>
       <td class="align-middle">{{ $item->total_venta }}</td>
       <td class="align-middle">

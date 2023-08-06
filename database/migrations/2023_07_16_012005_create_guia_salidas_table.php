@@ -17,8 +17,8 @@ class CreateGuiaSalidasTable extends Migration
             $table->id();
             $table->string('serie')->nullable();
             $table->integer('numero')->nullable();
-            $table->date('fecha_emision');
-            $table->string('hora_emision');
+            $table->date('fecha_emision')->nullable();
+            $table->string('hora_emision')->nullable();
             $table->string('pedido_serie')->nullable();
             $table->string('pedido_numero')->nullable();
             $table->integer('vendedor_id')->nullable();
@@ -35,19 +35,19 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('cliente_documento_tipo_nombre')->nullable();
             $table->string('cliente_direccion')->nullable();
 
-            $table->integer('divisa_id');
+            $table->integer('divisa_id')->nullable();
             $table->string('divisa_nombre')->nullable();
-            $table->integer('forma_pago_id');
+            $table->integer('forma_pago_id')->nullable();
             $table->string('forma_pago_nombre')->nullable();
-            $table->integer('codlistaprecio');
-            $table->integer('tipo_operacion_id');
+            $table->integer('codlistaprecio')->nullable();
+            $table->integer('tipo_operacion_id')->nullable();
             $table->string('tipo_operacion_nombre')->nullable();
-            $table->string('codalmacen');
+            $table->string('codalmacen')->nullable();
             $table->string('almacen_nombre')->nullable();
             $table->string('codestacion')->nullable();
 
             // datos transporte
-            $table->integer('transportista_id');
+            $table->integer('transportista_id')->nullable();
             $table->string('transportista_ruc')->nullable();
             $table->string('transportista_nombre')->nullable();
             $table->string('transportista_direccion')->nullable();
@@ -78,18 +78,18 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('ubigeo_llegada_distrito')->nullable();
             $table->text('direccion_llegada')->nullable();
 
-            $table->decimal('monto_descuento');
-            $table->decimal('importe_sin_igv');
-            $table->decimal('monto_igv');
-            $table->decimal('total_venta');
-            $table->decimal('peso_bruto_total');
-            $table->integer('base_calculo');
+            $table->decimal('monto_descuento')->nullable();
+            $table->decimal('importe_sin_igv')->nullable();
+            $table->decimal('monto_igv')->nullable();
+            $table->decimal('total_venta')->nullable();
+            $table->decimal('peso_bruto_total')->nullable();
+            $table->integer('base_calculo')->nullable();
             
-            $table->integer('guia_estado_id');
+            $table->integer('guia_estado_id')->nullable();
 
             $table->string('comentario')->nullable();
             
-            $table->tinyInteger('envio_sunat');
+            $table->tinyInteger('envio_sunat')->nullable();
             $table->integer('envio_id')->nullable();
             $table->integer('facturacion_estado')->nullable();
             $table->tinyInteger('activo')->default(1);

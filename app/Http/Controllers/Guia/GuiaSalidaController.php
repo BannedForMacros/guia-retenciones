@@ -59,6 +59,13 @@ class GuiaSalidaController extends Controller
                 // dd($getEnvio->pdf417);
             }
             $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
+
+            $texto_razon_social = $value->proveedor_nombre;
+
+            if ($value->indicar_proveedor == 0) {
+                $texto_razon_social = $value->cliente_razon_social;
+            }
+            $list[$key]->texto_razon_social = $texto_razon_social;
         }
         return view('guia.salida.tabla', compact('list'));
     }
@@ -543,7 +550,10 @@ class GuiaSalidaController extends Controller
         //         "unidadMedida" => 1
         //     ]
         // ]
-
+        $proveedor_id = '';
+        if ($datos['indicar_proveedor'] == true) {
+            $proveedor_id = $datos['proveedor_id'];
+        }
         $body = [
             "anioGuiaRemision" => $anio_actual,
             "breveteChofer" => $datos['brevete'],
@@ -553,7 +563,7 @@ class GuiaSalidaController extends Controller
             "codCliente" => $datos['cliente_id'] ?? '',
             "codEstacion" => $datos['codestacion'],
             "codListaPrecio" => $datos['codlistaprecio'],
-            "codProveedor" => $datos['proveedor_id'],
+            "codProveedor" => $proveedor_id,
             "codtrabajador" => $datos['vendedor_id'],
             "comentario" => $datos['comentario'],
             "descuento" => $datos['monto_descuento'],
