@@ -75,8 +75,8 @@ class GuiaSalidaController extends Controller
         // $listFormasPago = Http::post(route('simulacion.ObtenerFormasPago'), [])->object();
         $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
         // $listTipoOperacion = Http::post(route('simulacion.ObtenerOperaciones'), [])->object();
-        // $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
-        $listTipoOperacion = [];
+        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
+        // $listTipoOperacion = [];
         // dd($listTipoOperacion);
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
