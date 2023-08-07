@@ -3,7 +3,7 @@
   <thead>
     <th>Condicion</th>
     <th>Serie</th>
-    <th>Cliente</th>
+    <th>Proveedor</th>
     <th>Fecha Emision</th>
     <th>Importe</th>
     <th>Accion</th>

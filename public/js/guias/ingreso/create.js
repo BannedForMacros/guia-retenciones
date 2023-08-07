@@ -379,17 +379,24 @@ var callStore = (guardar_avance = false) => {
   var procede_store = true;
   var msj_store = '';
   console.log(formData.get('proveedor_nombre'));
-  if (formData.get('proveedor_nombre') == null) {
-    procede_store = false;
-    msj_store = 'Debe indicar un proveedor';
+
+  if (formData.get('guardar_avance') == 'false') {
+    
+    if (formData.get('proveedor_nombre') == null) {
+      procede_store = false;
+      msj_store = 'Debe indicar un proveedor';
+    }
+  
+    if (procede_store == true) {
+      if (items.length <= 0) {
+        procede_store = false;
+        msj_store = 'Debe indicar articulos en la guia';
+      }
+    }
+
   }
 
-  if (procede_store == true) {
-    if (items.length <= 0) {
-      procede_store = false;
-      msj_store = 'Debe indicar articulos en la guia';
-    }
-  }
+
 
   if (procede_store == true) {
     var msj_guardado = `<b>¿Desea registrar esta Guia de Ingreso?</b>`;

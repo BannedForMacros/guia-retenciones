@@ -17,9 +17,9 @@ class CreateGuiaIngresosTable extends Migration
             $table->id();
             $table->string('serie')->nullable();
             $table->integer('numero')->nullable();
-            $table->date('fecha_emision');
-            $table->string('hora_emision');
-            $table->integer('relacion')->nullable()->comment('1->pedido;2->recepcion');
+            $table->date('fecha_emision')->nullable();
+            $table->string('hora_emision')->nullable();
+            $table->integer('relacion_pedido')->nullable()->comment('1->pedido;2->recepcion');
             $table->string('pedido_serie')->nullable();
             $table->string('pedido_numero')->nullable();
             $table->integer('vendedor_id')->nullable();
@@ -27,23 +27,23 @@ class CreateGuiaIngresosTable extends Migration
             $table->integer('proveedor_id')->nullable();
             $table->string('proveedor_nombre')->nullable();
             $table->string('proveedor_ruc')->nullable();
-            $table->integer('divisa_id');
+            $table->integer('divisa_id')->nullable();
             $table->string('divisa_nombre')->nullable();
-            $table->integer('forma_pago_id');
+            $table->integer('forma_pago_id')->nullable();
             $table->string('forma_pago_nombre')->nullable();
-            $table->integer('tipo_operacion_id');
+            $table->integer('tipo_operacion_id')->nullable();
             $table->string('tipo_operacion_nombre')->nullable();
-            $table->string('codalmacen');
+            $table->string('codalmacen')->nullable();
             $table->string('almacen_nombre')->nullable();
             $table->text('condiciones')->nullable();
-            $table->integer('base_calculo');
+            $table->integer('base_calculo')->nullable();
 
-            $table->decimal('monto_descuento');
-            $table->decimal('importe_sin_igv');
-            $table->decimal('monto_igv');
-            $table->decimal('total_venta');
+            $table->decimal('monto_descuento')->nullable();
+            $table->decimal('importe_sin_igv')->nullable();
+            $table->decimal('monto_igv')->nullable();
+            $table->decimal('total_venta')->nullable();
             $table->string('comentario')->nullable();
-            $table->integer('guia_estado_id');
+            $table->integer('guia_estado_id')->nullable();
 
             $table->tinyInteger('activo')->default(1);
             $table->timestamps();

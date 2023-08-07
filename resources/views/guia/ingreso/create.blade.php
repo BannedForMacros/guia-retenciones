@@ -46,15 +46,15 @@
                     <div class="col-md-4">
                       <div class="form-check">
                         <input class="form-check-input" type="radio" name="relacion_pedido" id="pedido"
-                          value="1">
+                          value="1" {{ (($guia->relacion_pedido ?? '') == 1) ? 'checked' : '' ; }}>
                         <label class="form-check-label" for="pedido">
                           Pedido
                         </label>
                       </div>
                       <div class="form-check">
                         <input class="form-check-input" type="radio" name="relacion_pedido" id="recepcion"
-                          value="2" checked>
-                        <label class="form-check-label" for="recepcion">
+                          value="2" {{ (($guia->relacion_pedido ?? 2) == 2) ? 'checked' : '' ; }}>
+                        <label class="form-check-label" for="recepcion" >
                           Recepcion
                         </label>
                       </div>
@@ -63,10 +63,10 @@
                       {{-- <label class="form-label">Serie-Nro</label> --}}
                       <div class="row">
                         <div class="col-md-4">
-                          <input type="text" class="form-control" name="pedido_serie" placeholder="Serie">
+                          <input type="text" class="form-control" name="pedido_serie" placeholder="Serie" value="{{ $guia->pedido_serie ?? '' }}">
                         </div>
                         <div class="col-md-8">
-                          <input type="text" class="form-control" name="pedido_numero" placeholder="Numero">
+                          <input type="text" class="form-control" name="pedido_numero" placeholder="Numero" value="{{ $guia->pedido_numero ?? '' }}">
                         </div>
                       </div>
                     </div>
@@ -137,7 +137,7 @@
                   <select class="form-select" name="tipo_operacion_id" id="tipo_operacion_id">
                     @foreach ($listTipoOperacion as $item)
                       @if ($item->ingresoSalida == 'Ingreso')
-                        <option value="{{ $item->tipoOperacion }}" data-nombre="{{ $item->descripcion }}">
+                        <option value="{{ $item->tipoOperacion }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
                           {{ $item->descripcion }}</option>
                       @endif
                     @endforeach
@@ -148,7 +148,7 @@
                   <select class="form-select" name="codalmacen" id="codalmacen">
                     @foreach ($listAlmacenes as $item)
                       <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
-                        data-codestacion="{{ $item->codEstacion }}">{{ $item->descripcion }}</option>
+                        data-codestacion="{{ $item->codEstacion }}" {{ $item->selected ?? '' }}>{{ $item->descripcion }}</option>
                     @endforeach
                   </select>
                 </div>
