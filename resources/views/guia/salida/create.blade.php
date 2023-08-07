@@ -55,8 +55,8 @@
                       <div class="row">
                         <div class="col-md-3">
                           <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-                            <label class="form-check-label" for="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" value="1" id="pedido_interno" {{ (($guia->pedido_interno ?? '') == 1) ? 'checked' : '' ; }} name="pedido_interno">
+                            <label class="form-check-label" for="pedido_interno">
                               Interno
                             </label>
                           </div>
@@ -64,10 +64,10 @@
                         <div class="col-md-9">
                           <div class="row no-gutters">
                             <div class="col-md-5">
-                              <input type="text" class="form-control" placeholder="Serie" name="pedido_serie">
+                              <input type="text" class="form-control" placeholder="Serie" name="pedido_serie" value="{{ $guia->pedido_serie ?? '' }}">
                             </div>
                             <div class="col-md-7">
-                              <input type="text" class="form-control" placeholder="Numero" name="pedido_numero">
+                              <input type="text" class="form-control" placeholder="Numero" name="pedido_numero" value="{{ $guia->pedido_numero ?? '' }}">
                             </div>
 
                           </div>
@@ -250,7 +250,7 @@
                     <div class="mt-2" id="div_almacene_transferencia" style="display: none">
                       <div class="col-md-12">
                         <label class="form-label">Almacen Origen</label>
-                        <select class="form-select" name="codAlmacenOrigen" id="codAlmacenOrigen">
+                        <select class="form-select" name="cod_almacen_origen" id="cod_almacen_origen">
                           @foreach ($listAlmacenes as $item)
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">
                               {{ $item->descripcion }}</option>
@@ -259,7 +259,7 @@
                       </div>
                       <div class="col-md-12">
                         <label class="form-label">Almacen Destino</label>
-                        <select class="form-select" name="codAlmacenDestino" id="codAlmacenDestino">
+                        <select class="form-select" name="cod_almacen_destino" id="cod_almacen_destino">
                           @foreach ($listAlmacenes as $item)
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">
                               {{ $item->descripcion }}</option>
@@ -471,8 +471,8 @@
                   @endforeach
                 </select>
               </div>
-              <div class="col-md-2 mt-3">
-                <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i>
+              <div class="col-md-2">
+                <button class="btn btn-success btn-primary" id="btnAdd"><i class="fa fa-plus"></i>
                   Agregar</button>
               </div>
             </div>

@@ -526,6 +526,18 @@ class GuiaSalidaController extends Controller
         if ($datos['indicar_proveedor'] == true) {
             $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
         }
+        
+        if ($datos['tipo_operacion_id'] != 12) {//diferente a trasnsferencia
+            $datos['cod_almacen_origen'] = null;
+            $datos['almacen_origen_nombre'] = null;
+            $datos['cod_almacen_destino'] = null;
+            $datos['almacen_destino_nombre'] = null;
+        }
+
+        if ($datos['tipo_operacion_id'] == 12) {//transferencia
+            $datos['codalmacen'] = null;
+            $datos['almacen_nombre'] = null;
+        }
 
         // dd(json_encode($body));
         // dd($body);
@@ -568,8 +580,8 @@ class GuiaSalidaController extends Controller
                     "anioGuiaRemision" => $anio_actual,
                     "breveteChofer" => $datos['brevete'],
                     "codAlmacen" => $datos['codalmacen'],
-                    "codAlmacenDestino" => $datos['codAlmacenDestino'],
-                    "codAlmacenOrigen" => $datos['codAlmacenOrigen'],
+                    "codAlmacenOrigen" => $datos['cod_almacen_origen'],
+                    "codAlmacenDestino" => $datos['cod_almacen_destino'],
                     "codCliente" => $datos['cliente_id'] ?? '',
                     "codEstacion" => $datos['codestacion'],
                     "codListaPrecio" => $datos['codlistaprecio'],

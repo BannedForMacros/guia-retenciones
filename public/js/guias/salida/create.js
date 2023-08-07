@@ -495,6 +495,11 @@ var callStore = (guardar_avance = false) => {
   formData.append('ubigeo_llegada_provincia', $('#llegada_provincia').val());
   formData.append('ubigeo_llegada_distrito', $('#llegada_distrito').val());
 
+  var almacen_origen_nombre = $('#cod_almacen_origen').find(':selected').data('nombre');
+  formData.append('almacen_origen_nombre', almacen_origen_nombre);
+  
+  var almacen_destino_nombre = $('#cod_almacen_destino').find(':selected').data('nombre');
+  formData.append('almacen_destino_nombre', almacen_destino_nombre);
 
   var peso_bruto_total = $('#peso_bruto_total').val();
   formData.append('peso_bruto_total', peso_bruto_total);
@@ -515,8 +520,15 @@ var callStore = (guardar_avance = false) => {
   var msj_store = '';
   console.log(formData.get('proveedor_nombre'));
 
-  if (formData.get('guardar_avance') == true) {
+  if (formData.get('guardar_avance') == 'false') {
     
+    if (formData.get('tipo_operacion_id') == 12) {
+      if (formData.get('cod_almacen_origen') == formData.get('cod_almacen_destino')) {
+        procede_store = false;
+        msj_store = 'Almacen origen y Destino no pueden ser iguales';
+      }
+    }
+
     if (indicar_proveedor == true) {
       if (formData.get('proveedor_nombre') == '') {
         procede_store = false;
@@ -559,8 +571,14 @@ var callStore = (guardar_avance = false) => {
 
   
   if (procede_store == true) {
-
+    
     var msj_guardado = `<b>¿Desea registrar esta Guia de Salida?</b>`;
+    if (formData.get('envio_sunat') == 0) {
+      msj_guardado = `${msj_guardado} <br><code>No se enviara a SUNAT</code>`;
+    }
+    if (formData.get('envio_sunat') == 1) {
+      msj_guardado = `${msj_guardado} <br><code>Se enviara a SUNAT</code>`;
+    }
     if (guardar_avance == true) {
       msj_guardado = `<b>¿Desea guardar el avance de esta Guia de Salida?</b>`;
       

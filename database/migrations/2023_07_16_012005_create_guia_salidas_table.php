@@ -19,6 +19,7 @@ class CreateGuiaSalidasTable extends Migration
             $table->integer('numero')->nullable();
             $table->date('fecha_emision')->nullable();
             $table->string('hora_emision')->nullable();
+            $table->tinyInteger('pedido_interno')->default(0)->nullable();
             $table->string('pedido_serie')->nullable();
             $table->string('pedido_numero')->nullable();
             $table->integer('vendedor_id')->nullable();
@@ -45,6 +46,10 @@ class CreateGuiaSalidasTable extends Migration
             $table->string('codalmacen')->nullable();
             $table->string('almacen_nombre')->nullable();
             $table->string('codestacion')->nullable();
+            $table->string('cod_almacen_origen')->nullable();
+            $table->string('almacen_origen_nombre')->nullable();
+            $table->string('cod_almacen_destino')->nullable();
+            $table->string('almacen_destino_nombre')->nullable();
 
             // datos transporte
             $table->integer('transportista_id')->nullable();
