@@ -87,6 +87,8 @@ class GuiaSalidaController extends Controller
         // dd($listTipoOperacion);
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        $listAlmacenOrigen = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        $listAlmacenDestino = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
         $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
         $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
         // $getVendedor = $listVendedores[0];
@@ -118,7 +120,7 @@ class GuiaSalidaController extends Controller
         
 
 
-        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada'));
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
     }
 
     public function continuar(GuiaSalida $guia)
@@ -133,7 +135,45 @@ class GuiaSalidaController extends Controller
 
         $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
 
+        if (count($listTipoOperacion) > 0 ) {
+            foreach ($listTipoOperacion as $key => $item) {
+                $selected = "";
+                if ($item->tipoOperacion == $guia->tipo_operacion_id) {
+                    $selected = "selected";
+                }
+
+                $listTipoOperacion[$key]->selected = $selected;
+            }
+        }
+        // dd($listTipoOperacion);
+
         $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        $listAlmacenOrigen = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        $listAlmacenDestino = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+
+        foreach ($listAlmacenes as $key => $value) {
+            $selected = "";
+            if ($value->codAlmacen == $guia->codalmacen) {
+                $selected = "selected";
+            }
+            $listAlmacenes[$key]->selected = $selected;
+        }
+        foreach ($listAlmacenOrigen as $key => $value) {
+            $selected = "";
+            if ($value->codAlmacen == $guia->cod_almacen_origen) {
+                $selected = "selected";
+            }
+            $listAlmacenOrigen[$key]->selected = $selected;
+        }
+        
+        foreach ($listAlmacenDestino as $key => $value) {
+            $selected = "";
+            if ($value->codAlmacen == $guia->cod_almacen_destino) {
+                $selected = "selected";
+            }
+            $listAlmacenDestino[$key]->selected = $selected;
+        }
+
         $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
         $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
 
@@ -241,7 +281,7 @@ class GuiaSalidaController extends Controller
 
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
 
-        return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada'));
+        return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
     }
 
     public function listarArticulos(Request $request)

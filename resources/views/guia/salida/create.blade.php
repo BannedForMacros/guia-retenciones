@@ -233,7 +233,11 @@
                             <option value="{{ $item->tipoOperacion }}"
                               data-codigo_motivo_traslado="{{ $item->motivotraslado }}"
                               data-nombre_motivo_traslado="{{ $item->descriMotivotraslado }}"
-                              data-nombre="{{ $item->descripcion }}">{{ $item->descripcion }}</option>
+                              data-nombre="{{ $item->descripcion }}"
+                              {{ $item->selected ?? '' }}
+                            >
+                              {{ $item->descripcion }}
+                            </option>
                           @endif
                         @endforeach
                       </select>
@@ -242,7 +246,7 @@
                       <label class="form-label">Almacen</label>
                       <select class="form-select" name="codalmacen" id="codalmacen">
                         @foreach ($listAlmacenes as $item)
-                          <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">
+                          <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
                             {{ $item->descripcion }}</option>
                         @endforeach
                       </select>
@@ -251,8 +255,8 @@
                       <div class="col-md-12">
                         <label class="form-label">Almacen Origen</label>
                         <select class="form-select" name="cod_almacen_origen" id="cod_almacen_origen">
-                          @foreach ($listAlmacenes as $item)
-                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">
+                          @foreach ($listAlmacenOrigen as $item)
+                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
                         </select>
@@ -260,8 +264,8 @@
                       <div class="col-md-12">
                         <label class="form-label">Almacen Destino</label>
                         <select class="form-select" name="cod_almacen_destino" id="cod_almacen_destino">
-                          @foreach ($listAlmacenes as $item)
-                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}">
+                          @foreach ($listAlmacenDestino as $item)
+                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
                         </select>
