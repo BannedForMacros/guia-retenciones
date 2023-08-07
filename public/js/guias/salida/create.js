@@ -511,48 +511,53 @@ var callStore = (guardar_avance = false) => {
 
   var indicar_proveedor = $('#indicar_proveedor').prop('checked');
   var procede_store = true;
+
   var msj_store = '';
   console.log(formData.get('proveedor_nombre'));
-  if (indicar_proveedor == true) {
-    if (formData.get('proveedor_nombre') == '') {
-      procede_store = false;
-      msj_store = 'Debe indicar un proveedor';
-    }
+
+  if (formData.get('guardar_avance') == true) {
     
-  }
-  
-  if (procede_store == true) {
-    if (indicar_proveedor == false) {
-      if (formData.get('cliente_razon_social') == '') {
+    if (indicar_proveedor == true) {
+      if (formData.get('proveedor_nombre') == '') {
         procede_store = false;
-        msj_store = 'Debe indicar un cliente';
+        msj_store = 'Debe indicar un proveedor';
       }
       
     }
-  }
-
-  if (procede_store == true) {
-    if (formData.get('transportista_nombre') == '') {
-      procede_store = false;
-      msj_store = 'Debe indicar un transportista';
+  
+    if (procede_store == true) {
+      if (indicar_proveedor == false) {
+        if (formData.get('cliente_razon_social') == '') {
+          procede_store = false;
+          msj_store = 'Debe indicar un cliente';
+        }
+        
+      }
+    }
+  
+    if (procede_store == true) {
+      if (formData.get('transportista_nombre') == '') {
+        procede_store = false;
+        msj_store = 'Debe indicar un transportista';
+      }
+    }
+  
+    if (procede_store == true) {
+      if (items.length <= 0) {
+        procede_store = false;
+        msj_store = 'Debe indicar articulos en la guia';
+      }
+    }
+  
+    if (procede_store == true) {
+      if (peso_bruto_total == '') {
+        procede_store = false;
+        msj_store = 'Debe indicar el Peso Total';
+      }
     }
   }
 
-
-  if (procede_store == true) {
-    if (items.length <= 0) {
-      procede_store = false;
-      msj_store = 'Debe indicar articulos en la guia';
-    }
-  }
-
-  if (procede_store == true) {
-    if (peso_bruto_total == '') {
-      procede_store = false;
-      msj_store = 'Debe indicar el Peso Total';
-    }
-  }
-
+  
   if (procede_store == true) {
 
     var msj_guardado = `<b>¿Desea registrar esta Guia de Salida?</b>`;
@@ -739,7 +744,7 @@ $(document).on('change', '#indicar_proveedor', function(event) {
 
 var callIndicarProveedor = () => {
   
-  var status = $(this).prop('checked');
+  var status = $('#indicar_proveedor').prop('checked');
   if (status == true) {
     $('#div_proveedor').show();
     $('#div_cliente').hide();

@@ -148,7 +148,7 @@
                 <div class="col-md-12">
                   <label class="form-label mt-1">Direccion</label>
                   <input type="text" class="form-control" name="direccion" id="direccion"
-                    placeholder="Direccion del cliente">
+                    placeholder="Direccion del cliente" value="{{ $guia->cliente_direccion ?? '' }}">
                 </div>
               </div>
 
@@ -387,7 +387,7 @@
                 <div class="col-md-12">
                   <label class="form-label">Direccion Partida</label>
                   <input type="text" class="form-control" name="direccion_partida"
-                    placeholder="Direccion de Partida">
+                    placeholder="Direccion de Partida" value="{{ $guia->direccion_partida ?? '' }}">
                 </div>
               </div>
             </div>
@@ -438,7 +438,7 @@
                 <div class="col-md-12">
                   <label class="form-label">Llegada</label>
                   <input type="text" class="form-control" name="direccion_llegada"
-                    placeholder="Direccion de llegada">
+                    placeholder="Direccion de llegada" value="{{ $guia->direccion_llegada ?? '' }}">
                 </div>
               </div>
             </div>
