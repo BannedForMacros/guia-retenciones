@@ -20,6 +20,8 @@ class ParametroSeeder extends Seeder
             2 => array('id' => '3', 'nombre' => 'razon_social_entidad', 'valor' => 'Franco Supermercado E.I.R.L.'),
             3 => array('id' => '4', 'nombre' => 'direccion_entiedad', 'valor' => 'jr. jose sagobal 1200 BR San Sebastian'),
             4 => array('id' => '5', 'nombre' => 'telefonos', 'valor' => '-'),
+            5 => array('id' => '6', 'nombre' => 'api_datos', 'valor' => 'http://161.132.192.240:88/ApiDMK/GREDMK'),
+            6 => array('id' => '7', 'nombre' => 'api_facturacion', 'valor' => 'http://161.132.192.240:8180/api/Guia21'),
         );
 
         foreach ($list as $item) {

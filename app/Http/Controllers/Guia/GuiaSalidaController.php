@@ -77,20 +77,23 @@ class GuiaSalidaController extends Controller
      */
     public function create()
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $listProveedores = [];
         // dd(count($listProveedores));
         // $listFormasPago = Http::post(route('simulacion.ObtenerFormasPago'), [])->object();
-        $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
+        // $listFormasPago = Http::get("http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago")->object()->formasdePago;
+        $listFormasPago = Http::get("{$api_datos}/ObtenerFormasPago")->object()->formasdePago;
         // $listTipoOperacion = Http::post(route('simulacion.ObtenerOperaciones'), [])->object();
-        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
+        $listTipoOperacion = Http::get("{$api_datos}/ObtenerOperacion")->object()->operaciones;
         // $listTipoOperacion = [];
         // dd($listTipoOperacion);
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
-        $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
-        $listAlmacenOrigen = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
-        $listAlmacenDestino = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
-        $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
-        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+        $listAlmacenes = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
+        $listAlmacenOrigen = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
+        $listAlmacenDestino = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
+        $listPrecios = Http::get("{$api_datos}/ObtenerSucursalPrecio")->object()->listasPrecio;
+        $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
         // $getVendedor = $listVendedores[0];
         // dd($getVendedor);
         // dd($getVendedor);
@@ -100,13 +103,13 @@ class GuiaSalidaController extends Controller
         // $listClientes = Http::post(route('simulacion.ObtenerClientes'), [])->object();
         $listClientes = [];
         // dd($listClientes);
-        $listVehiculos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerVehiculo', ['valor' => '', 'tipo' => 4])->object()->vehiculos;
-        $listChoferes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerChoferes', ['nombrechofer' => ''])->object()->choferes;
+        $listVehiculos = Http::post("{$api_datos}/ObtenerVehiculo", ['valor' => '', 'tipo' => 4])->object()->vehiculos;
+        $listChoferes = Http::post("{$api_datos}/ObtenerChoferes", ['nombrechofer' => ''])->object()->choferes;
         // dd($listChoferes);
 
-        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
         // dd($listSeries);
-        $listUbigeos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        $listUbigeos = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
         // dd($listUbigeos);
 
         // $listUbigeosDepartamentoPartida = $listUbigeos;
@@ -125,15 +128,17 @@ class GuiaSalidaController extends Controller
 
     public function continuar(GuiaSalida $guia)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $listProveedores = [];
         if ($guia->proveedor_id != null) {
-            $listProveedores = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', ['valor' => $guia->proveedor_id, 'tipo' => 1])->object()->proveedores;
+            $listProveedores = Http::post("{$api_datos}/ObtenerProveedores", ['valor' => $guia->proveedor_id, 'tipo' => 1])->object()->proveedores;
 
         }
 
-        $listFormasPago = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerFormasPago')->object()->formasdePago;
+        $listFormasPago = Http::get("{$api_datos}/ObtenerFormasPago")->object()->formasdePago;
 
-        $listTipoOperacion = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerOperacion')->object()->operaciones;
+        $listTipoOperacion = Http::get("{$api_datos}/ObtenerOperacion")->object()->operaciones;
 
         if (count($listTipoOperacion) > 0 ) {
             foreach ($listTipoOperacion as $key => $item) {
@@ -147,9 +152,9 @@ class GuiaSalidaController extends Controller
         }
         // dd($listTipoOperacion);
 
-        $listAlmacenes = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
-        $listAlmacenOrigen = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
-        $listAlmacenDestino = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerAlmacenes')->object()->almacenes;
+        $listAlmacenes = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
+        $listAlmacenOrigen = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
+        $listAlmacenDestino = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
 
         foreach ($listAlmacenes as $key => $value) {
             $selected = "";
@@ -174,12 +179,12 @@ class GuiaSalidaController extends Controller
             $listAlmacenDestino[$key]->selected = $selected;
         }
 
-        $listPrecios = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerSucursalPrecio')->object()->listasPrecio;
-        $listVendedores = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTrabajador?CodigoTrabajador=-1')->object()->trabajador;
+        $listPrecios = Http::get("{$api_datos}/ObtenerSucursalPrecio")->object()->listasPrecio;
+        $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
 
         $listArticulos = array();
 
-        $listClientes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerCliente', ['valor' => $guia->cliente_id, 'tipo' => 1])->object()->cliente;
+        $listClientes = Http::post("{$api_datos}/obtenerCliente", ['valor' => $guia->cliente_id, 'tipo' => 1])->object()->cliente;
         // dd($listClientes);
 
         foreach ($listClientes as $key => $item) {
@@ -192,10 +197,10 @@ class GuiaSalidaController extends Controller
         }
 
 
-        $listVehiculos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerVehiculo', ['valor' => '', 'tipo' => 4])->object()->vehiculos;
-        $listChoferes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerChoferes', ['nombrechofer' => ''])->object()->choferes;
+        $listVehiculos = Http::post("{$api_datos}/ObtenerVehiculo", ['valor' => '', 'tipo' => 4])->object()->vehiculos;
+        $listChoferes = Http::post("{$api_datos}/ObtenerChoferes", ['nombrechofer' => ''])->object()->choferes;
 
-        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
         
         foreach ($listVendedores as $key => $value) {
             $selected = "";
@@ -207,7 +212,7 @@ class GuiaSalidaController extends Controller
         }
 
         
-        $listTransportistas = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTransportista', ['valor' => $guia->transportista_ruc, 'tipo' => 3])->object()->transportistas;
+        $listTransportistas = Http::post("{$api_datos}/ObtenerTransportista", ['valor' => $guia->transportista_ruc, 'tipo' => 3])->object()->transportistas;
         foreach ($listTransportistas as $key => $value) {
             $listTransportistas[$key]->texto_transportista = "[{$value->rucTransportista}] {$value->nombreTransportista}";
         }
@@ -216,7 +221,7 @@ class GuiaSalidaController extends Controller
         // dd($guia);
         
         // ubigeos de partida
-        $listUbigeosDepartamentoPartida = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        $listUbigeosDepartamentoPartida = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
         
         foreach ($listUbigeosDepartamentoPartida as $key => $value) {
             $selected = '';
@@ -226,7 +231,7 @@ class GuiaSalidaController extends Controller
             $listUbigeosDepartamentoPartida[$key]->selected = $selected; 
         }
         // dd($guia->ubigeo_partida_provincia);
-        $listUbigeosProvinciaPartida = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_partida_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
+        $listUbigeosProvinciaPartida = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => $guia->ubigeo_partida_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
         // dd($listUbigeosProvinciaPartida);
         foreach ($listUbigeosProvinciaPartida as $key => $value) {
             $selected = "";
@@ -235,7 +240,7 @@ class GuiaSalidaController extends Controller
             }
             $listUbigeosProvinciaPartida[$key]->selected = $selected;
         }
-        $listUbigeosDistritoPartida = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_partida_provincia, 'tipoConsulta' => 3 ])->object()->ubigeos;
+        $listUbigeosDistritoPartida = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => $guia->ubigeo_partida_provincia, 'tipoConsulta' => 3 ])->object()->ubigeos;
         // dd($listUbigeosDistritoPartida);
         foreach ($listUbigeosDistritoPartida as $key => $value) {
             $selected = "";
@@ -247,7 +252,7 @@ class GuiaSalidaController extends Controller
 
         // dd($listUbigeosDepartamentoPartida);
         // ubigeos de legada
-        $listUbigeosDepartamentoLlegada = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        $listUbigeosDepartamentoLlegada = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
         
         foreach ($listUbigeosDepartamentoLlegada as $key => $value) {
             $selected = '';
@@ -258,7 +263,7 @@ class GuiaSalidaController extends Controller
         }
 
 
-        $listUbigeosProvinciaLlegada = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_llegada_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
+        $listUbigeosProvinciaLlegada = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => $guia->ubigeo_llegada_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
         // dd($listUbigeosProvinciaLlegada);
         foreach ($listUbigeosProvinciaLlegada as $key => $value) {
             $selected = "";
@@ -268,7 +273,7 @@ class GuiaSalidaController extends Controller
             $listUbigeosProvinciaLlegada[$key]->selected = $selected;
         }
 
-        $listUbigeosDistritoLlegada = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', ['codigoUbigeo' => $guia->ubigeo_llegada_provincia, 'tipoConsulta' => 3 ])->object()->ubigeos;
+        $listUbigeosDistritoLlegada = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => $guia->ubigeo_llegada_provincia, 'tipoConsulta' => 3 ])->object()->ubigeos;
         // dd($listUbigeosDistritoLlegada);
         foreach ($listUbigeosDistritoLlegada as $key => $value) {
             $selected = "";
@@ -286,6 +291,8 @@ class GuiaSalidaController extends Controller
 
     public function listarArticulos(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $valor = trim($request->get('term'));
         $tipoconsulta = $request->post('tipo');
         $codestacion = $request->get('codestacion');
@@ -297,7 +304,7 @@ class GuiaSalidaController extends Controller
         }
         
         if (strlen($valor) > $maximo) {
-            $listArticulos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerArticulo', 
+            $listArticulos = Http::post("{$api_datos}/ObtenerArticulo", 
                 ['valor' => $valor, 'tipoconsulta' => $tipoconsulta, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio]
             )->object()->articulos;
             
@@ -314,6 +321,8 @@ class GuiaSalidaController extends Controller
 
     public function listarProveedores(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+        
         $valor = trim($request->get('term'));
         $tipo = $request->get('tipo');//busqueda por razon social
         // dd($request->all());
@@ -321,8 +330,9 @@ class GuiaSalidaController extends Controller
         if ($tipo == 3) {
             $maximo = 2;
         }
+
         if (strlen($valor) > $maximo) {
-            $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerProveedores', 
+            $listItems = Http::post("{$api_datos}/ObtenerProveedores", 
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->proveedores;
             
@@ -340,11 +350,13 @@ class GuiaSalidaController extends Controller
 
     public function listarClientes(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $valor = trim($request->get('term'));
         $tipo = $request->get('tipo_busqueda_cliente');//busqueda por razon social
         // dd($request->all());
         if (strlen($valor) > 2) {
-            $listClientes = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerCliente', 
+            $listClientes = Http::post("{$api_datos}/obtenerCliente", 
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->cliente;
             
@@ -368,11 +380,13 @@ class GuiaSalidaController extends Controller
 
     public function listarTransportistas(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $valor = trim($request->get('term'));
         $tipo = 1;//busqueda por nombre
         // dd($request->all());
         if (strlen($valor) >= 0) {
-            $listItems = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtenerTransportista', 
+            $listItems = Http::post("{$api_datos}/ObtenerTransportista", 
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->transportistas;
             
@@ -389,12 +403,14 @@ class GuiaSalidaController extends Controller
 
     public function listarUbigeos(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $codigoUbigeo = $request->post('codUbigeo');
         $tipoConsulta = $request->post('tipo_busqueda');
         $tipo_ubigeo = $request->post('tipo_ubigeo');
         $next = false;
         $procede = true;
-        $listUbigeos = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/ObtieneUbigeos', 
+        $listUbigeos = Http::post("{$api_datos}/ObtieneUbigeos", 
             ['codigoUbigeo' => $codigoUbigeo, 'tipoConsulta' => $tipoConsulta ]
         )->object()->ubigeos;
 
@@ -419,6 +435,8 @@ class GuiaSalidaController extends Controller
 
     public function agregarItem(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         $producto_id = $request->post('producto_id');
         $codigo_barra = $request->post('codigo_barra');
         $cod_plu = $request->post('cod_plu');
@@ -508,6 +526,8 @@ class GuiaSalidaController extends Controller
 
     public function store(Request $request)
     {
+        $api_datos = Parametro::find(6)->valor;
+
         // dd($request->post());
         $datos = $request->post();
         $id_continuar = $request->post('id_continua');
@@ -544,7 +564,7 @@ class GuiaSalidaController extends Controller
         $numero = 1;
         $id = null;
 
-        $listSeries = Http::get('http://161.132.192.240:88/ApiDMK/GREDMK/obtenerSeriesNumerosGuia')->object()->serienumeros;
+        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
         // dd($listSeries);
         foreach ($listSeries as $item) {
             if ($item->numserie == $datos['serie']) {
@@ -656,7 +676,7 @@ class GuiaSalidaController extends Controller
                 ];
                 
                 try {
-                    $storeRemoto = Http::post('http://161.132.192.240:88/ApiDMK/GREDMK/InsertGuiaDMK', $body)->object();
+                    $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
                     // dd($storeRemoto);
                     if ($storeRemoto->exito == false) {
                         $procede = false;
@@ -744,6 +764,8 @@ class GuiaSalidaController extends Controller
 
     public function facturacionElectronica(Request $request)
     {
+        $api_facturacion = Parametro::find(7)->valor;
+
         $id = $request->post('id');
         $guia = GuiaSalida::find($id);
 
@@ -863,7 +885,8 @@ class GuiaSalidaController extends Controller
         $credencial = Parametro::find(1)->valor;
         try {
             $send = Http::withHeaders(['Credencial' => $credencial])
-                        ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
+                        ->put("{$api_facturacion}", $body)->object();
+                        // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
             // dd($send);
         } catch (Exception $e) {
             //throw $th;
