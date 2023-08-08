@@ -843,9 +843,9 @@ class GuiaSalidaController extends Controller
                 "NombreRazonSocial" => $guia->cliente_razon_social
             ],
             "Proveedor" => [
-                "NroDocumento" => $guia->proveedor_ruc,
+                "NroDocumento" =>  $guia->proveedor_ruc ?? '',
                 "TipoDocumento" => 6,
-                "NombreRazonSocial" => $guia->proveedor_nombre
+                "NombreRazonSocial" => $guia->proveedor_nombre ?? ''
             ],
             "DocumentoRelacionado" => [
                 // "descripcion" => "Factura",
@@ -958,17 +958,35 @@ class GuiaSalidaController extends Controller
         }
 
         if ($procede == true) {//obtener PDF y XML
-
-            // $bodyConsulta = array(
-            //     'token' => 'W6quxyHjJnAF268qPLXd16VdBVJvVAcQxpzP1Uek0j5/6IPkpk6yqyPB9sQRN+Ks',
-            //     'serie' => "T{$guia->serie}-{$guia->numero}",
-            //     'tipodocumentoconsulta' => '09',
-            //     'fecha' => $guia->fecha_emision,
-            //     'tipodocumentorespuesta' => 'PDF'
-            // );
-
-            // $getPdf = Http::post('http://testdbfact.dbperulab.com/webPSE/ConsultaDocumentoElectronico', []);
+            $api_facturacion_consultas = Parametro::find(8)->valor;
+            $serie_format = str_pad($guia->serie, 3, "0", STR_PAD_LEFT);
+            $bodyConsulta = array(
+                // 'token' => 'W6quxyHjJnAF268qPLXd16VdBVJvVAcQxpzP1Uek0j5/6IPkpk6yqyPB9sQRN+Ks',
+                'token' => $credencial,
+                'serie' => "T{$serie_format}-{$guia->numero}",
+                'tipodocumentoconsulta' => '09',
+                'fecha' => $guia->fecha_emision,
+                'tipodocumentorespuesta' => 'PDF'
+            );
+            // dd($bodyConsulta);
+            $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
+            // dd($getPdf->data);
+            if ($getPdf->success == true) {
+                $storePdf = FacturacionEnvio::find($store->id);
+                $storePdf->pdf = $getPdf->data;
+                try {
+                    $storePdf->save();
+                    
+                } catch (Exception $e) {
+                    //throw $th;
+                    // dd($e)
+                    
+                }
+            }
         }
+
+        
+
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
