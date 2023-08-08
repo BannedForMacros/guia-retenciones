@@ -32,13 +32,16 @@
                           </select>
                         </div>
                         <div class="col-md-6 mb-2">
+                          <label class="form-label">Numero</label>
+                          <input type="text" class="form-control" id="span_numero" readonly>
+                        </div>
+                        <div class="col-md-6 mb-2">
                           <label class="form-label">Fecha Emision</label>
                           <input type="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
                         </div>
                         <div class="col-md-6 mb-2">
-                          {{-- <label class="form-label">Estado</label> --}}
+                          
                           <label class="form-label">Enviar a sunat</label>
-                          {{-- <input type="text" class="form-control" readonly value="GENERADA"> --}}
                           <select class="form-select" name="envio_sunat" id="envio-sunat">
                             <option value="0" {{ ($guia->envio_sunat ?? '') == 0 ? 'selected' : '' }}>No</option>
                             <option value="1" {{ ($guia->envio_sunat ?? '') == 1 ? 'selected' : '' }}>Si</option>

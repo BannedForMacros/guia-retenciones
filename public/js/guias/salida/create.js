@@ -12,10 +12,45 @@ $(document).ready(function () {
     callBrevete();
     callSetMotivoTraslado();
     callIndicarProveedor();
+    callGetSerie();
     
     calcularTotales();
   }, 300);
 });
+
+$(document).on('change', '#serie', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callGetSerie();
+});
+
+var callGetSerie = () => {
+
+  var serie = $('#serie').val();
+
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('serie', serie);
+
+  getSerie(formData);
+}
+
+var getSerie = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.getSerie'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      console.log({response});
+      var serie = response.getSerie;
+      $('#span_numero').val(serie.nuevo_numero);
+    }
+  };
+  $.ajax(options);
+};
 
 var callListarArticulos = () => {
 
@@ -381,9 +416,7 @@ $(document).on('submit', '#form_store', function(event) {
 
 });
 
-
 var callStore = (guardar_avance = false) => {
-
 
   var formElement = document.getElementById("form_store");
   var formData = new FormData(formElement);

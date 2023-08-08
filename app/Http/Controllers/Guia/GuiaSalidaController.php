@@ -70,6 +70,24 @@ class GuiaSalidaController extends Controller
         return view('guia.salida.tabla', compact('list'));
     }
 
+    public function getSerie(Request $request)
+    {
+        $api_datos = Parametro::find(6)->valor;
+        $serie = $request->post('serie');
+        // dd($request->post());
+        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+
+        foreach ($listSeries as $item) {
+            if ($serie == $item->numserie) {
+                $getSerie = $item;
+            }
+        }
+
+        $getSerie->nuevo_numero = str_pad(($getSerie->ultimoValormarket + 1), 4, "0", STR_PAD_LEFT);
+
+        return response()->json(['getSerie' => $getSerie]);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
