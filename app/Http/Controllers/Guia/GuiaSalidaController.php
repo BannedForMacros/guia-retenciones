@@ -985,7 +985,7 @@ class GuiaSalidaController extends Controller
             }
         }
 
-        
+
 
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
@@ -996,11 +996,15 @@ class GuiaSalidaController extends Controller
 
         // dd($guia);
         $data = array();
+        $ruc_entidad = Parametro::find(2)->valor;
+        $nombreEntidad = Parametro::find(3)->valor;
+        $direccion_entidad = Parametro::find(4)->valor;
+        $telefonos = Parametro::find(4)->valor;
         $cabecera = (object) array(
-            'nombre_entidad' => 'MILKA SUPERMERCADOS E.I.R.L',
-            'direccion_entidad' => 'jr. jose sagobal 1200 BR San Sebastian',
-            'telefono_entidad' => '--',
-            'ruc_entidad' => '20491576902',
+            'nombre_entidad' => $nombreEntidad,
+            'direccion_entidad' => $direccion_entidad,
+            'telefono_entidad' => $telefonos,
+            'ruc_entidad' => $ruc_entidad,
         );
         $data['cabecera'] = $cabecera;
 
