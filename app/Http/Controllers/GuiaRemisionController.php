@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class GuiaRemisionController extends Controller
 {
@@ -13,7 +15,14 @@ class GuiaRemisionController extends Controller
      */
     public function index()
     {
-        return view('guia/index');
+        // User::create([
+        //     'name' => 'tester',
+        //     'email' => 'tester@gmail.com',
+        //     // 'username' => 'tester@gmail.com',
+        //     'password' => Hash::make('12345678'),
+        //     'activo' => 1,
+        // ]);
+        // return view('guia/index');
     }
 
     /**
