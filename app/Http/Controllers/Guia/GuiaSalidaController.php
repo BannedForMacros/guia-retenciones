@@ -66,6 +66,11 @@ class GuiaSalidaController extends Controller
                 $texto_razon_social = $value->cliente_razon_social;
             }
             $list[$key]->texto_razon_social = $texto_razon_social;
+            $url_pdf = route('guiasalida.pdf', ['guia' => $value->id]);
+            if ($value->envio_sunat == 1) {
+                $url_pdf = route('guiasalida.pdfDecode', ['guia' => $value->id]);
+            }
+            $list[$key]->url_pdf = $url_pdf;
         }
         return view('guia.salida.tabla', compact('list'));
     }
@@ -657,13 +662,13 @@ class GuiaSalidaController extends Controller
                 $body = [
                     "anioGuiaRemision" => $anio_actual,
                     "breveteChofer" => $datos['brevete'],
-                    "codAlmacen" => $datos['codalmacen'],
-                    "codAlmacenOrigen" => $datos['cod_almacen_origen'],
-                    "codAlmacenDestino" => $datos['cod_almacen_destino'],
+                    "codAlmacen" => $datos['codalmacen'] ?? '',
+                    "codAlmacenOrigen" => $datos['cod_almacen_origen'] ?? '',
+                    "codAlmacenDestino" => $datos['cod_almacen_destino'] ?? '',
                     "codCliente" => $datos['cliente_id'] ?? '',
                     "codEstacion" => $datos['codestacion'],
                     "codListaPrecio" => $datos['codlistaprecio'],
-                    "codProveedor" => $proveedor_id,
+                    "codProveedor" => $proveedor_id ?? '',
                     "codtrabajador" => $datos['vendedor_id'],
                     "comentario" => $datos['comentario'],
                     "descuento" => $datos['monto_descuento'],
@@ -680,7 +685,7 @@ class GuiaSalidaController extends Controller
                     "nombrechofer" => $datos['transportista_nombre'],
                     "numSerie" => $datos['serie'],
                     "seriefactura" => $datos['pedido_serie'],
-                    "numeroFactura" => 159,
+                    "numeroFactura" => '',
                     "numeroGuia" => $datos['numero'],
                     "placavehiculo" => $datos['vehiculo_placa'],
                     "rucTransportista" => $datos['transportista_ruc'],
@@ -692,7 +697,7 @@ class GuiaSalidaController extends Controller
                     "ubigeopartida" => $datos['ubigeo_partida'],
                     "valorVenta" => $datos['importe_sin_igv']
                 ];
-                
+                dd($body);
                 try {
                     $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
                     // dd($storeRemoto);
@@ -771,7 +776,12 @@ class GuiaSalidaController extends Controller
 
         if ($procede == true) {
             if ($datos['envio_sunat'] == 1) {
-                $msj = "{$msj} <button class='btn btn-sm btn-success'><i class='fa fa-external-link'></i> Ver</button>";
+                // $msj = "{$msj} <button class='btn btn-sm btn-success'><i class='fa fa-external-link'></i> Ver</button>";
+            }
+            
+            if ($datos['envio_sunat'] == 0) {
+                $link = route('guiasalida.pdf', ['guia' => $guia]);
+                $msj = "{$msj} <a class='btn btn-sm btn-success' href='{$link}' target='_blank'><i class='fa fa-external-link'></i> Ver</a>";
             }
         }
 
@@ -893,7 +903,7 @@ class GuiaSalidaController extends Controller
         
         // dd($body);
         
-        $url_button = route('guiasalida.pdf', ['guia'=> $guia->id]);
+        $url_button = route('guiasalida.pdfDecode', ['guia'=> $guia->id]);
         
         $procede = true;
         $msj = "Guia electronica emitida correctamente  <br><a class='btn btn-success' href='{$url_button}' target='_blank'><i class='fa fa-external-link'></i> ver</a>";
@@ -1040,6 +1050,20 @@ class GuiaSalidaController extends Controller
         // $pdf->getCanvas()->page_text(520, 810, "Pag. {PAGE_NUM} de {PAGE_COUNT}", $font, 10, array(0, 0, 0));
         return $pdf->stream();
     }
+
+    public function pdfDecode(GuiaSalida $guia)
+    {
+        // dd($guia);
+        $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->whereNotNull('pdf')->first();
+        // dd($getEnvioConPdf);
+        // DB::table('users')->whereNotNull()
+        // $pdfData = 'JVBERi0xLjQKJcfs...'; // Base64 encoded PDF data
+        $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
+        $pdfDataDecoded = base64_decode($pdfData);
+        return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
+
+    }
+
     /**
      * Display the specified resource.
      *
