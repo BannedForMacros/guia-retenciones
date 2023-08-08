@@ -24,12 +24,12 @@
               <div class="row">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Contacto</label>
-                  <select class="form-select" name="vendedor_id" id="vendedor_id" style="width: 100%">
+                  <select class="form-select select_2" name="vendedor_id" id="vendedor_id" style="width: 100%">
                     @foreach ($listVendedores as $item)
                       <option value="{{ $item->codTrabajador }}"
                         data-vendedor_nombre="{{ "{$item->apellidos} {$item->nombres}" }}"
                         {{ ($item->selected ?? '') == 'selected' ? 'selected' : '' }}>
-                        {{ "{$item->apellidos} {$item->nombres}" }}</option>
+                        {{ "[{$item->dni}] {$item->apellidos} {$item->nombres}" }}</option>
                     @endforeach
                   </select>
                 </div>
@@ -91,7 +91,7 @@
                     </div>
                     <div class="col-md-9">
                       <select class="form-select" id="proveedor_id" name="proveedor_id"
-                        data-placeholder="Buscar un proveedor">
+                        data-placeholder="Buscar un proveedor" style="width: 100%">
                         @if (count($listProveedores) > 0)
                           @foreach ($listProveedores as $item)
                             <option value="{{ $item->codProveedor }}" data-proveedor_nombre="{{ $item->nombreproveedor }}"

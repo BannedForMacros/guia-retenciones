@@ -117,6 +117,7 @@ class GuiaSalidaController extends Controller
         $listAlmacenDestino = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
         $listPrecios = Http::get("{$api_datos}/ObtenerSucursalPrecio")->object()->listasPrecio;
         $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        // dd($listVendedores);
         // $getVendedor = $listVendedores[0];
         // dd($getVendedor);
         // dd($getVendedor);
