@@ -111,6 +111,13 @@ class GuiaSalidaController extends Controller
         $listTipoOperacion = Http::get("{$api_datos}/ObtenerOperacion")->object()->operaciones;
         // $listTipoOperacion = [];
         // dd($listTipoOperacion);
+        foreach ($listTipoOperacion as $key => $value) {
+            $selected = "";
+            if (trim($value->tipoOperacion) == 12) {//SALIDA POR TRANSFERENCIA DE ALMACEN
+                $selected = "selected";
+            }
+            $listTipoOperacion[$key]->selected = $selected;
+        }
         // $listAlmacenes = Http::post(route('simulacion.ObtenerAlmacenes'), [])->object();
         $listAlmacenes = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
         $listAlmacenOrigen = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
@@ -137,11 +144,26 @@ class GuiaSalidaController extends Controller
         // dd($listUbigeos);
 
         // $listUbigeosDepartamentoPartida = $listUbigeos;
-        $listUbigeosDepartamentoPartida = $listUbigeos;
+        $listUbigeosDepartamentoPartida = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        foreach ($listUbigeosDepartamentoPartida as $key => $value) {
+            $selected = "";
+            if (trim($value->codUbigeo) == '04') {//arequipa
+                $selected = "selected";
+            }
+            $listUbigeosDepartamentoPartida[$key]->selected = $selected;
+        }
+        // dd($listUbigeosDepartamentoPartida);
         $listUbigeosProvinciaPartida = [];
         $listUbigeosDistritoPartida = [];
 
-        $listUbigeosDepartamentoLlegada = $listUbigeos;
+        $listUbigeosDepartamentoLlegada = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        foreach ($listUbigeosDepartamentoLlegada as $key => $value) {
+            $selected = "";
+            if (trim($value->codUbigeo) == '04') {//arequipa
+                $selected = "selected";
+            }
+            $listUbigeosDepartamentoLlegada[$key]->selected = $selected;
+        }
         $listUbigeosProvinciaLlegada = [];
         $listUbigeosDistritoLlegada = [];
         

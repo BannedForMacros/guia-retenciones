@@ -29,7 +29,7 @@
                       <option value="{{ $item->codTrabajador }}"
                         data-vendedor_nombre="{{ "{$item->apellidos} {$item->nombres}" }}"
                         {{ ($item->selected ?? '') == 'selected' ? 'selected' : '' }}>
-                        {{ "[{$item->dni}] {$item->apellidos} {$item->nombres}" }}</option>
+                        {{ "[{$item->codTrabajador}] {$item->apellidos} {$item->nombres}" }}</option>
                     @endforeach
                   </select>
                 </div>
