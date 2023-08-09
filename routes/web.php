@@ -38,6 +38,8 @@ Route::controller(GuiaRemisionController::class)->group(function(){
 Route::controller(GuiaSalidaController::class)->group(function (){
 
     Route::post('guiasalida/agregarItem', 'agregarItem')->name('guiasalida.agregarItem');
+    Route::post('guiasalida/formBusquedaArticulo', 'formBusquedaArticulo')->name('guiasalida.formBusquedaArticulo');
+    Route::post('guiasalida/buscarArticuloBarra', 'buscarArticuloBarra')->name('guiasalida.buscarArticuloBarra');
     Route::get('guiasalida/listarArticulos', 'listarArticulos')->name('guiasalida.listarArticulos');
     Route::get('guiasalida/listarClientes', 'listarClientes')->name('guiasalida.listarClientes');
     Route::get('guiasalida/listarTransportistas', 'listarTransportistas')->name('guiasalida.listarTransportistas');

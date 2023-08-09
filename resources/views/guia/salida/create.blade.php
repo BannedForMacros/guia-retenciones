@@ -40,7 +40,7 @@
                           <input type="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
                         </div>
                         <div class="col-md-6 mb-2">
-                          
+
                           <label class="form-label">Enviar a sunat</label>
                           <select class="form-select" name="envio_sunat" id="envio-sunat">
                             <option value="0" {{ ($guia->envio_sunat ?? '') == 0 ? 'selected' : '' }}>No</option>
@@ -58,7 +58,8 @@
                       <div class="row">
                         <div class="col-md-3">
                           <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="1" id="pedido_interno" {{ (($guia->pedido_interno ?? '') == 1) ? 'checked' : '' ; }} name="pedido_interno">
+                            <input class="form-check-input" type="checkbox" value="1" id="pedido_interno"
+                              {{ ($guia->pedido_interno ?? '') == 1 ? 'checked' : '' }} name="pedido_interno">
                             <label class="form-check-label" for="pedido_interno">
                               Interno
                             </label>
@@ -67,10 +68,12 @@
                         <div class="col-md-9">
                           <div class="row no-gutters">
                             <div class="col-md-5">
-                              <input type="text" class="form-control" placeholder="Serie" name="pedido_serie" value="{{ $guia->pedido_serie ?? '' }}">
+                              <input type="text" class="form-control" placeholder="Serie" name="pedido_serie"
+                                value="{{ $guia->pedido_serie ?? '' }}">
                             </div>
                             <div class="col-md-7">
-                              <input type="text" class="form-control" placeholder="Numero" name="pedido_numero" value="{{ $guia->pedido_numero ?? '' }}">
+                              <input type="text" class="form-control" placeholder="Numero" name="pedido_numero"
+                                value="{{ $guia->pedido_numero ?? '' }}">
                             </div>
 
                           </div>
@@ -98,9 +101,8 @@
                         <div class="col-md-12">
                           <h5>Otros Datos</h5>
                           <div class="form-check">
-                            <input class="form-check-input" id="indicar_proveedor" name="indicar_proveedor" type="checkbox"  
-                              {{ (($guia->indicar_proveedor ?? 0) == 1) ? 'checked' : '' ; }}
-                            />
+                            <input class="form-check-input" id="indicar_proveedor" name="indicar_proveedor"
+                              type="checkbox" {{ ($guia->indicar_proveedor ?? 0) == 1 ? 'checked' : '' }} />
                             <label class="form-check-label" for="indicar_proveedor">Proveedor</label>
                           </div>
 
@@ -115,7 +117,8 @@
           </div>
           <div class="row mt-2">
             <div class="col-md-6">
-              <div class="row" id="div_cliente" style="display: {{ (($guia->indicar_proveedor ?? 0) == 0) ? '' : 'none' ; }}">
+              <div class="row" id="div_cliente"
+                style="display: {{ ($guia->indicar_proveedor ?? 0) == 0 ? '' : 'none' }}">
                 <h5>Datos el Cliente</h5>
                 <div class="col-md-12">
                   <label class="form-label">Cliente</label>
@@ -155,7 +158,8 @@
                 </div>
               </div>
 
-              <div class="row" id="div_proveedor" style="display:  style="display: {{ (($guia->indicar_proveedor ?? 0) == 1) ? '' : 'none' ; }}"">
+              <div class="row" id="div_proveedor" style="display:  style="display:
+                {{ ($guia->indicar_proveedor ?? 0) == 1 ? '' : 'none' }}"">
                 <h5>Proveedor</h5>
                 <div class="col-md-12">
                   <div class="row g-2">
@@ -236,9 +240,7 @@
                             <option value="{{ $item->tipoOperacion }}"
                               data-codigo_motivo_traslado="{{ $item->motivotraslado }}"
                               data-nombre_motivo_traslado="{{ $item->descriMotivotraslado }}"
-                              data-nombre="{{ $item->descripcion }}"
-                              {{ $item->selected ?? '' }}
-                            >
+                              data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}
                             </option>
                           @endif
@@ -249,7 +251,8 @@
                       <label class="form-label">Almacen</label>
                       <select class="form-select" name="codalmacen" id="codalmacen">
                         @foreach ($listAlmacenes as $item)
-                          <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
+                          <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
+                            {{ $item->selected ?? '' }}>
                             {{ $item->descripcion }}</option>
                         @endforeach
                       </select>
@@ -259,7 +262,8 @@
                         <label class="form-label">Almacen Origen</label>
                         <select class="form-select" name="cod_almacen_origen" id="cod_almacen_origen">
                           @foreach ($listAlmacenOrigen as $item)
-                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
+                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
+                              {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
                         </select>
@@ -268,7 +272,8 @@
                         <label class="form-label">Almacen Destino</label>
                         <select class="form-select" name="cod_almacen_destino" id="cod_almacen_destino">
                           @foreach ($listAlmacenDestino as $item)
-                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}" {{ $item->selected ?? '' }}>
+                            <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
+                              {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
                         </select>
@@ -430,7 +435,6 @@
                   <select class="form-select mt-1 ubigeo" name="ubigeo_llegada" data-tipo_ubigeo="llegada"
                     id="llegada_distrito">
                     @if (count($listUbigeosDistritoLlegada) > 0)
-                        
                       @foreach ($listUbigeosDistritoLlegada as $item)
                         <option value="{{ $item->codUbigeo }}" {{ $item->selected }}>
                           {{ $item->descripcion }}
@@ -457,32 +461,49 @@
           <h5><i class="fa fa-list"></i> Detalle</h5>
           <div class="col-md-12">
             <label class="form-label">Articulo</label>
-            <div class="row">
-              <div class="col-md-2">
-                <select class="form-select" id="tipo_busqueda_articulo">
-                  <option value="1">Codigo Barras</option>
-                  <option value="2">Codigo Articulo</option>
-                  <option value="3">Codigo Interno</option>
-                  <option value="4">Descripcion</option>
-                </select>
+            <form name="form_buscar_articulo" id="form_buscar_articulo">
+              @csrf
+              <div class="row">
+                <div class="col-md-2">
+                  <select class="form-select" id="tipo_busqueda_articulo">
+                    <option value="1">Codigo Barras</option>
+                    <option value="2">Codigo Articulo</option>
+                    <option value="3">Codigo Interno</option>
+                    <option value="4">Descripcion</option>
+                  </select>
+                </div>
+                <div class="col-md-8 mb-2" id="div_form_buscar_articulo">
+                  {{-- <select class="form-select select_2" name="producto_select" id="producto_select" style="width: 100%"
+                    data-placeholder="Indicar un Articulo"> --}}
+                    {{-- @foreach ($listArticulos as $item)
+                      <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
+                        data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}"
+                        data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
+                        [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
+                      </option>
+                    @endforeach --}}
+                  {{-- </select> --}}
+                </div>
+
+
+                <div class="col-md-2">
+                  {{-- <button type="button" class="btn btn-success btn-primary" id="btnAdd"><i class="fa fa-plus"></i>
+                    Agregar</button> --}}
+                </div>
+
               </div>
-              <div class="col-md-8 mb-2">
-                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%"
-                  data-placeholder="Indicar un Articulo">
-                  @foreach ($listArticulos as $item)
-                    <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
-                      data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}"
-                      data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
-                      [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-              <div class="col-md-2">
-                <button class="btn btn-success btn-primary" id="btnAdd"><i class="fa fa-plus"></i>
-                  Agregar</button>
-              </div>
+            </form>
+
+
+            <div>
+              <input type="hidden" id="producto_id" name="producto_id">
+              <input type="hidden" id="producto_codigo_barra" name="producto_codigo_barra">
+              <input type="hidden" id="producto_descripcion" name="producto_descripcion">
+              <input type="hidden" id="producto_precio_publico" name="producto_precio_publico">
+              <input type="hidden" id="producto_precio_sin_igv" name="producto_precio_sin_igv">
+
             </div>
+
             <div class="row mt-2">
               <div class="col-md-12 table-responsive">
                 <table class="table table-hover table-striped table-sm table-bordered">
@@ -639,6 +660,7 @@
   </div>
   @push('js-scripts')
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/salida/articulo.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/ubigeo.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection
