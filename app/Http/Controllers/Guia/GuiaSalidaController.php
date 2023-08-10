@@ -93,20 +93,7 @@ class GuiaSalidaController extends Controller
         return response()->json(['getSerie' => $getSerie]);
     }
 
-    public function formBusquedaArticulo(Request $request)
-    {
-        $tipoBusqueda = $request->post('tipo_busqueda_articulo');
-        $callSelect = true;
-        if ($tipoBusqueda == 1) {
-            $callSelect = false;
-            $form = " <input class='form-control' id='producto_valor' name='producto_valor' placeholder='Escanea un producto' autocomplete='off' autofocus>
-            ";
-        }else{
-            $form =  " <select class='form-select select_2' name='producto_select' id='producto_select' style='width: 100%' data-placeholder='Indicar un Articulo'></select>";
-        }
 
-        return response()->json(['form' => $form, 'callSelect' => $callSelect]);
-    }
     /**
      * Show the form for creating a new resource.
      *
@@ -349,6 +336,21 @@ class GuiaSalidaController extends Controller
         return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
     }
 
+    public function formBusquedaArticulo(Request $request)
+    {
+        $tipoBusqueda = $request->post('tipo_busqueda_articulo');
+        $callSelect = true;
+        if ($tipoBusqueda == 1) {
+            $callSelect = false;
+            $form = " <input class='form-control' id='producto_valor' name='producto_valor' placeholder='Escanea un producto' autocomplete='off' autofocus>
+            ";
+        }else{
+            $form =  " <select class='form-select select_2' name='producto_select' id='producto_select' style='width: 100%' data-placeholder='Indicar un Articulo'></select>";
+        }
+
+        return response()->json(['form' => $form, 'callSelect' => $callSelect]);
+    }
+
     public function listarArticulos(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
@@ -378,7 +380,6 @@ class GuiaSalidaController extends Controller
 
         return response()->json(['items' => $items]);
     }
-
 
     public function buscarArticuloBarra(Request $request)
     {

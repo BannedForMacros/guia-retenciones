@@ -163,33 +163,48 @@
         <div class="row mt-4">
           <h5><i class="fa fa-list"></i> Detalle</h5>
           <div class="col-md-12">
-            <div class="row">
-              <label class="form-label">Productos</label>
-              <div class="col-md-2">
-                <select class="form-select" id="tipo_busqueda_articulo">
-                  <option value="1">Codigo Barras</option>
-                  <option value="2">Codigo Articulo</option>
-                  <option value="3">Codigo Interno</option>
-                  <option value="4">Descripcion</option>
-                </select>
+            <label class="form-label">Articulo</label>
+
+            <form name="form_buscar_articulo" id="form_buscar_articulo">
+              @csrf
+              <div class="row">
+                <div class="col-md-2">
+                  <select class="form-select" id="tipo_busqueda_articulo">
+                    <option value="1">Codigo Barras</option>
+                    <option value="2">Codigo Articulo</option>
+                    <option value="3">Codigo Interno</option>
+                    <option value="4">Descripcion</option>
+                  </select>
+                </div>
+                <div class="col-md-8 mb-2" id="div_form_buscar_articulo">
+                  {{-- <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%"
+                    data-placeholder="Buscar un articulo">
+                    @foreach ($listArticulos as $item)
+                      <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
+                        data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}"
+                        data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
+                        [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
+                      </option>
+                    @endforeach
+                  </select> --}}
+                </div>
+                <div class="col-md-2">
+                  {{-- <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i>
+                    Agregar</button> --}}
+                </div>
               </div>
-              <div class="col-md-8 mb-2">
-                <select class="form-select select_2" name="producto_id" id="producto_id" style="width: 100%"
-                  data-placeholder="Buscar un articulo">
-                  @foreach ($listArticulos as $item)
-                    <option data-codigo_barra="{{ $item->CodBarra }}" data-cod_plu="{{ $item->CodPlu }}"
-                      data-descripcion="{{ $item->NombreArticulo }}" data-precio_publico="{{ $item->PrecioPublico }}"
-                      data-precio_sin_igv="{{ $item->PrecioSinIGV }}" value="{{ $item->CodArticulo }}">
-                      [{{ $item->CodPlu }}] {{ $item->NombreArticulo }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-              <div class="col-md-4 mt-4">
-                <button class="btn btn-success btn-primary mt-1" id="btnAdd"><i class="fa fa-plus"></i>
-                  Agregar</button>
-              </div>
+
+            </form>
+
+            <div>
+              <input type="hidden" id="producto_id" name="producto_id">
+              <input type="hidden" id="producto_codigo_barra" name="producto_codigo_barra">
+              <input type="hidden" id="producto_descripcion" name="producto_descripcion">
+              <input type="hidden" id="producto_precio_publico" name="producto_precio_publico">
+              <input type="hidden" id="producto_precio_sin_igv" name="producto_precio_sin_igv">
+
             </div>
+
             <div class="row mt-2">
               <div class="col-md-12 table-responsive">
                 <table class="table table-hover table-striped table-sm table-bordered">
@@ -340,5 +355,6 @@
   </div>
   @push('js-scripts')
     <script src="{{ asset('js/guias/ingreso/create.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/ingreso/articulo.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection

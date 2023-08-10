@@ -135,6 +135,7 @@ class GuiaIngresoController extends Controller
     }
 
 
+
     public function agregarItem(Request $request)
     {
         $producto_id = $request->post('producto_id');
@@ -240,6 +241,21 @@ class GuiaIngresoController extends Controller
         return response()->json(['items' => $items]);
     }
 
+    public function formBusquedaArticulo(Request $request)
+    {
+        $tipoBusqueda = $request->post('tipo_busqueda_articulo');
+        $callSelect = true;
+        if ($tipoBusqueda == 1) {
+            $callSelect = false;
+            $form = " <input class='form-control' id='producto_valor' name='producto_valor' placeholder='Escanea un producto' autocomplete='off' autofocus>
+            ";
+        }else{
+            $form =  " <select class='form-select select_2' name='producto_select' id='producto_select' style='width: 100%' data-placeholder='Indicar un Articulo'></select>";
+        }
+
+        return response()->json(['form' => $form, 'callSelect' => $callSelect]);
+    }
+
     public function listarArticulos(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
@@ -268,6 +284,26 @@ class GuiaIngresoController extends Controller
         }
 
         return response()->json(['items' => $items]);
+    }
+
+    public function buscarArticuloBarra(Request $request)
+    {
+        $api_datos = Parametro::find(6)->valor;
+
+        $valor = trim($request->get('producto_valor'));
+        $tipoconsulta = $request->post('tipo');
+        $codestacion = $request->get('codestacion');
+        $codalmacen = $request->get('codalmacen');
+        $codlistaprecio = $request->get('codlistaprecio');
+
+        $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
+        ['valor' => $valor, 'tipoconsulta' => 1, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio])->object()->articulos;
+
+        // $getArticulo = $listArticulos;
+        $getArticulo = $getArticulo[0];
+        // dd($getArticulo);
+
+        return response()->json(['getArticulo' => $getArticulo]);
     }
 
     /**

@@ -59,6 +59,8 @@ Route::controller(GuiaSalidaController::class)->group(function (){
 Route::controller(GuiaIngresoController::class)->group(function (){
     
     Route::post('guiaingreso/agregarItem', 'agregarItem')->name('guiaingreso.agregarItem');
+    Route::post('guiaingreso/formBusquedaArticulo', 'formBusquedaArticulo')->name('guiaingreso.formBusquedaArticulo');
+    Route::post('guiaingreso/buscarArticuloBarra', 'buscarArticuloBarra')->name('guiaingreso.buscarArticuloBarra');
     Route::get('guiaingreso/listarProveedores', 'listarProveedores')->name('guiaingreso.listarProveedores');
     Route::get('guiaingreso/listarArticulos', 'listarArticulos')->name('guiaingreso.listarArticulos');
     Route::post('guiaingreso/listar', 'listar')->name('guiaingreso.listar');
