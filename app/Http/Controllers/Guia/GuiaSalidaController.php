@@ -124,7 +124,8 @@ class GuiaSalidaController extends Controller
         $listAlmacenOrigen = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
         $listAlmacenDestino = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
         $listPrecios = Http::get("{$api_datos}/ObtenerSucursalPrecio")->object()->listasPrecio;
-        $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        // $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        $listVendedores = [];
         // dd($listVendedores);
         // $getVendedor = $listVendedores[0];
         // dd($getVendedor);
@@ -167,7 +168,6 @@ class GuiaSalidaController extends Controller
         }
         $listUbigeosProvinciaLlegada = [];
         $listUbigeosDistritoLlegada = [];
-        
 
 
         return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
@@ -334,6 +334,28 @@ class GuiaSalidaController extends Controller
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
 
         return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
+    }
+
+    public function getVendedor(Request $request)
+    {
+        // dd($request->post());
+        $api_datos = Parametro::find(6)->valor;
+
+        $vendedor_codigo = $request->post('vendedor_codigo');
+
+        $getVendedor = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$vendedor_codigo}")->object()->trabajador;
+
+        // $getVendedor = $getVendedor[0];
+        // dd($getVendedor);
+        $options = "";
+        foreach ($getVendedor as $item) {
+            $options .= "<option value='{$item->codTrabajador}'
+            
+                data-vendedor_nombre = '{$item->apellidos} {$item->nombres}'
+            >{$item->apellidos} {$item->nombres}</option>";
+        }
+
+        return response()->json(['options' => $options]);
     }
 
     public function formBusquedaArticulo(Request $request)

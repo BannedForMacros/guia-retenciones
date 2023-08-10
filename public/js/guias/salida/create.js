@@ -401,6 +401,10 @@ var callStore = (guardar_avance = false) => {
   // }
 
   var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
+  console.log({vendedor_nombre});
+  if (vendedor_nombre == undefined) {
+    vendedor_nombre = '';
+  }
   formData.append('vendedor_nombre', vendedor_nombre);
 
   var data_cliente = $('#cliente_id').select2('data')[0];
@@ -494,12 +498,23 @@ var callStore = (guardar_avance = false) => {
 
   if (formData.get('guardar_avance') == 'false') {
     
-    if (formData.get('tipo_operacion_id') == 12) {
-      if (formData.get('cod_almacen_origen') == formData.get('cod_almacen_destino')) {
-        procede_store = false;
-        msj_store = 'Almacen origen y Destino no pueden ser iguales';
+    if (formData.get('vendedor_nombre') == '') {
+      procede_store = false;
+      msj_store = `Debe indicar un vendedor`;
+    }
+
+    if (procede_store == true) {
+      
+      if (formData.get('tipo_operacion_id') == 12) {
+        if (formData.get('cod_almacen_origen') == formData.get('cod_almacen_destino')) {
+          procede_store = false;
+          msj_store = 'Almacen origen y Destino no pueden ser iguales';
+        }
       }
     }
+
+
+
 
     if (indicar_proveedor == true) {
       if (formData.get('proveedor_nombre') == '') {
@@ -744,3 +759,77 @@ var callIndicarProveedor = () => {
     
   }
 }
+
+
+$(document).on('keypress', '#vendedor_codigo', function(event) {
+  // event.preventDefault();
+  console.log('enter');
+  /* Act on the event */
+  console.log(event.keyCode);
+
+});
+$(document).on('click', '#btnBuscarVendedor', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callGetVendedor();
+
+});
+
+var callGetVendedor = () => {
+
+  var vendedor_codigo = $('#vendedor_codigo').val();
+  // console.log({vendedor_codigo});
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('vendedor_codigo', vendedor_codigo);
+
+  getVendedor(formData);
+}
+
+var getVendedor = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiaingreso.getVendedor'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      $('#vendedor_id').html(response.options);
+    }
+  };
+  $.ajax(options);
+};
+
+$('#form_store').on('keydown', function(e) {
+  var keyCode = e.keyCode || e.which;
+  var tag = e.target.tagName
+  var tag_id = e.target.id;
+
+  console.log({keyCode, tag});
+  console.log(e.target.id);
+  if (keyCode === 13 && tag_id !=="vendedor_codigo") {
+    console.log("Enter prevented")
+    e.preventDefault();
+    return false;
+  }else{
+    // console.log("Enter is ok...")
+    if (keyCode == 13) {
+      callGetVendedor();
+      
+    }
+  }
+});
+
+$(document).on('keypress', '.input_cantidad_tr', function(event) {
+  // event.preventDefault();
+  var keyCode = event.keyCode || event.which;
+  var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
+  if (keyCode == 13) {//enter
+    if (tipo_busqueda_articulo == 1) {
+      // console.log('cambiar foco');
+      $('#producto_valor').focus();
+      
+    }
+  }
+});

@@ -74,7 +74,8 @@ class GuiaIngresoController extends Controller
         // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
         $listArticulos = [];
         // dd($listArticulos);
-        $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        // $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        $listVendedores = [];
 
         // foreach ($listVendedores as $key => $value) {
         //     $listVendedores[$key]->selected = '';
@@ -116,7 +117,7 @@ class GuiaIngresoController extends Controller
         // $listArticulos = Http::post(route('simulacion.ObtenerArticulos'), [])->object();
         $listArticulos = [];
         // dd($listArticulos);
-        $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$guia->vendedor_id}")->object()->trabajador;
         // dd($listVendedores);
 
         foreach ($listVendedores as $key => $value) {
@@ -134,7 +135,27 @@ class GuiaIngresoController extends Controller
         return view('guia.ingreso.create', compact('guia','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'listVendedores', 'detalle'));
     }
 
+    public function getVendedor(Request $request)
+    {
+        // dd($request->post());
+        $api_datos = Parametro::find(6)->valor;
 
+        $vendedor_codigo = $request->post('vendedor_codigo');
+
+        $getVendedor = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$vendedor_codigo}")->object()->trabajador;
+
+        // $getVendedor = $getVendedor[0];
+        // dd($getVendedor);
+        $options = "";
+        foreach ($getVendedor as $item) {
+            $options .= "<option value='{$item->codTrabajador}'
+            
+                data-vendedor_nombre = '{$item->apellidos} {$item->nombres}'
+            >{$item->apellidos} {$item->nombres}</option>";
+        }
+
+        return response()->json(['options' => $options]);
+    }
 
     public function agregarItem(Request $request)
     {

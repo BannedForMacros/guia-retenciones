@@ -39,6 +39,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
 
     Route::post('guiasalida/agregarItem', 'agregarItem')->name('guiasalida.agregarItem');
     Route::post('guiasalida/formBusquedaArticulo', 'formBusquedaArticulo')->name('guiasalida.formBusquedaArticulo');
+    Route::post('guiasalida/getVendedor', 'getVendedor')->name('guiasalida.getVendedor');
     Route::post('guiasalida/buscarArticuloBarra', 'buscarArticuloBarra')->name('guiasalida.buscarArticuloBarra');
     Route::get('guiasalida/listarArticulos', 'listarArticulos')->name('guiasalida.listarArticulos');
     Route::get('guiasalida/listarClientes', 'listarClientes')->name('guiasalida.listarClientes');
@@ -60,6 +61,7 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     
     Route::post('guiaingreso/agregarItem', 'agregarItem')->name('guiaingreso.agregarItem');
     Route::post('guiaingreso/formBusquedaArticulo', 'formBusquedaArticulo')->name('guiaingreso.formBusquedaArticulo');
+    Route::post('guiaingreso/getVendedor', 'getVendedor')->name('guiaingreso.getVendedor');
     Route::post('guiaingreso/buscarArticuloBarra', 'buscarArticuloBarra')->name('guiaingreso.buscarArticuloBarra');
     Route::get('guiaingreso/listarProveedores', 'listarProveedores')->name('guiaingreso.listarProveedores');
     Route::get('guiaingreso/listarArticulos', 'listarArticulos')->name('guiaingreso.listarArticulos');

@@ -186,8 +186,6 @@ $(document).on('change', '#proveedor_id', function(event) {
 });
 
 
-
-
 $(document).on('click', '.delete_item', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -347,9 +345,13 @@ var callStore = (guardar_avance = false) => {
     var proveedor_ruc = data_proveedor.proveedor_ruc;
     formData.append('proveedor_ruc', $('#proveedor_ruc').val());
   }
-  new Response(formData).text().then(console.log)
+  // new Response(formData).text().then(console.log)
 
   var vendedor_nombre = $('#vendedor_id').find(':selected').data('vendedor_nombre');
+  console.log({vendedor_nombre});
+  if (vendedor_nombre == undefined) {
+    vendedor_nombre = '';
+  }
   formData.append('vendedor_nombre', vendedor_nombre);
 
   var divisa_nombre = $('#divisa_id').find(':selected').data('nombre');
@@ -379,13 +381,22 @@ var callStore = (guardar_avance = false) => {
 
   var procede_store = true;
   var msj_store = '';
+  new Response(formData).text().then(console.log)
   console.log(formData.get('proveedor_nombre'));
 
   if (formData.get('guardar_avance') == 'false') {
     
-    if (formData.get('proveedor_nombre') == null) {
+    if (formData.get('vendedor_nombre') == '') {
       procede_store = false;
-      msj_store = 'Debe indicar un proveedor';
+      msj_store = `Debe indicar un vendedor`;
+    }
+
+    if (procede_store == true) {
+      
+      if (formData.get('proveedor_nombre') == null) {
+        procede_store = false;
+        msj_store = 'Debe indicar un proveedor';
+      }
     }
   
     if (procede_store == true) {
@@ -430,7 +441,6 @@ var callStore = (guardar_avance = false) => {
 
 
 }
-
 
 var store = function(formData){
   var options = {
@@ -498,4 +508,77 @@ $(document).on('click', '#btnGuardarAvance', function(event) {
   event.preventDefault();
   /* Act on the event */
   callStore(true);
+});
+
+$(document).on('keypress', '#vendedor_codigo', function(event) {
+  // event.preventDefault();
+  console.log('enter');
+  /* Act on the event */
+  console.log(event.keyCode);
+
+});
+$(document).on('click', '#btnBuscarVendedor', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callGetVendedor();
+
+});
+
+var callGetVendedor = () => {
+
+  var vendedor_codigo = $('#vendedor_codigo').val();
+  // console.log({vendedor_codigo});
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('vendedor_codigo', vendedor_codigo);
+
+  getVendedor(formData);
+}
+
+var getVendedor = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiaingreso.getVendedor'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      $('#vendedor_id').html(response.options);
+    }
+  };
+  $.ajax(options);
+};
+
+$('#form_store').on('keydown', function(e) {
+  var keyCode = e.keyCode || e.which;
+  var tag = e.target.tagName
+  var tag_id = e.target.id;
+
+  console.log({keyCode, tag});
+  console.log(e.target.id);
+  if (keyCode === 13 && tag_id !=="vendedor_codigo") {
+    console.log("Enter prevented")
+    e.preventDefault();
+    return false;
+  }else{
+    // console.log("Enter is ok...")
+    if (keyCode == 13) {
+      callGetVendedor();
+      
+    }
+  }
+});
+
+$(document).on('keypress', '.input_cantidad_tr', function(event) {
+  // event.preventDefault();
+  var keyCode = event.keyCode || event.which;
+  var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
+  if (keyCode == 13) {//enter
+    if (tipo_busqueda_articulo == 1) {
+      // console.log('cambiar foco');
+      $('#producto_valor').focus();
+      
+    }
+  }
 });
