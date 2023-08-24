@@ -265,8 +265,8 @@
                       <select class="form-select almacen_select" data-almacen_tipo='1' name="codalmacen" id="codalmacen">
                         @foreach ($listAlmacenes as $item)
                           <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
-                            data-ubigeo="{{ $item->ubigeo }}"
-                            data-direccion="{{ $item->direccion }}"
+                            data-ubigeo="{{ $item->ubigeo ?? '' }}"
+                            data-direccion="{{ $item->direccion ?? '' }}"
                             {{ $item->selected ?? '' }}>
                             {{ $item->descripcion }}</option>
                         @endforeach
@@ -278,8 +278,8 @@
                         <select class="form-select almacen_select" data-almacen_tipo="1" name="cod_almacen_origen" id="cod_almacen_origen">
                           @foreach ($listAlmacenOrigen as $item)
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
-                              data-ubigeo="{{ $item->ubigeo }}"
-                              data-direccion="{{ $item->direccion }}"
+                              data-ubigeo="{{ $item->ubigeo ?? '' }}"
+                              data-direccion="{{ $item->direccion ?? '' }}"
                               {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
@@ -290,8 +290,8 @@
                         <select class="form-select almacen_select" data-almacen_tipo="2" name="cod_almacen_destino" id="cod_almacen_destino">
                           @foreach ($listAlmacenDestino as $item)
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
-                              data-ubigeo="{{ $item->ubigeo }}"
-                              data-direccion="{{ $item->direccion }}"
+                              data-ubigeo="{{ $item->ubigeo ?? '' }}"
+                              data-direccion="{{ $item->direccion ?? '' }}"
                               {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
