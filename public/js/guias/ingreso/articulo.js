@@ -78,6 +78,7 @@ var buscarArticuloBarra = function (formData) {
       $('#producto_descripcion').val(data.nombreArticulo);
       $('#producto_precio_publico').val(data.precioPublico);
       $('#producto_precio_sin_igv').val(data.precioSinIGV);
+      $('#producto_peso').val(data.peso);
 
       callAgregarItem();
 
@@ -101,6 +102,7 @@ $(document).on('change', '#producto_select', function(event) {
   $('#producto_descripcion').val(data.descripcion);
   $('#producto_precio_publico').val(data.precio_publico);
   $('#producto_precio_sin_igv').val(data.precio_sin_igv);
+  $('#producto_peso').val(data.peso);
 
   callAgregarItem();
 });
@@ -122,6 +124,7 @@ var callAgregarItem = () => {
   var precio_publico = $('#producto_precio_publico').val();
   // var precio_sin_igv = data.precio_sin_igv;
   var precio_sin_igv = $('#producto_precio_sin_igv').val();
+  var peso = $('#producto_peso').val();
 
   var base_calculo = $('#base_calculo').val();
   var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
@@ -145,6 +148,7 @@ var callAgregarItem = () => {
   formData.append('descripcion', descripcion);
   formData.append('precio_publico', precio_publico);
   formData.append('precio_sin_igv', precio_sin_igv);
+  formData.append('peso', peso);
   formData.append('cantidad', cantidad);
   formData.append('base_calculo', base_calculo);
   formData.append('tipo_busqueda_articulo', tipo_busqueda_articulo);

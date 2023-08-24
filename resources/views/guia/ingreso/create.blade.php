@@ -221,6 +221,7 @@
               <input type="hidden" id="producto_descripcion" name="producto_descripcion">
               <input type="hidden" id="producto_precio_publico" name="producto_precio_publico">
               <input type="hidden" id="producto_precio_sin_igv" name="producto_precio_sin_igv">
+              <input type="hidden" id="producto_peso" name="producto_peso">
 
             </div>
 
@@ -250,6 +251,7 @@
                         data-descripcion='{{ $item->descripcion }}'
                         data-codigo='{{ $item->codarticulo }}'
                         data-codigo_barra='{{ $item->codigo_barra }}'
+                        data-peso='{{ $item->peso }}'
                       >
                         <td class='align-middle'>{{ $item->codigo_barra }}</td>
                         <td class='align-middle'>{{ $item->codarticulo }}</td>

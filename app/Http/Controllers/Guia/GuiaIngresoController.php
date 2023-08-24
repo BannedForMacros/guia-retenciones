@@ -165,6 +165,7 @@ class GuiaIngresoController extends Controller
         $descripcion = $request->post('descripcion');
         $precio_publico = $request->post('precio_publico');
         $precio_sin_igv = $request->post('precio_sin_igv');
+        $peso = $request->post('peso') ?? 0;
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
@@ -212,7 +213,7 @@ class GuiaIngresoController extends Controller
                     data-precio_sin_igv='{$precio_sin_igv}'
                     data-descripcion = '{$descripcion}'
                     data-codigo = '{$cod_plu}'
-                    data-codigo_barra = '{$codigo_barra}'
+                    data-peso = '{$peso}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -301,7 +302,7 @@ class GuiaIngresoController extends Controller
         // dd($listArticulos);
         $items = array();
         foreach ($listArticulos as $item) {
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV );
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0 );
         }
 
         return response()->json(['items' => $items]);

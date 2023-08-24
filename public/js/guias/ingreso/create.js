@@ -251,6 +251,7 @@ var calcularTotales = () => {
         'importe' :  $(this).find('span[name=span_importe]').text(),
         'porcentaje_descuento' :  $(this).find('input[name=porcentaje_descuento]').val(),
         'monto_descuento' :  $(this).find('input[name=monto_descuento]').val(),
+        'peso' : $(this).data('peso'),
   
       };
     }
@@ -263,10 +264,12 @@ var calcularTotales = () => {
   var importe_sin_igv = 0;
   var monto_igv = 0;
   var monto_descuento = 0;
+  var peso_total = 0;
 
   $.map(items, function (element, index) {
     total_cantidad = total_cantidad + parseInt(element.cantidad);
     total_venta = total_venta + parseFloat(element.importe);
+    peso_total = peso_total + (element.peso * element.cantidad);
     if (element.porcentaje_descuento != '') {
       monto_descuento = monto_descuento + parseFloat(element.monto_descuento)
 
@@ -287,7 +290,8 @@ var calcularTotales = () => {
   $('#total_venta').val(total_venta)
   $('#importe_sin_igv').val(importe_sin_igv)
   $('#monto_igv').val(monto_igv)
-  $('#monto_descuento').val(round(monto_descuento,2))
+  $('#monto_descuento').val(round(monto_descuento,2));
+  $('#peso_bruto_total').val(round(peso_total,2));
 
   console.log({items});
 }

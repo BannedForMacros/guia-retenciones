@@ -398,7 +398,7 @@ class GuiaSalidaController extends Controller
         // dd($listArticulos);
         $items = array();
         foreach ($listArticulos as $item) {
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV );
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0 );
         }
 
         return response()->json(['items' => $items]);
@@ -605,6 +605,7 @@ class GuiaSalidaController extends Controller
         $descripcion = $request->post('descripcion');
         $precio_publico = $request->post('precio_publico');
         $precio_sin_igv = $request->post('precio_sin_igv');
+        $peso = $request->post('peso') ?? 0;
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
@@ -638,6 +639,7 @@ class GuiaSalidaController extends Controller
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
             $span_precio = $precio_publico;
             $importe = $cantidad * $precio_publico;
+            
             if ($base_clalculo == 1) {
                 $span_precio = $precio_sin_igv;
                 $importe = $cantidad * $precio_sin_igv;
@@ -653,6 +655,7 @@ class GuiaSalidaController extends Controller
                     data-descripcion = '{$descripcion}'
                     data-codigo = '{$cod_plu}'
                     data-codigo_barra = '{$codigo_barra}'
+                    data-peso = '{$peso}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
