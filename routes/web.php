@@ -48,6 +48,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::post('guiasalida/getSerie', 'getSerie')->name('guiasalida.getSerie');
     Route::post('guiasalida/listar', 'listar')->name('guiasalida.listar');
     Route::post('guiasalida/listarUbigeos', 'listarUbigeos')->name('guiasalida.listarUbigeos');
+    Route::post('guiasalida/getUbigeosPorAlmacen', 'getUbigeosPorAlmacen')->name('guiasalida.getUbigeosPorAlmacen');
     Route::get('guiasalida/pdf/{guia}', 'pdf')->name('guiasalida.pdf');
     Route::get('guiasalida/pdfDecode/{guia}', 'pdfDecode')->name('guiasalida.pdfDecode');
     Route::get('guiasalida/continuar/{guia}', 'continuar')->name('guiasalida.continuar');

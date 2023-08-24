@@ -262,9 +262,11 @@
                     </div>
                     <div class="col-md-12 mt-2" id="div_almacen_unico">
                       <label class="form-label">Almacen</label>
-                      <select class="form-select" name="codalmacen" id="codalmacen">
+                      <select class="form-select almacen_select" data-almacen_tipo='1' name="codalmacen" id="codalmacen">
                         @foreach ($listAlmacenes as $item)
                           <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
+                            data-ubigeo="{{ $item->ubigeo }}"
+                            data-direccion="{{ $item->direccion }}"
                             {{ $item->selected ?? '' }}>
                             {{ $item->descripcion }}</option>
                         @endforeach
@@ -273,9 +275,11 @@
                     <div class="mt-2" id="div_almacene_transferencia" style="display: none">
                       <div class="col-md-12">
                         <label class="form-label">Almacen Origen</label>
-                        <select class="form-select" name="cod_almacen_origen" id="cod_almacen_origen">
+                        <select class="form-select almacen_select" data-almacen_tipo="1" name="cod_almacen_origen" id="cod_almacen_origen">
                           @foreach ($listAlmacenOrigen as $item)
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
+                              data-ubigeo="{{ $item->ubigeo }}"
+                              data-direccion="{{ $item->direccion }}"
                               {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
@@ -283,9 +287,11 @@
                       </div>
                       <div class="col-md-12">
                         <label class="form-label">Almacen Destino</label>
-                        <select class="form-select" name="cod_almacen_destino" id="cod_almacen_destino">
+                        <select class="form-select almacen_select" data-almacen_tipo="2" name="cod_almacen_destino" id="cod_almacen_destino">
                           @foreach ($listAlmacenDestino as $item)
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
+                              data-ubigeo="{{ $item->ubigeo }}"
+                              data-direccion="{{ $item->direccion }}"
                               {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
@@ -411,7 +417,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <label class="form-label">Direccion Partida</label>
-                  <input type="text" class="form-control" name="direccion_partida"
+                  <input type="text" class="form-control" name="direccion_partida" id="direccion_partida"
                     placeholder="Direccion de Partida" value="{{ $guia->direccion_partida ?? '' }}">
                 </div>
               </div>
@@ -461,7 +467,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <label class="form-label">Llegada</label>
-                  <input type="text" class="form-control" name="direccion_llegada"
+                  <input type="text" class="form-control" name="direccion_llegada" id="direccion_llegada"
                     placeholder="Direccion de llegada" value="{{ $guia->direccion_llegada ?? '' }}">
                 </div>
               </div>
@@ -675,5 +681,6 @@
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/articulo.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/ubigeo.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/salida/almacen.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection

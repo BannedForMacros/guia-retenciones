@@ -123,6 +123,7 @@ class GuiaSalidaController extends Controller
         $listAlmacenes = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
         $listAlmacenOrigen = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
         $listAlmacenDestino = Http::get("{$api_datos}/ObtenerAlmacenes")->object()->almacenes;
+        // dd($listAlmacenes);
         $listPrecios = Http::get("{$api_datos}/ObtenerSucursalPrecio")->object()->listasPrecio;
         // $listVendedores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
         $listVendedores = [];
@@ -535,6 +536,63 @@ class GuiaSalidaController extends Controller
         }
 
         return response()->json(['options' => $options, 'tag_id' => $tag_id, 'next' => $next, 'procede' => $procede]);
+    }
+
+    public function getUbigeosPorAlmacen(Request $request)
+    {
+        // dd($request->post());
+        $tipo = $request->post('tipo');
+        $ubigeoDistrito = trim($request->post('ubigeo'));
+        $direccion = trim($request->post('direccion'));
+
+        // dd($tipo, $ubigeo);
+        $ubigeoProvincia = Str::substr($ubigeoDistrito, 0,4);
+        $ubigeoDepartamento = Str::substr($ubigeoProvincia, 0,2);
+
+        // dd($ubigeoDistrito, $ubigeoProvincia, $ubigeoDepartamento);
+
+        $api_datos = Parametro::find(6)->valor;
+
+        $getUbigeoDepartamento = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
+        // dd($getUbigeoDepartamento);
+        $optionsDepartamento = '';
+        foreach ($getUbigeoDepartamento as $item) {
+            $codUbigeo = trim($item->codUbigeo);
+            $selected = "";
+            if ($codUbigeo == $ubigeoDepartamento) {
+                $selected = "selected";
+            }
+            $optionsDepartamento .= "<option value='{$codUbigeo}' {$selected}>{$item->descripcion}</option>";
+        }
+        
+        $getUbigeoProvincia = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => "{$ubigeoDepartamento}", 'tipoConsulta' => 2 ])->object()->ubigeos;
+        // dd($getUbigeoProvincia);
+        $optionsProvincia = '';
+        foreach ($getUbigeoProvincia as $item) {
+            $codUbigeo = trim($item->codUbigeo);
+            $selected = "";
+            if ($codUbigeo == $ubigeoProvincia) {
+                $selected = "selected";
+            }
+            $optionsProvincia .= "<option value='{$codUbigeo}' {$selected}>{$item->descripcion}</option>";
+        }
+        
+        $getUbigeoDistrito = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => "{$ubigeoProvincia}", 'tipoConsulta' => 3 ])->object()->ubigeos;
+        // dd($getUbigeoDistrito);
+        $optionsDistrito = '';
+        foreach ($getUbigeoDistrito as $item) {
+            $codUbigeo = trim($item->codUbigeo);
+            $selected = "";
+            if ($codUbigeo == $ubigeoDistrito) {
+                $selected = "selected";
+            }
+            $optionsDistrito .= "<option value='{$codUbigeo}' {$selected}>{$item->descripcion}</option>";
+        }
+
+
+        // dd($optionsDepartamento, $optionsProvincia, $optionsDistrito);
+        return response()->json(['optionsDepartamento' => $optionsDepartamento, 'optionsProvincia' => $optionsProvincia, 'optionsDistrito' => $optionsDistrito, 'tipo' => $tipo, 'direccion' => $direccion]);
+
     }
 
     public function agregarItem(Request $request)

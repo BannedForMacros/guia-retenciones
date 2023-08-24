@@ -375,5 +375,6 @@
   @push('js-scripts')
     <script src="{{ asset('js/guias/ingreso/create.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/ingreso/articulo.js?v=') }}{{ rand() }}"></script>
+
   @endpush
 @endsection
