@@ -784,7 +784,9 @@ class GuiaSalidaController extends Controller
         }
 
         if ($procede == true) {
+            
             if ($guardar_avance == false) {
+                // dd('hola');
                 foreach ($detalle as $item) {
                     $body_detalle[] = array(
                         "anioGuia" => $anio_actual,
@@ -800,8 +802,10 @@ class GuiaSalidaController extends Controller
                         "unidadMedida" => 1
                     );
                 }
-                $placa_Vehiculo = $datos['vehiculo_placa'];
-                $placa_vehiculo_format = substr(str_replace('-', '', $placa_Vehiculo), 0, 8);
+                $placa_vehiculo = str_replace('-', '', $datos['vehiculo_placa']);
+                $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
+                // dd($placa_vehiculo_format);
+                $datos['vehiculo_placa'] = $placa_vehiculo_format;
                 $body = [
                     "anioGuiaRemision" => $anio_actual,
                     "breveteChofer" => $datos['brevete'],
