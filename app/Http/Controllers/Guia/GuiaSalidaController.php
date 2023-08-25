@@ -802,7 +802,7 @@ class GuiaSalidaController extends Controller
                         "unidadMedida" => 1
                     );
                 }
-                $placa_vehiculo = str_replace('-', '', $datos['vehiculo_placa']);
+                $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
                 $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
                 // dd($placa_vehiculo_format);
                 $datos['vehiculo_placa'] = $placa_vehiculo_format;
