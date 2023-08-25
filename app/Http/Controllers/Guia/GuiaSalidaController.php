@@ -800,7 +800,8 @@ class GuiaSalidaController extends Controller
                         "unidadMedida" => 1
                     );
                 }
-
+                $placa_Vehiculo = $datos['vehiculo_placa'];
+                $placa_vehiculo_format = substr(str_replace('-', '', $placa_Vehiculo), 0, 8);
                 $body = [
                     "anioGuiaRemision" => $anio_actual,
                     "breveteChofer" => $datos['brevete'],
@@ -829,7 +830,7 @@ class GuiaSalidaController extends Controller
                     "seriefactura" => $datos['pedido_serie'],
                     "numeroFactura" => '',
                     "numeroGuia" => $datos['numero'],
-                    "placavehiculo" => $datos['vehiculo_placa'],
+                    "placavehiculo" => $placa_vehiculo_format,
                     "rucTransportista" => $datos['transportista_ruc'],
                     "tipoGuia" => "A", //N->ingreso; A->Salida
                     "tipoOperacion" => $datos['tipo_operacion_id'],
@@ -971,7 +972,7 @@ class GuiaSalidaController extends Controller
         //         "LineaReferencia" => 1
         //     ]
         // ]
-
+        
         $body = [
             // "IdDocumento" => "T001-00000070",
             "IdDocumento" => "T00{$guia->serie}-{$guia->numero}",
