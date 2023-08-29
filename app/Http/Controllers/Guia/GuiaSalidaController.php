@@ -53,6 +53,9 @@ class GuiaSalidaController extends Controller
 
         $list = $consulta->get();
         
+        $api_facturacion_consultar_estado = Parametro::find(9)->valor;
+        $ruc_entidad = Parametro::find(2)->valor;
+
         foreach ($list as $key => $value) {
             if ($value->envio_id != null) {
                 $getEnvio = FacturacionEnvio::find($value->envio_id);
@@ -70,8 +73,61 @@ class GuiaSalidaController extends Controller
             if ($value->envio_sunat == 1) {
                 $url_pdf = route('guiasalida.pdfDecode', ['guia' => $value->id]);
             }
+
+            if ($value->guia_estado_id == 1) {
+                if ($value->envio_sunat == 1) {
+                    $actualizar_estado = false;
+                    $serie_format = str_pad($value->serie, 3, '0', STR_PAD_LEFT);
+                    $body_consultar_estado = [
+                        "rucremitente" => "{$ruc_entidad}",
+                        "serienumero" => "T{$serie_format}-{$value->numero}"
+                    ];
+
+                    
+                    try {
+                        $estadoSunat = Http::post("{$api_facturacion_consultar_estado}", $body_consultar_estado)->object();
+                        if ($estadoSunat->estado != null ) {
+                            $actualizar_estado = true;
+                            if ($estadoSunat->estado =='A') {//Aceptado
+                                $nuevo_estado = 2;//aceptada
+                            }
+                            if ($estadoSunat->estado =='B') {//Rechazado
+                                $nuevo_estado = 3;//aceptada
+                            }
+                            if ($estadoSunat->estado =='O') {//Observado
+                                $nuevo_estado = 5;//observada
+                            }
+                        }
+                    } catch (Exception $e) {
+                        //throw $th;
+                    }
+
+
+                    if ($actualizar_estado == true) {
+                        $guia_upt_status = GuiaSalida::find($value->id);
+                        // dd($guia_upt_status);
+                        $guia_upt_status->guia_estado_id = $nuevo_estado;
+                        
+                        try {
+                            $guia_upt_status->save();
+                            $value->guia_estado_id = $nuevo_estado;
+                            $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
+                        } catch (Exception $e) {
+                            //throw $th;
+                        }
+                    }
+
+
+                }
+
+
+            }
+
+
+
             $list[$key]->url_pdf = $url_pdf;
         }
+        // dd($list);
         return view('guia.salida.tabla', compact('list'));
     }
 
@@ -1120,7 +1176,7 @@ class GuiaSalidaController extends Controller
 
             } catch (Exception $e) {
                 //throw $th;
-                dd($e);
+                // dd($e);
                 $procede = false;
                 $msj = "Ocurrio un error al actualizar el envio en la guia";
                 $msj_tipo = "error";

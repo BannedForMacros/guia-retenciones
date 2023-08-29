@@ -6,6 +6,7 @@
     <th>Razon Social</th>
     <th>Fecha Emision</th>
     <th>Importe</th>
+    <th>Estado</th>
     <th>Accion</th>
   </thead>
   <tbody>
@@ -16,6 +17,7 @@
       <td class="align-middle">{{ $item->texto_razon_social }}</td>
       <td class="align-middle">{{ $carbon::parse($item->fecha_emision)->format('d/m/Y') }}</td>
       <td class="align-middle">{{ $item->total_venta }}</td>
+      <td class="align-middle">{{ $item->estado_nombre }}</td>
       <td class="align-middle">
         {{-- <a href="{{ route('guiasalida.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a> --}}
 

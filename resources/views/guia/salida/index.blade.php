@@ -13,21 +13,25 @@
         <div class="row">
           <div class="col-md-12">
             <h5><i class="fa fa-list"></i> Guia de Salida Generadas
-            <a href="{{ route('guiasalida.create') }}" class="btn btn-primary btn-sm float-end"><i class="fa fa-plus"></i> Nueva</a></h5>
+              <a href="{{ route('guiasalida.create') }}" class="btn btn-primary btn-sm float-end"><i class="fa fa-plus"></i>
+                Nueva</a>
+            </h5>
 
           </div>
         </div>
 
         <form name="form_busqueda" id="form_busqueda">
-        <div class="row">
+          <div class="row">
             @csrf
             <div class="col-md-3">
               <label class="form-label">Fecha Inicio</label>
-              <input class="form-control fecha" data-tipo='inicio' type="date" name="fecha_inicio" id="fecha_inicio" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
+              <input class="form-control fecha" data-tipo='inicio' type="date" name="fecha_inicio" id="fecha_inicio"
+                value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
             </div>
             <div class="col-md-3">
               <label class="form-label">Fecha Fin</label>
-              <input class="form-control fecha" data-tipo='fin' type="date" name="fecha_fin" id="fecha_fin" value="{{ date('Y-m-d') }}">
+              <input class="form-control fecha" data-tipo='fin' type="date" name="fecha_fin" id="fecha_fin"
+                value="{{ date('Y-m-d') }}">
             </div>
             <div class="col-md-1">
               <label class="form-label">Serie</label>
@@ -45,6 +49,13 @@
         </form>
 
         <div class="row mt-4">
+          <div class="col-md-6" id="div_loading">
+            <div class="d-flex align-items-center">
+              <strong role="status">Cargando...</strong>
+              <div class="spinner-border ms-auto" aria-hidden="true"></div>
+            </div>
+
+          </div>
           <div class="col-md-12" id="resultados">
 
           </div>

@@ -12,6 +12,9 @@ var callListarGuias = () => {
 
   var formElement = document.getElementById("form_busqueda");
   var formData = new FormData(formElement);
+
+  $('#div_loading').show();
+  $('#resultados').html('');
   listar(formData);
 }
 
@@ -25,7 +28,8 @@ var listar = function(formData){
     dataType: 'html',
     success: function(response){
       $('#resultados').html(response);
-
+      $('#div_loading').hide();
+      
       $('#tabla_guias').DataTable({
         responsive: true,
         language: DataTable_Spanish
