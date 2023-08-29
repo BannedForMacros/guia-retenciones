@@ -902,7 +902,12 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->importe = $item->importe;
                     $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
-                    $guiaDetalle->descripcion = $item->descripcion;
+
+                    $nombreArticulo = $item->descripcion;
+                    $nombreArticuloLimpio = json_decode('"' . $nombreArticulo . '"');
+
+                    // $guiaDetalle->descripcion = $item->descripcion;
+                    $guiaDetalle->descripcion = $nombreArticuloLimpio;
                     $guiaDetalle->precio_publico = $item->precio_publico;
                     $guiaDetalle->precio_sin_igv = $item->precio_sin_igv;
                     $guiaDetalle->codigo_barra = $item->codigo_barra;
@@ -956,10 +961,15 @@ class GuiaSalidaController extends Controller
         // dd($detalle);
         $nro = 1;
         foreach ($detalle as $item) {
+            $nombre_articulo_format = utf8_encode($item->descripcion);
+            // dd($nombre_articulo_format);
+            // $nombre_articulo = $item->descripcion;
+            // $nombre_articulo_format = iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $nombre_articulo);
+            // dd($nombre_articulo_format);
             $body_detalle[] = array(
                 'Correlativo' => $nro++,
                 "CodigoItem" => "{$item->codarticulo}",
-                "Descripcion" => "{$item->descripcion}",
+                "Descripcion" => "{$nombre_articulo_format}",
                 "UnidadMedida" => "NIU",
                 "Cantidad" => $item->cantidad,
                 "LineaReferencia" => 1
@@ -976,10 +986,10 @@ class GuiaSalidaController extends Controller
         //         "LineaReferencia" => 1
         //     ]
         // ]
-        
+        $serie_format = str_pad($guia->serie, 3, '0', STR_PAD_LEFT);
         $body = [
             // "IdDocumento" => "T001-00000070",
-            "IdDocumento" => "T00{$guia->serie}-{$guia->numero}",
+            "IdDocumento" => "T{$serie_format}-{$guia->numero}",
             "FechaEmision" => "{$guia->fecha_emision}",
             "HoraEmision" => "{$guia->hora_emision}",
             "TipoDocumento" => "09",
@@ -1048,6 +1058,7 @@ class GuiaSalidaController extends Controller
             "BienesATransportar" => $body_detalle
         ]; 
         
+        // dd(json_encode($body));
         // dd($body);
         
         $url_button = route('guiasalida.pdfDecode', ['guia'=> $guia->id]);
@@ -1060,6 +1071,8 @@ class GuiaSalidaController extends Controller
         $credencial = Parametro::find(1)->valor;
         try {
             $send = Http::withHeaders(['Credencial' => $credencial])
+                        ->asJson() // Asegurarse de que se envíe como JSON
+                        // ->put("{$api_facturacion}", $body)->object();
                         ->put("{$api_facturacion}", $body)->object();
                         // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
             // dd($send);
@@ -1073,17 +1086,18 @@ class GuiaSalidaController extends Controller
         }
 
         if ($procede == true) {
+
+            $store = new FacturacionEnvio();
+            $store->tabla = 'guia_salidas';
+            $store->registro_id = $id;
+            $store->trama_json = json_encode($body);
+            $store->codigo_hash = $send->CodigoHash;
+            $store->codigo_qr = $send->CodigoQr;
+            $store->pdf417 = $send->pdf417;
+            $store->exito = $send->Exito;
+            $store->mensaje_error = $send->MensajeError;
+            $store->pila = $send->Pila;
             try {
-                $store = new FacturacionEnvio();
-                $store->tabla = 'guia_salidas';
-                $store->registro_id = $id;
-                $store->trama_json = json_encode($body);
-                $store->codigo_hash = $send->CodigoHash;
-                $store->codigo_qr = $send->CodigoQr;
-                $store->pdf417 = $send->pdf417;
-                $store->exito = $send->Exito;
-                $store->mensaje_error = $send->MensajeError;
-                $store->pila = $send->Pila;
                 // dd($store);
                 $store->save();
             } catch (Exception $e) {
@@ -1115,6 +1129,7 @@ class GuiaSalidaController extends Controller
         }
 
         if ($procede == true) {//obtener PDF y XML
+            // dd('pdf');
             $api_facturacion_consultas = Parametro::find(8)->valor;
             $serie_format = str_pad($guia->serie, 3, "0", STR_PAD_LEFT);
             $bodyConsulta = array(
@@ -1126,20 +1141,30 @@ class GuiaSalidaController extends Controller
                 'tipodocumentorespuesta' => 'PDF'
             );
             // dd($bodyConsulta);
-            $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
-            // dd($getPdf->data);
-            if ($getPdf->success == true) {
-                $storePdf = FacturacionEnvio::find($store->id);
-                $storePdf->pdf = $getPdf->data;
-                try {
-                    $storePdf->save();
-                    
-                } catch (Exception $e) {
-                    //throw $th;
-                    // dd($e)
-                    
+            try {
+                $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
+                if ($getPdf->success == true) {
+                    $storePdf = FacturacionEnvio::find($store->id);
+                    $storePdf->pdf = $getPdf->data;
+                    try {
+                        $storePdf->save();
+                        
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e)
+                        
+                    }
                 }
+                // dd($getPdf);
+            } catch (Exception $e) {
+                //throw $th;
+                // dd($e);
+                // $procede = false;
+                // $msj = "";
             }
+            // dd($getPdf);
+            // dd($getPdf->data);
+
         }
 
 
