@@ -1,7 +1,7 @@
 @inject('carbon', 'Carbon\Carbon')
 <table class="table table-hover table-striped table-sm table-bordered" id="tabla_guias" style="width: 100%">
   <thead>
-    <th>Condicion</th>
+    <th>#</th>
     <th>Serie</th>
     <th>Razon Social</th>
     <th>Fecha Emision</th>
@@ -12,7 +12,7 @@
   <tbody>
     @foreach ($list as $item)
     <tr>
-      <td class="align-middle">{{ $item->estado_nombre}}</td>
+      <td class="align-middle">{{ $nro++}}</td>
       <td class="align-middle">{{ $item->serie }}-{{$item->numero}}</td>
       <td class="align-middle">{{ $item->texto_razon_social }}</td>
       <td class="align-middle">{{ $carbon::parse($item->fecha_emision)->format('d/m/Y') }}</td>

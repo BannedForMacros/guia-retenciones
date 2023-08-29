@@ -128,7 +128,8 @@ class GuiaSalidaController extends Controller
             $list[$key]->url_pdf = $url_pdf;
         }
         // dd($list);
-        return view('guia.salida.tabla', compact('list'));
+        $nro = 1;
+        return view('guia.salida.tabla', compact('list', 'nro'));
     }
 
     public function getSerie(Request $request)
