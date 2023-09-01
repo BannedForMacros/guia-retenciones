@@ -831,11 +831,11 @@ class GuiaSalidaController extends Controller
             ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
                 ->object()->cliente;
             $getClientePorRuc = $getClientePorRuc[0];
-                $datos['cliente_id'] = $getClientePorRuc->codCliente;
-                $datos['cliente_razon_social'] = $getClientePorRuc->razonSocial;
-                $datos['cliente_nro_documento'] = $getClientePorRuc->razonSocial;
+                $datos['cliente_id'] = trim($getClientePorRuc->codCliente);
+                $datos['cliente_razon_social'] = trim($getClientePorRuc->razonSocial);
+                $datos['cliente_nro_documento'] = trim($getClientePorRuc->razonSocial);
                 $datos['cliente_documento_tipo_nombre'] = 'RUC';
-                $datos['cliente_direccion'] = $getClientePorRuc->direccion;
+                $datos['cliente_direccion'] = trim($getClientePorRuc->direccion);
 
             // dd($getClientePorRuc);
             // dd($datos);
