@@ -11,10 +11,10 @@ $(document).ready(function () {
     callListarTransportistas();
     callListarProveedores();
     callBrevete();
-    callSetMotivoTraslado();
     callIndicarProveedor();
     callGetSerie();
     
+    callSetMotivoTraslado();
     calcularTotales();
   }, 300);
 });
@@ -243,7 +243,6 @@ $(document).on('click', '#btnAdd', function(event) {
 });
 
 
-
 $(document).on('click', '.delete_item', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -411,6 +410,7 @@ var callStore = (guardar_avance = false) => {
   }
   formData.append('vendedor_nombre', vendedor_nombre);
 
+  
   var data_cliente = $('#cliente_id').select2('data')[0];
   // if (data_cliente != null) {
     
@@ -530,9 +530,12 @@ var callStore = (guardar_avance = false) => {
   
     if (procede_store == true) {
       if (indicar_proveedor == false) {
-        if (formData.get('cliente_razon_social') == '') {
-          procede_store = false;
-          msj_store = 'Debe indicar un cliente';
+        if (formData.get('tipo_operacion_id') != 12) {
+          if (formData.get('cliente_razon_social') == '') {
+            procede_store = false;
+            msj_store = 'Debe indicar un cliente';
+          }
+          
         }
         
       }
@@ -699,10 +702,28 @@ var callSetMotivoTraslado = () => {
   if (tipo_operacion_id == 12) {
     $('#div_almacen_unico').hide();
     $('#div_almacene_transferencia').show();
+    $('#div_cliente').hide();
+    $('#div_proveedor').hide();
+    $('#div_operaciones').removeClass("col-md-6").addClass("col-md-12");
+    $('#indicar_proveedor').prop('checked', false);
+    $('#indicar_proveedor').prop('disabled', true);
+    
     
     console.log('mostramos origen y destino');
   } else {
-    
+    $('#div_operaciones').removeClass("col-md-12").addClass("col-md-6");
+    $('#indicar_proveedor').prop('disabled', false);
+
+    var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+    if (indicar_proveedor == true) {
+      $('#div_cliente').hide();
+      $('#div_proveedor').show();
+      
+    }else{
+      $('#div_cliente').show();
+      $('#div_proveedor').hide();
+
+    }
     $('#div_almacen_unico').show();
     $('#div_almacene_transferencia').hide();
     console.log('mostramos solo un almacen');
@@ -753,7 +774,11 @@ $(document).on('change', '#indicar_proveedor', function(event) {
 
 var callIndicarProveedor = () => {
   
-  var status = $('#indicar_proveedor').prop('checked');
+  var status = $('#indicar_proveedor').prop('checked')
+
+  var tipo_operacion_id = $('#tipo_operacion_id').val();
+
+
   if (status == true) {
     $('#div_proveedor').show();
     $('#div_cliente').hide();

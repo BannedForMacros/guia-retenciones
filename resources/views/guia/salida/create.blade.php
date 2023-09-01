@@ -212,7 +212,7 @@
 
 
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" id="div_operaciones">
               <div class="row">
                 <div class="col-md-6">
                   <div class="row mt-4">
@@ -332,7 +332,7 @@
               </div>
 
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" >
               <div class="row">
                 <div class="col-md-6">
                   <label class="form-label">Motivo Traslado</label>

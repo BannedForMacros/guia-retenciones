@@ -86,6 +86,7 @@ class GuiaSalidaController extends Controller
                     
                     try {
                         $estadoSunat = Http::post("{$api_facturacion_consultar_estado}", $body_consultar_estado)->object();
+                        // dd($estadoSunat);
                         if ($estadoSunat->estado != null ) {
                             $actualizar_estado = true;
                             if ($estadoSunat->estado =='A') {//Aceptado
@@ -97,6 +98,7 @@ class GuiaSalidaController extends Controller
                             if ($estadoSunat->estado =='O') {//Observado
                                 $nuevo_estado = 5;//observada
                             }
+                            $mensaje_sunat = $estadoSunat->mensaje;
                         }
                     } catch (Exception $e) {
                         //throw $th;
@@ -107,6 +109,7 @@ class GuiaSalidaController extends Controller
                         $guia_upt_status = GuiaSalida::find($value->id);
                         // dd($guia_upt_status);
                         $guia_upt_status->guia_estado_id = $nuevo_estado;
+                        $guia_upt_status->mensaje_estado_sunat = $mensaje_sunat;
                         
                         try {
                             $guia_upt_status->save();
@@ -805,6 +808,10 @@ class GuiaSalidaController extends Controller
         
 
         $proveedor_id = '';
+        // $
+        // if ($) {
+        //     # code...
+        // }
         if ($datos['indicar_proveedor'] == true) {
             $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
         }
@@ -819,6 +826,20 @@ class GuiaSalidaController extends Controller
         if ($datos['tipo_operacion_id'] == 12) {//transferencia
             $datos['codalmacen'] = null;
             $datos['almacen_nombre'] = null;
+            $valor_cliente_transferencia = Parametro::find(2)->valor;
+            $getClientePorRuc = Http::post("{$api_datos}/obtenerCliente", 
+            ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
+                ->object()->cliente;
+            $getClientePorRuc = $getClientePorRuc[0];
+                $datos['cliente_id'] = $getClientePorRuc->codCliente;
+                $datos['cliente_razon_social'] = $getClientePorRuc->razonSocial;
+                $datos['cliente_nro_documento'] = $getClientePorRuc->razonSocial;
+                $datos['cliente_documento_tipo_nombre'] = 'RUC';
+                $datos['cliente_direccion'] = $getClientePorRuc->direccion;
+
+            // dd($getClientePorRuc);
+            // dd($datos);
+
         }
 
         // dd(json_encode($body));
