@@ -833,7 +833,7 @@ class GuiaSalidaController extends Controller
             $getClientePorRuc = $getClientePorRuc[0];
                 $datos['cliente_id'] = trim($getClientePorRuc->codCliente);
                 $datos['cliente_razon_social'] = trim($getClientePorRuc->razonSocial);
-                $datos['cliente_nro_documento'] = trim($getClientePorRuc->razonSocial);
+                $datos['cliente_nro_documento'] = trim($getClientePorRuc->rucCliente);
                 $datos['cliente_documento_tipo_nombre'] = 'RUC';
                 $datos['cliente_direccion'] = trim($getClientePorRuc->direccion);
 
