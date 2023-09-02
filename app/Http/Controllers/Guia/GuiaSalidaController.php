@@ -847,6 +847,10 @@ class GuiaSalidaController extends Controller
             $datos['almacen_origen_nombre'] = null;
             $datos['cod_almacen_destino'] = null;
             $datos['almacen_destino_nombre'] = null;
+            $datos['codigo_anexo_partida'] = null;
+            $datos['codigo_anexo_llegada'] = null;
+
+
         }
 
         if ($datos['tipo_operacion_id'] == 12) {//transferencia
@@ -1162,12 +1166,12 @@ class GuiaSalidaController extends Controller
             "DireccionPartida" => [
                 "Ubigeo" => "{$guia->ubigeo_partida}",
                 "DireccionCompleta" => "{$guia->direccion_partida}",
-                "codigoanexo" => ""
+                "codigoanexo" => "{$guia->codigo_anexo_partida}"
             ],
             "DireccionLlegada" => [
                 "Ubigeo" => "{$guia->ubigeo_llegada}",
                 "DireccionCompleta" => "{$guia->direccion_llegada}",
-                "codigoanexo" => ""
+                "codigoanexo" => "{$guia->codigo_anexo_llegada}"
             ],
             "NumeroContenedor" => "",
             "Nropresintocontenedor" => "",

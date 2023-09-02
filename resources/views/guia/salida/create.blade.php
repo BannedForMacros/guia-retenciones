@@ -267,6 +267,7 @@
                           <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
                             data-ubigeo="{{ $item->ubigeo ?? '' }}"
                             data-direccion="{{ $item->direccion ?? '' }}"
+                            data-codigo_anexo = "{{ $item->codInterno }}"
                             {{ $item->selected ?? '' }}>
                             {{ $item->descripcion }}</option>
                         @endforeach
@@ -280,6 +281,7 @@
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
                               data-ubigeo="{{ $item->ubigeo ?? '' }}"
                               data-direccion="{{ $item->direccion ?? '' }}"
+                              data-codigo_anexo = "{{ $item->codInterno }}"
                               {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach
@@ -292,6 +294,7 @@
                             <option value="{{ $item->codAlmacen }}" data-nombre="{{ $item->descripcion }}"
                               data-ubigeo="{{ $item->ubigeo ?? '' }}"
                               data-direccion="{{ $item->direccion ?? '' }}"
+                              data-codigo_anexo = "{{ $item->codInterno }}"
                               {{ $item->selected ?? '' }}>
                               {{ $item->descripcion }}</option>
                           @endforeach

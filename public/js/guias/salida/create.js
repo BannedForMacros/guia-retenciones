@@ -478,9 +478,15 @@ var callStore = (guardar_avance = false) => {
 
   var almacen_origen_nombre = $('#cod_almacen_origen').find(':selected').data('nombre');
   formData.append('almacen_origen_nombre', almacen_origen_nombre);
+
+  var codigo_anexo_partida = $('#cod_almacen_origen').find(':selected').data('codigo_anexo');
+  formData.append('codigo_anexo_partida', codigo_anexo_partida);
   
   var almacen_destino_nombre = $('#cod_almacen_destino').find(':selected').data('nombre');
   formData.append('almacen_destino_nombre', almacen_destino_nombre);
+  
+  var codigo_anexo_llegada = $('#cod_almacen_destino').find(':selected').data('codigo_anexo');
+  formData.append('codigo_anexo_llegada', codigo_anexo_llegada);
 
   var peso_bruto_total = $('#peso_bruto_total').val();
   formData.append('peso_bruto_total', peso_bruto_total);
