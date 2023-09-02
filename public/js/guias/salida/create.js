@@ -656,7 +656,7 @@ var store = function(formData){
       $('#li_store').html(response.msj);
 
       if (response.procede == true) {
-        if (response.guardar_avance == false) {
+        if (formData.get('guardar_avance') == 'false') {
           if (formData.get('envio_sunat') == 1) {
             formData.append('id', response.id);
             facturacionElectronica(formData);
