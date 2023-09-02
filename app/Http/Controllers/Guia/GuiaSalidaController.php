@@ -310,6 +310,14 @@ class GuiaSalidaController extends Controller
         $listChoferes = Http::post("{$api_datos}/ObtenerChoferes", ['nombrechofer' => ''])->object()->choferes;
 
         $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+        foreach ($listSeries as $key => $item) {
+            $selected = "";
+            if ($item->numserie == $guia->serie ) {
+                $selected = "selected";
+            }
+            $listSeries[$key]->selected = $selected;
+        }
+        // dd($listSeries);
         
         foreach ($listVendedores as $key => $value) {
             $selected = "";
@@ -992,7 +1000,7 @@ class GuiaSalidaController extends Controller
         if ($guardar_avance == true) {
             // dd('holap');
             $datos['numero'] = null;
-            $datos['serie'] = null;
+            // $datos['serie'] = null;
             $msj = "<b>Avance de Guia de Salida registrada </b>";
         }
         // dd($datos);

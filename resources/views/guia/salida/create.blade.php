@@ -27,7 +27,9 @@
                           <label class="form-label">Serie</label>
                           <select class="form-select" name="serie" id="serie">
                             @foreach ($listSeries as $item)
-                              <option value="{{ $item->numserie }}">{{ $item->numserie }}</option>
+                              <option value="{{ $item->numserie }}" {{ $item->selected ?? '' }}>
+                                {{ $item->numserie }}
+                              </option>
                             @endforeach
                           </select>
                         </div>
