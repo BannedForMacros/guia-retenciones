@@ -1150,7 +1150,7 @@ class GuiaSalidaController extends Controller
             "UnidadPesobrutototal" => "KGM",
             // "UnidadPesobrutototal" => "",
             "NroPallets" => 0,
-            "ModalidadTraslado" => "01",
+            "ModalidadTraslado" => $guia->modalidad_traslado,
             // "FechaInicioTraslado" => "2023-06-02",
             "FechaInicioTraslado" => $guia->fecha_emision,
             "RucTransportista" => "{$guia->transportista_ruc}",
