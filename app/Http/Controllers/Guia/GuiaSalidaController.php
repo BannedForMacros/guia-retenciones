@@ -765,7 +765,8 @@ class GuiaSalidaController extends Controller
     public function modalStore(Request $request)
     {
         $envio_sunat = $request->post('envio_sunat');
-        return view('guia.salida.modal-store', compact('envio_sunat'));
+        $guardar_avance = $request->post('guardar_avance');
+        return view('guia.salida.modal-store', compact('envio_sunat', 'guardar_avance'));
     }
 
     /**

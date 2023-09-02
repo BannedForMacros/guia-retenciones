@@ -12,11 +12,13 @@
             <b>Registrando guia...</b>
             <span class=""><i class="fa-solid fa-spinner fa-spin fa-lg"></i></span>
           </li>
-          @if ($envio_sunat == 1)
-            <li class="list-group-item d-flex justify-content-between align-items-center" id="li_facturacion">
-              <b>Enviando a SUNAT...</b>
-              <span class=""><i class="fa-solid fa-spinner fa-spin fa-lg"></i></span>
-            </li>
+          @if ($guardar_avance == false)
+            @if ($envio_sunat == 1)
+              <li class="list-group-item d-flex justify-content-between align-items-center" id="li_facturacion">
+                <b>Enviando a SUNAT...</b>
+                <span class=""><i class="fa-solid fa-spinner fa-spin fa-lg"></i></span>
+              </li>
+            @endif
               
           @endif
         </ul>
