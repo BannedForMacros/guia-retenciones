@@ -565,6 +565,13 @@ var callStore = (guardar_avance = false) => {
         msj_store = 'Debe indicar el Peso Total';
       }
     }
+
+    if (procede_store == true) {
+      if (peso_bruto_total <= 0) {
+        procede_store = false;
+        msj_store = 'El peso debe ser mayor a cero (0)';
+      }
+    }
   }
 
   
