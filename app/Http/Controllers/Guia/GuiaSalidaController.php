@@ -229,9 +229,10 @@ class GuiaSalidaController extends Controller
         }
         $listUbigeosProvinciaLlegada = [];
         $listUbigeosDistritoLlegada = [];
+        $verChofer = 'display: none';
+        $verVehiculo = 'display: none';
 
-
-        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino', 'verChofer', 'verVehiculo'));
     }
 
     public function continuar(GuiaSalida $guia)
@@ -394,7 +395,14 @@ class GuiaSalidaController extends Controller
 
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
 
-        return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino'));
+        $verChofer = 'display: none';
+        $verVehiculo = 'display: none';
+        if ($guia->modalidad_traslado == '02') {
+            $verChofer = '';
+            $verVehiculo = '';
+        }
+
+        return view('guia.salida.create', compact('guia', 'detalle','listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listTransportistas', 'listUbigeosDepartamentoPartida','listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino', 'verChofer', 'verVehiculo'));
     }
 
     public function getVendedor(Request $request)
@@ -655,6 +663,24 @@ class GuiaSalidaController extends Controller
 
     }
 
+    public function getModalidadTraslado(Request $request)
+    {
+        // dd($request->post());
+        $entidad_ruc = Parametro::find(2)->valor;
+        // $entidad_ruc = '20117332714';
+        $transportista_ruc = $request->post('transportista_ruc');
+
+        $modalidad_traslado = '01';//publico
+        $verChofer = false;
+        
+        if ($entidad_ruc == $transportista_ruc) {
+            $modalidad_traslado = '02';//privado
+            $verChofer = true;
+        }
+
+        return response()->json(['modalidad_traslado' => $modalidad_traslado, 'verChofer' => $verChofer]);
+    }
+
     public function agregarItem(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
@@ -842,6 +868,16 @@ class GuiaSalidaController extends Controller
 
         }
 
+        if ($datos['modalidad_traslado'] == '01') {//publico
+            $datos['vehiculo_id'] = null;
+            $datos['chofer_id'] = null;
+            $datos['brevete'] = null;
+            $datos['chofer_dni'] = null;
+            $datos['chofer_brevete'] = null;
+            $datos['chofer_nombre'] = null;
+            $datos['vehiculo_placa'] = null;
+            $datos['vehiculo_marca'] = null;
+        }
         // dd(json_encode($body));
         // dd($body);
         // dd($guardar_avance);
@@ -880,10 +916,14 @@ class GuiaSalidaController extends Controller
                         "unidadMedida" => 1
                     );
                 }
-                $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
-                $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
-                // dd($placa_vehiculo_format);
-                $datos['vehiculo_placa'] = $placa_vehiculo_format;
+                if ($datos['vehiculo_placa'] != null) {
+                    // dd('hola');
+                    $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
+                    $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
+                    // dd($placa_vehiculo_format);
+                    $datos['vehiculo_placa'] = $placa_vehiculo_format;
+                    
+                }
                 $body = [
                     "anioGuiaRemision" => $anio_actual,
                     "breveteChofer" => $datos['brevete'],
@@ -912,7 +952,7 @@ class GuiaSalidaController extends Controller
                     "seriefactura" => $datos['pedido_serie'],
                     "numeroFactura" => '',
                     "numeroGuia" => $datos['numero'],
-                    "placavehiculo" => $placa_vehiculo_format,
+                    "placavehiculo" => $datos['vehiculo_placa'],
                     "rucTransportista" => $datos['transportista_ruc'],
                     "tipoGuia" => "A", //N->ingreso; A->Salida
                     "tipoOperacion" => $datos['tipo_operacion_id'],

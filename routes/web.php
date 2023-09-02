@@ -37,6 +37,7 @@ Route::controller(GuiaRemisionController::class)->group(function(){
 
 Route::controller(GuiaSalidaController::class)->group(function (){
 
+    Route::post('guiasalida/getModalidadTraslado', 'getModalidadTraslado')->name('guiasalida.getModalidadTraslado');
     Route::post('guiasalida/agregarItem', 'agregarItem')->name('guiasalida.agregarItem');
     Route::post('guiasalida/formBusquedaArticulo', 'formBusquedaArticulo')->name('guiasalida.formBusquedaArticulo');
     Route::post('guiasalida/getVendedor', 'getVendedor')->name('guiasalida.getVendedor');

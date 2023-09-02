@@ -309,6 +309,7 @@
             <div class="col-md-6">
               <div class="row">
                 <div class="col-md-12">
+                  <input type="hidden" name="modalidad_traslado" id="modalidad_traslado" value="{{ $guia->modalidad_traslado ?? '' }}">
                   <label class="form-label">Transportista</label>
                   <select class="form-select" name="transportista_id" id="transportista_id" style="width: 100%"
                     data-placeholder="Seleccionar un Transportista">
@@ -341,7 +342,7 @@
                   </select>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6" id="div_vehiculo" style="{{ $verVehiculo }}">
                   <label class="form-label">Vehiculo</label>
                   <select name="vehiculo_id" id="vehiculo_id" class="form-select">
                     @foreach ($listVehiculos as $item)
@@ -352,7 +353,7 @@
                 </div>
               </div>
 
-              <div class="row mt-2">
+              <div class="row mt-2" id="div_chofer" style="{{ $verChofer }}">
                 <div class="col-md-6">
                   <label class="form-label">Chofer</label>
                   <select name="chofer_id" id="chofer_id" class="form-select">

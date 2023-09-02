@@ -227,6 +227,7 @@ $(document).on('change', '#transportista_id', function(event) {
   $('#transportista_ruc').val(data.ruc);
   $('#transportista_nombre').val(data.nombre);
   // console.log({option});
+  callGetModalidadTraslado();
 });
 
 var callBrevete = () => {
@@ -516,9 +517,6 @@ var callStore = (guardar_avance = false) => {
         }
       }
     }
-
-
-
 
     if (indicar_proveedor == true) {
       if (formData.get('proveedor_nombre') == '') {
@@ -862,3 +860,36 @@ $(document).on('keypress', '.input_cantidad_tr', function(event) {
     }
   }
 });
+
+var callGetModalidadTraslado = () => {
+  var transportista_ruc = $('#transportista_ruc').val();
+
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('transportista_ruc', transportista_ruc);
+
+  getModalidadTraslado(formData);
+}
+
+var getModalidadTraslado = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.getModalidadTraslado'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      $('#modalidad_traslado').val(response.modalidad_traslado);
+      if (response.verChofer == true) {
+        $('#div_chofer').show();
+        $('#div_vehiculo').show();
+      }else{
+        $('#div_chofer').hide();
+        $('#div_vehiculo').hide();
+
+      }
+    }
+  };
+  $.ajax(options);
+};
