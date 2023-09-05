@@ -803,7 +803,6 @@ var callIndicarProveedor = () => {
   }
 }
 
-
 $(document).on('keypress', '#vendedor_codigo', function(event) {
   // event.preventDefault();
   console.log('enter');
@@ -811,6 +810,7 @@ $(document).on('keypress', '#vendedor_codigo', function(event) {
   console.log(event.keyCode);
 
 });
+
 $(document).on('click', '#btnBuscarVendedor', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -909,3 +909,29 @@ var getModalidadTraslado = function(formData){
   };
   $.ajax(options);
 };
+
+$(document).on('click', '#btnReintentar', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  var callGuardarAvance = $(this).data('guardar_avance');
+
+  $('#modalStore').modal('hide');
+
+  // console.log({callGuardarAvance});
+  callStore();
+});
+
+$(document).on('click', '#btnReintentarFacturar', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  var id = $(this).data('id');
+
+  $('#li_facturacion').html(`<b>Enviando a SUNAT...</b>
+  <span class=""><i class="fa-solid fa-spinner fa-spin fa-lg"></i></span>`);
+
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('id', id);
+
+  facturacionElectronica(formData);
+});

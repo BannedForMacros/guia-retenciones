@@ -825,185 +825,223 @@ class GuiaSalidaController extends Controller
         $numero = 1;
         $id = null;
 
-        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
-        // dd($listSeries);
-        foreach ($listSeries as $item) {
-            if ($item->numserie == $datos['serie']) {
-                $numero = intval($item->ultimoValormarket) + 1;
-                $serie = $item->numserie;
+        try {
+            $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+            
+        } catch (Exception $e) {
+            //throw $th;
+            // dd($e);
+            $procede = false;
+            $msj = "Ocurrio un problema para obtener el Nº Serie (api)";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+        
+        
+        if ($procede == true) {
+            // dd($listSeries);
+            foreach ($listSeries as $item) {
+                if ($item->numserie == $datos['serie']) {
+                    $numero = intval($item->ultimoValormarket) + 1;
+                    $serie = $item->numserie;
+                }
             }
+    
+            // if ($getLast != null) {
+            //     $numero = intval($getLast->numero)+1;
+            // }
+            $datos['numero'] = $numero;
+            $datos['serie'] = $serie;
+            
+            $anio_actual = date('Y');
+            
+    
+            $proveedor_id = '';
+            
         }
 
-        // if ($getLast != null) {
-        //     $numero = intval($getLast->numero)+1;
-        // }
-        $datos['numero'] = $numero;
-        $datos['serie'] = $serie;
+
+        if ($procede == true) {
+            if ($datos['indicar_proveedor'] == true) {
+                $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
+            }
+            
+            if ($datos['tipo_operacion_id'] != 12) {//diferente a trasnsferencia
+                $datos['cod_almacen_origen'] = null;
+                $datos['almacen_origen_nombre'] = null;
+                $datos['cod_almacen_destino'] = null;
+                $datos['almacen_destino_nombre'] = null;
+                $datos['codigo_anexo_partida'] = null;
+                $datos['codigo_anexo_llegada'] = null;
+    
+    
+            }
+    
+            if ($datos['tipo_operacion_id'] == 12) {//transferencia
+                $datos['codalmacen'] = null;
+                $datos['almacen_nombre'] = null;
+                $valor_cliente_transferencia = Parametro::find(2)->valor;
+
+                try {
+                    
+                    $getClientePorRuc = Http::post("{$api_datos}/obtenerCliente", 
+                    ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
+                        ->object()->cliente;
+
+                } catch (Exception $e) {
+                    $procede = false;
+                    $msj = "Ocurrio un error al obtener cliente transferencia (API)";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+
+                }
+                if ($procede == true) {
+                    $getClientePorRuc = $getClientePorRuc[0];
+                        $datos['cliente_id'] = trim($getClientePorRuc->codCliente);
+                        $datos['cliente_razon_social'] = trim($getClientePorRuc->razonSocial);
+                        $datos['cliente_nro_documento'] = trim($getClientePorRuc->rucCliente);
+                        $datos['cliente_documento_tipo_nombre'] = 'RUC';
+                        $datos['cliente_direccion'] = trim($getClientePorRuc->direccion);
+                    
+                }
+    
+                // dd($getClientePorRuc);
+                // dd($datos);
+    
+            }
+            
+        }
         
-        $anio_actual = date('Y');
-        
-
-        $proveedor_id = '';
-        // $
-        // if ($) {
-        //     # code...
-        // }
-        if ($datos['indicar_proveedor'] == true) {
-            $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
-        }
-        
-        if ($datos['tipo_operacion_id'] != 12) {//diferente a trasnsferencia
-            $datos['cod_almacen_origen'] = null;
-            $datos['almacen_origen_nombre'] = null;
-            $datos['cod_almacen_destino'] = null;
-            $datos['almacen_destino_nombre'] = null;
-            $datos['codigo_anexo_partida'] = null;
-            $datos['codigo_anexo_llegada'] = null;
-
-
-        }
-
-        if ($datos['tipo_operacion_id'] == 12) {//transferencia
-            $datos['codalmacen'] = null;
-            $datos['almacen_nombre'] = null;
-            $valor_cliente_transferencia = Parametro::find(2)->valor;
-            $getClientePorRuc = Http::post("{$api_datos}/obtenerCliente", 
-            ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
-                ->object()->cliente;
-            $getClientePorRuc = $getClientePorRuc[0];
-                $datos['cliente_id'] = trim($getClientePorRuc->codCliente);
-                $datos['cliente_razon_social'] = trim($getClientePorRuc->razonSocial);
-                $datos['cliente_nro_documento'] = trim($getClientePorRuc->rucCliente);
-                $datos['cliente_documento_tipo_nombre'] = 'RUC';
-                $datos['cliente_direccion'] = trim($getClientePorRuc->direccion);
-
-            // dd($getClientePorRuc);
-            // dd($datos);
-
-        }
-
-        if ($datos['modalidad_traslado'] == '01') {//publico
-            $datos['vehiculo_id'] = null;
-            $datos['chofer_id'] = null;
-            $datos['brevete'] = null;
-            $datos['chofer_dni'] = null;
-            $datos['chofer_brevete'] = null;
-            $datos['chofer_nombre'] = null;
-            $datos['vehiculo_placa'] = null;
-            $datos['vehiculo_marca'] = null;
-        }
-        // dd(json_encode($body));
-        // dd($body);
-        // dd($guardar_avance);
-
-        if ($id_continuar != null) {
-            // dd('desactivamos el activo anterior');
-            $guia_avance = GuiaSalida::find($id_continuar);
-            $guia_avance->activo = 0;
-            try {
-                $guia_avance->save();
-            } catch (Exception $e) {
-                //throw $th;
-                $procede = false;
-                $msj = "No se pudo limpiar la guia guardada";
-                $msj_tipo = "error";
-                $log = "{$e}";
+        if ($procede == true) {
+            
+    
+            if ($datos['modalidad_traslado'] == '01') {//publico
+                $datos['vehiculo_id'] = null;
+                $datos['chofer_id'] = null;
+                $datos['brevete'] = null;
+                $datos['chofer_dni'] = null;
+                $datos['chofer_brevete'] = null;
+                $datos['chofer_nombre'] = null;
+                $datos['vehiculo_placa'] = null;
+                $datos['vehiculo_marca'] = null;
+            }
+            // dd(json_encode($body));
+            // dd($body);
+            // dd($guardar_avance);
+    
+            if ($id_continuar != null) {
+                // dd('desactivamos el activo anterior');
+                $guia_avance = GuiaSalida::find($id_continuar);
+                $guia_avance->activo = 0;
+                try {
+                    $guia_avance->save();
+                } catch (Exception $e) {
+                    //throw $th;
+                    $procede = false;
+                    $msj = "No se pudo limpiar la guia guardada";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+                }
+            }
+    
+            if ($procede == true) {
+                
+                if ($guardar_avance == false) {
+                    // dd('hola');
+                    foreach ($detalle as $item) {
+                        $body_detalle[] = array(
+                            "anioGuia" => $anio_actual,
+                            "cantidad" => $item->cantidad,
+                            "codArticulo" => $item->codarticulo,
+                            "estadoProceso" => "0",
+                            "importeDetalle" => $item->importe,
+                            "item" => 1,
+                            "numSerie" => $datos['serie'],
+                            "numeroGuia" => $datos['numero'],
+                            "precio" => $item->precio,
+                            "tipoGuia" => "A",
+                            "unidadMedida" => 1
+                        );
+                    }
+                    if ($datos['vehiculo_placa'] != null) {
+                        // dd('hola');
+                        $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
+                        $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
+                        // dd($placa_vehiculo_format);
+                        $datos['vehiculo_placa'] = $placa_vehiculo_format;
+                        
+                    }
+                    $body = [
+                        "anioGuiaRemision" => $anio_actual,
+                        "breveteChofer" => $datos['brevete'],
+                        "codAlmacen" => $datos['codalmacen'] ?? '',
+                        "codAlmacenOrigen" => $datos['cod_almacen_origen'] ?? '',
+                        "codAlmacenDestino" => $datos['cod_almacen_destino'] ?? '',
+                        "codCliente" => $datos['cliente_id'] ?? '',
+                        "codEstacion" => $datos['codestacion'],
+                        "codListaPrecio" => $datos['codlistaprecio'],
+                        "codProveedor" => $proveedor_id ?? '',
+                        "codtrabajador" => $datos['vendedor_id'],
+                        "comentario" => $datos['comentario'],
+                        "descuento" => $datos['monto_descuento'],
+                        "detalle" => $body_detalle,
+                        "direccionllegada" => $datos['direccion_llegada'],
+                        "direccionpartida" => $datos['direccion_partida'],
+                        "dnichofer" => $datos['chofer_dni'],
+                        "estadoProceso" => "0",
+                        "fechaEmision" => $datos['fecha_emision'],
+                        "formapago" => $datos['forma_pago_id'],
+                        "igv" => $datos['monto_igv'],
+                        "modalidadTransporte" => "18",
+                        "nombreTransportista" => $datos['transportista_nombre'],
+                        "nombrechofer" => $datos['transportista_nombre'],
+                        "numSerie" => $datos['serie'],
+                        "seriefactura" => $datos['pedido_serie'],
+                        "numeroFactura" => '',
+                        "numeroGuia" => $datos['numero'],
+                        "placavehiculo" => $datos['vehiculo_placa'],
+                        "rucTransportista" => $datos['transportista_ruc'],
+                        "tipoGuia" => "A", //N->ingreso; A->Salida
+                        "tipoOperacion" => $datos['tipo_operacion_id'],
+                        "tipomonda" => 1,
+                        "totalVenta" => $datos['total_venta'],
+                        "ubigeollegada" => $datos['ubigeo_llegada'],
+                        "ubigeopartida" => $datos['ubigeo_partida'],
+                        "valorVenta" => $datos['importe_sin_igv']
+                    ];
+                    // dd($body);
+                    try {
+                        $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
+                        // dd($storeRemoto);
+                        if ($storeRemoto->exito == false) {
+                            $procede = false;
+                            $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+                        }
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e);
+                        $procede = false;
+                        $msj = "No se pudo registrar remotamente";
+                        $msj_tipo = "error";
+                        $log = "{$e}";
+                    }
+                    
+                }
+                $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
+                
             }
         }
 
         if ($procede == true) {
             
-            if ($guardar_avance == false) {
-                // dd('hola');
-                foreach ($detalle as $item) {
-                    $body_detalle[] = array(
-                        "anioGuia" => $anio_actual,
-                        "cantidad" => $item->cantidad,
-                        "codArticulo" => $item->codarticulo,
-                        "estadoProceso" => "0",
-                        "importeDetalle" => $item->importe,
-                        "item" => 1,
-                        "numSerie" => $datos['serie'],
-                        "numeroGuia" => $datos['numero'],
-                        "precio" => $item->precio,
-                        "tipoGuia" => "A",
-                        "unidadMedida" => 1
-                    );
-                }
-                if ($datos['vehiculo_placa'] != null) {
-                    // dd('hola');
-                    $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
-                    $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
-                    // dd($placa_vehiculo_format);
-                    $datos['vehiculo_placa'] = $placa_vehiculo_format;
-                    
-                }
-                $body = [
-                    "anioGuiaRemision" => $anio_actual,
-                    "breveteChofer" => $datos['brevete'],
-                    "codAlmacen" => $datos['codalmacen'] ?? '',
-                    "codAlmacenOrigen" => $datos['cod_almacen_origen'] ?? '',
-                    "codAlmacenDestino" => $datos['cod_almacen_destino'] ?? '',
-                    "codCliente" => $datos['cliente_id'] ?? '',
-                    "codEstacion" => $datos['codestacion'],
-                    "codListaPrecio" => $datos['codlistaprecio'],
-                    "codProveedor" => $proveedor_id ?? '',
-                    "codtrabajador" => $datos['vendedor_id'],
-                    "comentario" => $datos['comentario'],
-                    "descuento" => $datos['monto_descuento'],
-                    "detalle" => $body_detalle,
-                    "direccionllegada" => $datos['direccion_llegada'],
-                    "direccionpartida" => $datos['direccion_partida'],
-                    "dnichofer" => $datos['chofer_dni'],
-                    "estadoProceso" => "0",
-                    "fechaEmision" => $datos['fecha_emision'],
-                    "formapago" => $datos['forma_pago_id'],
-                    "igv" => $datos['monto_igv'],
-                    "modalidadTransporte" => "18",
-                    "nombreTransportista" => $datos['transportista_nombre'],
-                    "nombrechofer" => $datos['transportista_nombre'],
-                    "numSerie" => $datos['serie'],
-                    "seriefactura" => $datos['pedido_serie'],
-                    "numeroFactura" => '',
-                    "numeroGuia" => $datos['numero'],
-                    "placavehiculo" => $datos['vehiculo_placa'],
-                    "rucTransportista" => $datos['transportista_ruc'],
-                    "tipoGuia" => "A", //N->ingreso; A->Salida
-                    "tipoOperacion" => $datos['tipo_operacion_id'],
-                    "tipomonda" => 1,
-                    "totalVenta" => $datos['total_venta'],
-                    "ubigeollegada" => $datos['ubigeo_llegada'],
-                    "ubigeopartida" => $datos['ubigeo_partida'],
-                    "valorVenta" => $datos['importe_sin_igv']
-                ];
-                // dd($body);
-                try {
-                    $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
-                    // dd($storeRemoto);
-                    if ($storeRemoto->exito == false) {
-                        $procede = false;
-                        $msj = "No se pudo completar : {$storeRemoto->msgerror}";
-                    }
-                } catch (Exception $e) {
-                    //throw $th;
-                    dd($e);
-                    $procede = false;
-                    $msj = "No se pudo registrar remotamente";
-                    $msj_tipo = "error";
-                    $log = "{$e}";
-                }
-                
+            if ($guardar_avance == true) {
+                // dd('holap');
+                $datos['numero'] = null;
+                // $datos['serie'] = null;
+                $msj = "<b>Avance de Guia de Salida registrada </b>";
             }
-            $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
-            
         }
 
-        if ($guardar_avance == true) {
-            // dd('holap');
-            $datos['numero'] = null;
-            // $datos['serie'] = null;
-            $msj = "<b>Avance de Guia de Salida registrada </b>";
-        }
         // dd($datos);
         
         if ($procede == true) {
@@ -1012,7 +1050,7 @@ class GuiaSalidaController extends Controller
                 $guia = GuiaSalida::create($datos);
             } catch (Exception $e) {
                 //throw $th;
-                dd($e);
+                // dd($e);
                 $procede = false;
                 $msj = "No se pudo registrar la Guia de Salida";
                 $msj_tipo = "error";
@@ -1048,7 +1086,7 @@ class GuiaSalidaController extends Controller
                         $guiaDetalle->save();
                     } catch (Exception $e) {
                         //throw $th;
-                        dd($e);
+                        // dd($e);
                         $procede = false;
                         $msj = "No se pudo registrar el detalle";
                         $msj_tipo = "error";
@@ -1069,6 +1107,10 @@ class GuiaSalidaController extends Controller
             }
         }
 
+        if ($procede == false) {
+            $data_guardar_avance  = ($guardar_avance == true) ? 'true' : 'false' ;
+            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' data-guardar_avance= '{$data_guardar_avance}' id='btnReintentar'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+        }
         // dd($msj);
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect, 'id' => $id]);
@@ -1207,7 +1249,18 @@ class GuiaSalidaController extends Controller
                         // ->put("{$api_facturacion}", $body)->object();
                         ->put("{$api_facturacion}", $body)->object();
                         // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
-            // dd($send);
+            try {
+                $send->CodigoHash;
+
+            } catch (Exception $e) {
+                // dd($e);
+                $procede = false;
+                $msj = "Ocurrio un error con el envio API Guia";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+            // dd($send->CodigoHash);
+
         } catch (Exception $e) {
             //throw $th;
             // dd($e);
@@ -1299,7 +1352,10 @@ class GuiaSalidaController extends Controller
 
         }
 
-
+        if ($procede == false) {
+            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarFacturar' data-id='{$id}'>
+            <i class='fa-regular fa-paper-plane'></i> Reintentar Facturar</button>";
+        }
 
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
