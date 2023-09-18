@@ -8,11 +8,13 @@ use App\Models\GuiaEstado;
 use App\Models\GuiaSalida;
 use App\Models\GuiaSalidaDetalle;
 use App\Models\Parametro;
+use App\Models\Serie;
 use Exception;
 use Faker\Provider\UserAgent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
@@ -148,11 +150,22 @@ class GuiaSalidaController extends Controller
             }
         }
 
-        $getSerie->nuevo_numero = str_pad(($getSerie->ultimoValormarket + 1), 4, "0", STR_PAD_LEFT);
+        
+        // dd($getSerie);
+        $serieLocal = Serie::where('serie', $getSerie->numserie)->first();
+        // dd($serieLocal);
+        
+        if ($serieLocal == null) {
+            $getSerie->nuevo_numero = str_pad(($getSerie->ultimoValormarket + 1), 4, "0", STR_PAD_LEFT);
+        }
+        
+        if ($serieLocal != null) {
+            $getSerie->nuevo_numero = str_pad(($serieLocal->numero + 1), 4, "0", STR_PAD_LEFT);
+            
+        }
 
         return response()->json(['getSerie' => $getSerie]);
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -778,14 +791,7 @@ class GuiaSalidaController extends Controller
         return view('guia.salida.modal-store', compact('envio_sunat', 'guardar_avance'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-
-    public function store(Request $request)
+    public function store2(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
 
@@ -860,7 +866,6 @@ class GuiaSalidaController extends Controller
             
         }
 
-
         if ($procede == true) {
             if ($datos['indicar_proveedor'] == true) {
                 $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
@@ -873,8 +878,6 @@ class GuiaSalidaController extends Controller
                 $datos['almacen_destino_nombre'] = null;
                 $datos['codigo_anexo_partida'] = null;
                 $datos['codigo_anexo_llegada'] = null;
-    
-    
             }
     
             if ($datos['tipo_operacion_id'] == 12) {//transferencia
@@ -914,7 +917,6 @@ class GuiaSalidaController extends Controller
         
         if ($procede == true) {
             
-    
             if ($datos['modalidad_traslado'] == '01') {//publico
                 $datos['vehiculo_id'] = null;
                 $datos['chofer_id'] = null;
@@ -1116,6 +1118,414 @@ class GuiaSalidaController extends Controller
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect, 'id' => $id]);
     }
 
+    public function store(Request $request)
+    {
+        // dd($request->post());
+
+        $api_datos = Parametro::find(6)->valor;
+        $id = "";
+
+        $datos = $request->post();
+        $id_continuar = $request->post('id_continua');
+        $datos['guardar_avance'] = ($datos['guardar_avance'] == 'true') ? true : false ;
+        $guardar_avance = $datos['guardar_avance'];
+
+        $datos['indicar_proveedor'] = ($datos['indicar_proveedor'] ?? '' == 'on') ? true : false ;
+        
+        $procede = true;
+        $msj_tipo = "success";
+        $log = "";
+        $datos['guia_estado_id'] = 1; //registrado-emitida
+        
+        $url_redirect = route('guiasalida.index');
+        
+        // asignamos existencia de serie en BD
+        if ($guardar_avance == false) {
+            $msj = "Guia registrada";
+            $asignarSerie = $this->asignarSerie($datos['serie']);
+            // dd($asignarSerie);
+
+            $procede = $asignarSerie->procede;
+        }
+        if ($guardar_avance == true) {
+            $msj = "Avance de guia registrada";
+            $datos['guia_estado_id'] = 4;//estado avance
+        }
+        
+        // se inicia registro
+        if ($procede == false ) {
+            $msj = $asignarSerie->msj;
+            $msj_tipo = $asignarSerie->msj_tipo;
+            $log = $asignarSerie->log;
+        }
+
+
+        // validacion antes del store
+        if ($procede == true) {
+
+            $datos['fecha_emision'] = date('Y-m-d');
+            $datos['hora_emision'] = date('H:i:s');
+
+            if ($datos['indicar_proveedor'] == true) {
+                $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
+            }
+
+            if ($datos['tipo_operacion_id'] != 12) {//diferente a trasnsferencia
+                $datos['cod_almacen_origen'] = null;
+                $datos['almacen_origen_nombre'] = null;
+                $datos['cod_almacen_destino'] = null;
+                $datos['almacen_destino_nombre'] = null;
+                $datos['codigo_anexo_partida'] = null;
+                $datos['codigo_anexo_llegada'] = null;
+            }
+
+            if ($datos['tipo_operacion_id'] == 12) {//transferencia
+                $datos['codalmacen'] = null;
+                $datos['almacen_nombre'] = null;
+                $valor_cliente_transferencia = Parametro::find(2)->valor;
+
+                try {
+                    
+                    $getClientePorRuc = Http::post("{$api_datos}/obtenerCliente", 
+                    ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
+                        ->object()->cliente;
+
+                } catch (Exception $e) {
+                    $procede = false;
+                    $msj = "Ocurrio un error al obtener cliente transferencia (API)";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+
+                }
+                if ($procede == true) {
+                    $getClientePorRuc = $getClientePorRuc[0];
+                        $datos['cliente_id'] = trim($getClientePorRuc->codCliente);
+                        $datos['cliente_razon_social'] = trim($getClientePorRuc->razonSocial);
+                        $datos['cliente_nro_documento'] = trim($getClientePorRuc->rucCliente);
+                        $datos['cliente_documento_tipo_nombre'] = 'RUC';
+                        $datos['cliente_direccion'] = trim($getClientePorRuc->direccion);
+                    
+                }
+
+            }
+
+            if ($datos['modalidad_traslado'] == '01') {//publico
+                $datos['vehiculo_id'] = null;
+                $datos['chofer_id'] = null;
+                $datos['brevete'] = null;
+                $datos['chofer_dni'] = null;
+                $datos['chofer_brevete'] = null;
+                $datos['chofer_nombre'] = null;
+                $datos['vehiculo_placa'] = null;
+                $datos['vehiculo_marca'] = null;
+            }
+
+            if ($datos['vehiculo_placa'] != null) {
+                $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
+                $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
+                $datos['vehiculo_placa'] = $placa_vehiculo_format;
+                
+            }
+
+            if ($id_continuar != null) {
+                // dd('desactivamos el activo anterior');
+                $guia_avance = GuiaSalida::find($id_continuar);
+                $guia_avance->activo = 0;
+                try {
+                    $guia_avance->save();
+                } catch (Exception $e) {
+                    //throw $th;
+                    $procede = false;
+                    $msj = "No se pudo limpiar la guia guardada";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+                }
+            }
+
+
+            if ($guardar_avance == false) {
+                // dd($asignarSerie);
+                $datos['serie_id'] = $asignarSerie->serieAsignada->id;
+                $datos['numero'] = intval($asignarSerie->serieAsignada->numero) +1; 
+            }
+        }
+
+
+        //registro en store
+        if ($procede == true) {
+
+            try {
+                $store = GuiaSalida::create($datos);
+            } catch (Exception $e) {
+                // dd($e);
+                $procede = false;
+                $msj = "No se pudo registrar en Nube";
+                $msj_tipo = "success";
+                $log = "{$e}";
+            }
+
+        }
+
+        // actualizar serie nube
+        if ($procede == true) {
+            $updateSerie = Serie::find($asignarSerie->serieAsignada->id);
+            // dd($datos);
+            $updateSerie->numero = $datos['numero'];
+
+            try {
+                $updateSerie->save();
+                
+            } catch (Exception $e) {
+                //throw $th;
+                dd($e);
+                $procede = true;
+                $msj = "No se pudo actualizar serie de Nube";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+        }
+
+        //registrar detalle
+        if ($procede == true) {
+            $detalle = json_decode($request->post('detalle'));
+            $id = $store->id;
+            foreach ($detalle as $item) {
+                
+                if ($procede == true) {
+                    $guiaDetalle = new GuiaSalidaDetalle();
+                    $guiaDetalle->guia_salida_id = $store->id;
+                    $guiaDetalle->codarticulo = $item->codarticulo;
+                    $guiaDetalle->precio = $item->precio;
+                    $guiaDetalle->cantidad = $item->cantidad;
+                    $guiaDetalle->importe = $item->importe;
+                    $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
+                    $guiaDetalle->monto_descuento = $item->monto_descuento;
+
+                    $nombreArticulo = $item->descripcion;
+                    $nombreArticuloLimpio = json_decode('"' . $nombreArticulo . '"');
+
+                    // $guiaDetalle->descripcion = $item->descripcion;
+                    $guiaDetalle->descripcion = $nombreArticuloLimpio;
+                    $guiaDetalle->precio_publico = $item->precio_publico;
+                    $guiaDetalle->precio_sin_igv = $item->precio_sin_igv;
+                    $guiaDetalle->codigo_barra = $item->codigo_barra;
+
+                    try {
+                        $guiaDetalle->save();
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e);
+                        $procede = false;
+                        $msj = "No se pudo registrar el detalle";
+                        $msj_tipo = "error";
+                        $log = "{$e}";
+                    }
+                }
+
+            }
+        }
+
+        if ($procede == true) {
+            $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
+            if ($datos['envio_sunat'] == 0) {
+                $link = route('guiasalida.pdf', ['guia' => $store]);
+                $msj = "{$msj} <a class='btn btn-sm btn-success' href='{$link}' target='_blank'><i class='fa fa-external-link'></i> Ver</a>";
+            }
+        }
+
+        if ($procede == false) {
+            $data_guardar_avance  = ($guardar_avance == true) ? 'true' : 'false' ;
+            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' data-guardar_avance= '{$data_guardar_avance}' id='btnReintentar'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'id' => $id]);
+
+    }
+    
+    public function asignarSerie($serie_busqueda)
+    {
+        $api_datos = Parametro::find(6)->valor;
+        
+        $getSerieLocal = Serie::where('serie', $serie_busqueda)->first();
+        $procede = true;
+        $msj = "Serie asignada";
+        $msj_tipo = "success";
+        $log = "";
+        $serieAsignada = "";
+
+        if ($getSerieLocal == null) {
+
+            $serie = null;
+            $numero = null;
+
+            try {
+                $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+                // dd($listSeries);
+            } catch (Exception $e) {
+                //throw $th;
+                // dd($e);
+                $procede = false;
+                $msj = "Ocurrio un problema para obtener el Nº Serie (api)";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+
+            if ($procede == true) {
+                // dd($listSeries);
+                foreach ($listSeries as $item) {
+                    if ($item->numserie == $serie_busqueda) {
+                        $numero = $item->ultimoValormarket;
+                        $serie = $item->numserie;
+                        $documento_tipo_id = $item->tipodocumento;
+                    }
+                }
+                $procede = false;
+                // dd($numero);
+                // dd([$serie, $numero]);
+                if ($serie != null) {
+                    // dd($serie);
+                    $procede = true;
+                    $id = 1;
+                    $lastSerie = Serie::orderBy('id', 'desc')->first();
+                    // dd($lastSerie);
+
+                    if ($lastSerie != null) {
+                        // dd('generamos serie');
+                        $id = intval($lastSerie->id) + 1;
+                    }
+                    // dd($id);
+                    $nueva_serie = new Serie();
+                    $nueva_serie->id = $id;
+                    $nueva_serie->serie = $serie;
+                    $nueva_serie->documento_tipo_id = $documento_tipo_id;
+                    $nueva_serie->numero = $numero;
+                    
+                    try {
+                        $nueva_serie->save();
+                        // dd($nueva_serie);
+                        $getSerieLocal = Serie::find($id);
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e);
+                        $procede = false;
+                        $msj = "No se pudo generar serie";
+                        $msj_tipo = "error";
+                        $log = "{$e}";
+                    }
+                }
+
+            }
+            
+        }
+
+        if ($procede == true) {
+            $serieAsignada = $getSerieLocal;
+            // dd($serieAsignada);
+        }
+
+        return (object)['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'serieAsignada' => $serieAsignada];
+
+    }
+
+    public function storeDataMart(Request $request)
+    {
+
+        $api_datos = Parametro::find(6)->valor;
+
+        $id = $request->post('id');
+
+        $guia = GuiaSalida::find($id);
+
+        $procede = true;
+        $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
+        $msj_tipo = "success";
+        $log = "";
+
+        $fecha = Carbon::parse($guia->fecha_emision);
+        $anio = $fecha->year;
+
+        $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
+
+        foreach ($detalle as $item) {
+            $body_detalle[] = array(
+                "anioGuia" => $anio,
+                "cantidad" => $item->cantidad,
+                "codArticulo" => $item->codarticulo,
+                "estadoProceso" => "0",
+                "importeDetalle" => $item->importe,
+                "item" => 1,
+                "numSerie" => $guia->serie,
+                "numeroGuia" => $guia->numero,
+                "precio" => $item->precio,
+                "tipoGuia" => "A",
+                "unidadMedida" => 1
+            );
+        }
+
+        $body = [
+            "anioGuiaRemision" => $anio,
+            "breveteChofer" => $guia->brevete,
+            "codAlmacen" => $guia->codalmacen,
+            "codAlmacenOrigen" => $guia->cod_almacen_origen,
+            "codAlmacenDestino" => $guia->cod_almacen_destino,
+            "codCliente" => $guia->cliente_id,
+            "codEstacion" => $guia->codestacion,
+            "codListaPrecio" => $guia->codlistaprecio,
+            "codProveedor" => $proveedor_id ?? '',
+            "codtrabajador" => $guia->vendedor_id,
+            "comentario" => $guia->comentario,
+            "descuento" => $guia->monto_descuento,
+            "detalle" => $body_detalle,
+            "direccionllegada" => $guia->direccion_llegada,
+            "direccionpartida" => $guia->direccion_partida,
+            "dnichofer" => $guia->chofer_dni,
+            "estadoProceso" => "0",
+            "fechaEmision" => $guia->fecha_emision,
+            "formapago" => $guia->forma_pago_id,
+            "igv" => $guia->monto_igv,
+            "modalidadTransporte" => "18",
+            "nombreTransportista" => $guia->transportista_nombre,
+            "nombrechofer" => $guia->transportista_nombre,
+            "numSerie" => $guia->serie,
+            "seriefactura" => $guia->pedido_serie,
+            "numeroFactura" => '',
+            "numeroGuia" => $guia->numero,
+            "placavehiculo" => $guia->vehiculo_placa,
+            "rucTransportista" => $guia->transportista_ruc,
+            "tipoGuia" => "A", //N->ingreso; A->Salida
+            "tipoOperacion" => $guia->tipo_operacion_id,
+            "tipomonda" => 1,
+            "totalVenta" => $guia->total_venta,
+            "ubigeollegada" => $guia->ubigeo_llegada,
+            "ubigeopartida" => $guia->ubigeo_partida,
+            "valorVenta" => $guia->importe_sin_ig,
+        ];
+
+        // dd($body);
+        try {
+            $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
+            // dd($storeRemoto);
+            if ($storeRemoto->exito == false) {
+                $procede = false;
+                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+            }
+        } catch (Exception $e) {
+            //throw $th;
+            // dd($e);
+            $procede = false;
+            $msj = "No se pudo registrar remotamente";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        if ($procede == false) {
+            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+        }
+        
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
+    }
+
     public function facturacionElectronica(Request $request)
     {
         $api_facturacion = Parametro::find(7)->valor;
@@ -1125,6 +1535,7 @@ class GuiaSalidaController extends Controller
 
         $ruc_emisor = Parametro::find(2)->valor;
         $razon_social_emisor = Parametro::find(3)->valor;
+        // dd($guia);
 
         $cliente_documento_tipo = 6;
         if ($guia->cliente_documento_tipo_nombre == 'DNI') {
@@ -1249,6 +1660,7 @@ class GuiaSalidaController extends Controller
                         // ->put("{$api_facturacion}", $body)->object();
                         ->put("{$api_facturacion}", $body)->object();
                         // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
+                        // dd($send);
             try {
                 $send->CodigoHash;
 
@@ -1336,7 +1748,7 @@ class GuiaSalidaController extends Controller
                         
                     } catch (Exception $e) {
                         //throw $th;
-                        // dd($e)
+                        // dd($e);
                         
                     }
                 }
@@ -1418,10 +1830,15 @@ class GuiaSalidaController extends Controller
         // dd($getEnvioConPdf);
         // DB::table('users')->whereNotNull()
         // $pdfData = 'JVBERi0xLjQKJcfs...'; // Base64 encoded PDF data
-        $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
-        $pdfDataDecoded = base64_decode($pdfData);
-        return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
+        if ($getEnvioConPdf != null) {
+            $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
+            $pdfDataDecoded = base64_decode($pdfData);
+            return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
+        }
 
+        if ($getEnvioConPdf == null) {
+            return "No se pudo obtener el PDF";
+        }
     }
 
     /**

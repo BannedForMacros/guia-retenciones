@@ -55,6 +55,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::get('guiasalida/continuar/{guia}', 'continuar')->name('guiasalida.continuar');
     Route::post('guiasalida/modalStore', 'modalStore')->name('guiasalida.modalStore');
     Route::post('guiasalida/store', 'store')->name('guiasalida.store');
+    Route::post('guiasalida/storeDataMart', 'storeDataMart')->name('guiasalida.storeDataMart');
     Route::post('guiasalida/facturacionElectronica', 'facturacionElectronica')->name('guiasalida.facturacionElectronica');
     
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');

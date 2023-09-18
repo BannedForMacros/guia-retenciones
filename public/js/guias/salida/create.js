@@ -663,9 +663,32 @@ var store = function(formData){
       $('#li_store').html(response.msj);
 
       if (response.procede == true) {
+        formData.append('id', response.id);
+        storeDataMart(formData);
+      }
+
+    }
+  };
+  $.ajax(options);
+};
+
+var storeDataMart = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.storeDataMart'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      $('#li_store_datamart').html(response.msj);
+
+      if (response.procede == true) {
         if (formData.get('guardar_avance') == 'false') {
           if (formData.get('envio_sunat') == 1) {
-            formData.append('id', response.id);
+            if (formData.get('id') == '') {
+              formData.append('id', response.id);
+            }
             facturacionElectronica(formData);
             
           }
@@ -910,15 +933,27 @@ var getModalidadTraslado = function(formData){
   $.ajax(options);
 };
 
-$(document).on('click', '#btnReintentar', function(event) {
+$(document).on('click', '#btnReintentarDataMart', function(event) {
   event.preventDefault();
   /* Act on the event */
-  var callGuardarAvance = $(this).data('guardar_avance');
+  // var callGuardarAvance = $(this).data('guardar_avance');
 
-  $('#modalStore').modal('hide');
+  // $('#modalStore').modal('hide');
 
   // console.log({callGuardarAvance});
-  callStore();
+  // callStore();
+
+  var formData = new FormData();
+  var id = $(this).data('id');
+
+  formData.append('_token', _token);
+  formData.append('id', id);
+
+  $('#li_store_datamart').html(`<b>Registrando en DataMart...</b>
+  <span class=""><i class="fa-solid fa-spinner fa-spin fa-lg"></i></span>`);
+  storeDataMart(formData);
+
+
 });
 
 $(document).on('click', '#btnReintentarFacturar', function(event) {
