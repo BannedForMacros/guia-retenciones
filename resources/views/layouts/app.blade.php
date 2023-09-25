@@ -66,6 +66,16 @@
                 <a class="dropdown-item" href="{{ route('guiasalida.index') }}">Guia de Salida</a>
               </div>
             </li>
+            <li class="nav-item dropdown">
+              <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                Configuraciones
+              </a>
+
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="{{ route('empleados.index') }}">Empleados</a>
+              </div>
+            </li>
           </ul>
 
           <!-- Right Side Of Navbar -->

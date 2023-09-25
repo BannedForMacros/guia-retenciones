@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\Guia\GuiaIngresoController;
 use App\Http\Controllers\Guia\GuiaSalidaController;
 use App\Http\Controllers\GuiaRemisionController;
@@ -75,4 +76,9 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     Route::post('guiaingreso/eliminar', 'eliminar')->name('guiaingreso.eliminar');
 
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
+});
+
+Route::controller(EmpleadoController::class)->group(function () {
+    
+    Route::resource('empleados', EmpleadoController::class)->parameter('empleados', 'empleado')->except('update');
 });
