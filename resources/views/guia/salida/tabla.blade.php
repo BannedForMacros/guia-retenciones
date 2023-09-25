@@ -31,8 +31,10 @@
           <ul class="dropdown-menu">
             {{-- <li><hr class="dropdown-divider"></li> --}}
             @if ($item->guia_estado_id == 4)
-            <li><a class="dropdown-item" href="{{ route('guiasalida.continuar', ['guia'=>$item->id]) }}"><i class="fa fa-edit"></i> Continuar</a></li>
-                
+              <li><a class="dropdown-item" href="{{ route('guiasalida.continuar', ['guia'=>$item->id]) }}"><i class="fa fa-edit"></i> Continuar</a></li>
+            @endif
+            @if ($item->mostrar_anular == true)
+              <li><a class="dropdown-item text-danger anular_guia" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-times"></i> <b>Anular</b></a></li>
             @endif
           </ul>
         </div>

@@ -59,6 +59,8 @@ class GuiaSalidaController extends Controller
         $ruc_entidad = Parametro::find(2)->valor;
 
         foreach ($list as $key => $value) {
+            // dd($value);
+
             if ($value->envio_id != null) {
                 $getEnvio = FacturacionEnvio::find($value->envio_id);
                 // dd($getEnvio->pdf417);
@@ -127,7 +129,13 @@ class GuiaSalidaController extends Controller
 
 
             }
+            $mostrar_anular = false;
 
+            if ($value->guia_estado_id == 1) {
+                $mostrar_anular = true;
+            }
+
+            $list[$key]->mostrar_anular = $mostrar_anular;
 
 
             $list[$key]->url_pdf = $url_pdf;
@@ -1841,48 +1849,71 @@ class GuiaSalidaController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+
+
+    public function anular(Request $request)
     {
-        //
+        // dd($request->post());
+        $id = $request->post('id');
+        
+        $guia = GuiaSalida::find($id);
+        
+        $guia->guia_estado_id = 0;
+
+        // dd($guia);
+
+        $procede = true;
+        $msj = "Guia anulada";
+        $msj_tipo = "success";
+        $log = "";
+
+        try {
+            $guia->save();
+
+        } catch (Exception $e) {
+            //throw $th;
+            $procede = false;
+            $msj = "No se pudo anular la Guia";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        if ($procede == true) {
+            $api_datos = Parametro::find(6)->valor;
+
+            $fecha = Carbon::parse($guia->fecha_emision);
+            $anio = $fecha->year;
+
+            $cod_proveedor = $guia->proveedor_id;
+            if ($cod_proveedor == null) {
+                $cod_proveedor = $guia->cliente_id;
+            }
+
+            $body = [
+                "anioGuiaRemision" => $anio,
+                "codProveedor" => $cod_proveedor,
+                "numSerie" => $guia->serie,
+                "numeroGuia" => $guia->numero
+            ];
+            // dd($body);
+            try {
+                $anularRemoto = Http::post("{$api_datos}/AnulaGuiaDMK", $body)->object();
+            } catch (Exception $e) {
+                $procede = false;
+                $msj = "No se pudo completar anulacion en DataMark";
+                $msj_tipo = "";
+                $log = "{$e}";
+            }
+            // dd($anularRemoto);
+        }
+
+        if ($procede == false) {
+            $guia->guia_estado_id = 1;
+            $guia->save();
+        }
+
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }

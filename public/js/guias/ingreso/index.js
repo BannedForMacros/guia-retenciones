@@ -60,3 +60,56 @@ $(document).on('change', '.fecha', function(event) {
   // console.log({tipo, fecha_inicio, fecha_fin});
 
 });
+
+
+
+$(document).on('click', '.eliminar_guia', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  var id = $(this).data('id');
+
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('id', id);
+
+  Swal.fire({
+    html: `¿!Esta seguro de <b>Eliminar</b> esta Guia¡?`,
+    icon: "warning",
+    showCancelButton: !0,
+    confirmButtonText: "Si, Eliminar",
+    cancelButtonText: "No, cancelar!",
+
+    // reverseButtons: !0
+  }).then((result) => {
+    if (result.isConfirmed) {
+      eliminarGuia(formData);
+    }
+  })
+
+});
+
+var eliminarGuia = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiaingreso.eliminar'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      Swal.fire({
+        html: response.msj,
+        icon: response.msj_tipo,
+      }).then((result) => {
+        if (result) {
+          if (response.procede == true) {
+            callListarGuias();
+          }
+        }
+      })
+
+    }
+  };
+  $.ajax(options);
+};

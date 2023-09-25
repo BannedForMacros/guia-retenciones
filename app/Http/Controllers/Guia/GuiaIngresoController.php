@@ -10,6 +10,7 @@ use App\Models\Parametro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
@@ -51,6 +52,13 @@ class GuiaIngresoController extends Controller
 
         foreach ($list as $key => $value) {
             $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
+            $mostrar_eliminar = false;
+            if ($value->guia_estado_id == 1) {
+                $mostrar_eliminar = true;
+                
+            }
+
+            $list[$key]->mostrar_eliminar = $mostrar_eliminar;
         }
         // dd($list);
         return view('guia.ingreso.tabla', compact('list'));
@@ -214,6 +222,7 @@ class GuiaIngresoController extends Controller
                     data-descripcion = '{$descripcion}'
                     data-codigo = '{$cod_plu}'
                     data-peso = '{$peso}'
+                    data-codigo_barra='{$codigo_barra}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -628,4 +637,72 @@ class GuiaIngresoController extends Controller
     {
         //
     }
+
+    public function eliminar(Request $request)
+    {
+        // dd($request->post());
+        $id = $request->post('id');
+        
+        $guia = GuiaIngreso::find($id);
+        
+        $guia->activo = 0;
+
+        // dd($guia);
+
+        $procede = true;
+        $msj = "Guia anulada";
+        $msj_tipo = "success";
+        $log = "";
+
+        try {
+            $guia->save();
+
+        } catch (Exception $e) {
+            //throw $th;
+            $procede = false;
+            $msj = "No se pudo eliminar la Guia";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        if ($procede == true) {
+            $api_datos = Parametro::find(6)->valor;
+
+            $fecha = Carbon::parse($guia->fecha_emision);
+            $anio = $fecha->year;
+
+            $cod_proveedor = $guia->proveedor_id;
+            // if ($cod_proveedor == null) {
+            //     $cod_proveedor = $guia->cliente_id;
+            // }
+
+            $body = [
+                "anioGuiaRemision" => $anio,
+                "codProveedor" => $cod_proveedor,
+                "numSerie" => $guia->serie,
+                "numeroGuia" => $guia->numero
+            ];
+            // dd($body);
+            try {
+                $anularRemoto = Http::post("{$api_datos}/EliminaGuiaDMK", $body)->object();
+
+            } catch (Exception $e) {
+                $procede = false;
+                $msj = "No se pudo completar eliminar en DataMark";
+                $msj_tipo = "";
+                $log = "{$e}";
+            }
+            // dd($anularRemoto);
+        }
+
+        if ($procede == false) {
+            $guia->guia_estado_id = 1;
+            $guia->save();
+        }
+
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
+    }
+
+
 }

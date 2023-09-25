@@ -57,6 +57,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::post('guiasalida/store', 'store')->name('guiasalida.store');
     Route::post('guiasalida/storeDataMart', 'storeDataMart')->name('guiasalida.storeDataMart');
     Route::post('guiasalida/facturacionElectronica', 'facturacionElectronica')->name('guiasalida.facturacionElectronica');
+    Route::post('guiasalida/anular', 'anular')->name('guiasalida.anular');
     
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
 });
@@ -71,6 +72,7 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     Route::post('guiaingreso/listar', 'listar')->name('guiaingreso.listar');
     Route::get('guiaingreso/pdf/{guia}', 'pdf')->name('guiaingreso.pdf');
     Route::get('guiaingreso/continuar/{guia}', 'continuar')->name('guiaingreso.continuar');
+    Route::post('guiaingreso/eliminar', 'eliminar')->name('guiaingreso.eliminar');
 
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
 });
