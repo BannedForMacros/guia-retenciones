@@ -895,11 +895,11 @@ class GuiaIngresoController extends Controller
         ];
 
         // dd("{$api_datos}/InsertGuiaDMK");
-        dd(json_encode($body));
+        // dd(json_encode($body));
         try {
             
             $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
-            dd($storeRemoto);
+            // dd($storeRemoto);
             if ($storeRemoto->exito == false) {
                 $procede = false;
                 $msj = "No se pudo completar : {$storeRemoto->msgerror}";
