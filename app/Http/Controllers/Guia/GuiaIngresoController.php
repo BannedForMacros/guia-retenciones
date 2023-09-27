@@ -89,7 +89,40 @@ class GuiaIngresoController extends Controller
         //     $listVendedores[$key]->selected = '';
         // }
         // $getVendedor = $listVendedores[0];
-        return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'listVendedores'));
+
+        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+
+        return view('guia.ingreso.create', compact('listProveedores', 'listFormasPago', 'listTipoOperacion', 'listAlmacenes', 'listArticulos', 'listVendedores', 'listSeries'));
+    }
+
+    public function getSerie(Request $request)
+    {
+        $api_datos = Parametro::find(6)->valor;
+        $serie = $request->post('serie');
+        // dd($request->post());
+        $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+
+        foreach ($listSeries as $item) {
+            if ($serie == $item->numserie) {
+                $getSerie = $item;
+            }
+        }
+
+        
+        // dd($getSerie);
+        $serieLocal = Serie::where('serie', $getSerie->numserie)->first();
+        // dd($serieLocal);
+        
+        if ($serieLocal == null) {
+            $getSerie->nuevo_numero = str_pad(($getSerie->ultimoValormarket + 1), 4, "0", STR_PAD_LEFT);
+        }
+        
+        if ($serieLocal != null) {
+            $getSerie->nuevo_numero = str_pad(($serieLocal->numero + 1), 4, "0", STR_PAD_LEFT);
+            
+        }
+
+        return response()->json(['getSerie' => $getSerie]);
     }
 
     public function continuar(GuiaIngreso $guia)
@@ -343,7 +376,7 @@ class GuiaIngresoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store2(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
 
@@ -492,8 +525,6 @@ class GuiaIngresoController extends Controller
         }
 
         
-
-
         if ($procede == true) {
 
             try {
@@ -508,7 +539,6 @@ class GuiaIngresoController extends Controller
             }
             
         }
-
 
         // dd($guia);
         if ($procede == true) {
@@ -544,6 +574,348 @@ class GuiaIngresoController extends Controller
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);
     }
+
+    public function modalStore(Request $request)
+    {
+        return view('guia.ingreso.modal-store');
+    }
+
+    public function store(Request $request)
+    {
+        
+        $api_datos = Parametro::find(6)->valor;
+        $id = "";
+        $es_guia_interna = $request->post('es_guia_interna');
+
+        $datos = $request->post();
+        $id_continuar = $request->post('id_continua');
+        $datos['guardar_avance'] = ($datos['guardar_avance'] == 'true') ? true : false ;
+        $guardar_avance = $datos['guardar_avance'];
+
+        $datos['indicar_proveedor'] = ($datos['indicar_proveedor'] ?? '' == 'on') ? true : false ;
+        
+        $procede = true;
+        $msj_tipo = "success";
+        $log = "";
+        $datos['guia_estado_id'] = 1; //registrado-emitida
+        
+        $url_redirect = route('guiasalida.index');
+
+
+        // asignamos existencia de serie en BD
+        if ($guardar_avance == false) {
+            $msj = "Guia registrada";
+            if ($es_guia_interna == 1) {
+                // dd($es_guia_interna);
+                
+                $asignarSerie = $this->asignarSerie($datos['serie']);
+                // dd($asignarSerie);
+                $procede = $asignarSerie->procede;
+            }
+        }
+
+        if ($guardar_avance == true) {
+            $msj = "Avance de guia registrada";
+            $datos['guia_estado_id'] = 4;//estado avance
+        }
+
+        // validacion antes del store
+        if ($procede == true) {
+            $datos['fecha_emision'] = date('Y-m-d');
+            $datos['hora_emision'] = date('H:i:s');
+
+            if ($id_continuar != null) {
+                // dd('desactivamos el activo anterior');
+                $guia_avance = GuiaIngreso::find($id_continuar);
+                $guia_avance->activo = 0;
+                try {
+                    $guia_avance->save();
+                } catch (Exception $e) {
+                    //throw $th;
+                    $procede = false;
+                    $msj = "No se pudo limpiar la guia guardada";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+                }
+            }
+
+
+            if ($guardar_avance == false) {
+                // dd($asignarSerie);
+                if ($es_guia_interna == 0) {
+                    $datos['serie_id'] = null;
+                    $datos['serie'] = $datos['serie_externa'];
+                    
+                }
+                if ($es_guia_interna == 1) {
+                    
+                    $datos['serie_id'] = $asignarSerie->serieAsignada->id;
+                    $datos['numero'] = intval($asignarSerie->serieAsignada->numero) +1; 
+                }
+            }
+
+        }
+
+        //registro en store
+        if ($procede == true) {
+            // dd($datos);
+            try {
+                $store = GuiaIngreso::create($datos);
+            } catch (Exception $e) {
+                // dd($e);
+                $procede = false;
+                $msj = "No se pudo registrar en Nube";
+                $msj_tipo = "success";
+                $log = "{$e}";
+            }
+
+        }
+
+        // actualizar serie nube
+        if ($procede == true) {
+            if ($es_guia_interna == 1) {
+                $updateSerie = Serie::find($asignarSerie->serieAsignada->id);
+                // dd($datos);
+                $updateSerie->numero = $datos['numero'];
+    
+                try {
+                    $updateSerie->save();
+                    
+                } catch (Exception $e) {
+                    //throw $th;
+                    dd($e);
+                    $procede = true;
+                    $msj = "No se pudo actualizar serie de Nube";
+                    $msj_tipo = "error";
+                    $log = "{$e}";
+                }
+                
+            }
+        }
+
+        //registrar detalle
+        if ($procede == true) {
+            $detalle = json_decode($request->post('detalle'));
+            $id = $store->id;
+            foreach ($detalle as $item) {
+                
+                if ($procede == true) {
+                    $guiaDetalle = new GuiaIngresoDetalle();
+                    $guiaDetalle->guia_ingreso_id = $store->id;
+                    $guiaDetalle->codarticulo = $item->codarticulo;
+                    $guiaDetalle->precio = $item->precio;
+                    $guiaDetalle->cantidad = $item->cantidad;
+                    $guiaDetalle->importe = $item->importe;
+                    $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
+                    $guiaDetalle->monto_descuento = $item->monto_descuento;
+
+                    $nombreArticulo = $item->descripcion;
+                    $nombreArticuloLimpio = json_decode('"' . $nombreArticulo . '"');
+
+                    // $guiaDetalle->descripcion = $item->descripcion;
+                    $guiaDetalle->descripcion = $nombreArticuloLimpio;
+                    $guiaDetalle->precio_publico = $item->precio_publico;
+                    $guiaDetalle->precio_sin_igv = $item->precio_sin_igv;
+                    $guiaDetalle->codigo_barra = $item->codigo_barra;
+
+                    try {
+                        $guiaDetalle->save();
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e);
+                        $procede = false;
+                        $msj = "No se pudo registrar el detalle";
+                        $msj_tipo = "error";
+                        $log = "{$e}";
+                    }
+                }
+
+            }
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'id' => $id]);
+    }
+    
+    public function asignarSerie($serie_busqueda)
+    {
+        $api_datos = Parametro::find(6)->valor;
+        
+        $getSerieLocal = Serie::where('serie', $serie_busqueda)->first();
+        $procede = true;
+        $msj = "Serie asignada";
+        $msj_tipo = "success";
+        $log = "";
+        $serieAsignada = "";
+
+        if ($getSerieLocal == null) {
+
+            $serie = null;
+            $numero = null;
+
+            try {
+                $listSeries = Http::get("{$api_datos}/obtenerSeriesNumerosGuia")->object()->serienumeros;
+                // dd($listSeries);
+            } catch (Exception $e) {
+                //throw $th;
+                // dd($e);
+                $procede = false;
+                $msj = "Ocurrio un problema para obtener el Nº Serie (api)";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+
+            if ($procede == true) {
+                // dd($listSeries);
+                foreach ($listSeries as $item) {
+                    if ($item->numserie == $serie_busqueda) {
+                        $numero = $item->ultimoValormarket;
+                        $serie = $item->numserie;
+                        $documento_tipo_id = $item->tipodocumento;
+                    }
+                }
+                $procede = false;
+                // dd($numero);
+                // dd([$serie, $numero]);
+                if ($serie != null) {
+                    // dd($serie);
+                    $procede = true;
+                    $id = 1;
+                    $lastSerie = Serie::orderBy('id', 'desc')->first();
+                    // dd($lastSerie);
+
+                    if ($lastSerie != null) {
+                        // dd('generamos serie');
+                        $id = intval($lastSerie->id) + 1;
+                    }
+                    // dd($id);
+                    $nueva_serie = new Serie();
+                    $nueva_serie->id = $id;
+                    $nueva_serie->serie = $serie;
+                    $nueva_serie->documento_tipo_id = $documento_tipo_id;
+                    $nueva_serie->numero = $numero;
+                    
+                    try {
+                        $nueva_serie->save();
+                        // dd($nueva_serie);
+                        $getSerieLocal = Serie::find($id);
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e);
+                        $procede = false;
+                        $msj = "No se pudo generar serie";
+                        $msj_tipo = "error";
+                        $log = "{$e}";
+                    }
+                }
+
+            }
+            
+        }
+
+        if ($procede == true) {
+            $serieAsignada = $getSerieLocal;
+            // dd($serieAsignada);
+        }
+
+        return (object)['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'serieAsignada' => $serieAsignada];
+
+    }
+    
+    public function storeDataMart(Request $request)
+    {
+        
+        $id = $request->post('id');
+
+        $guia = GuiaIngreso::find($store->id);
+        $fecha = Carbon::parse($guia->fecha_emision);
+        $anio = $fecha->year;
+
+        $procede = true;
+        $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
+        $msj_tipo = "success";
+        $log = "";
+
+        foreach ($detalle as $item) {
+            $body_detalle[] = array(
+                "anioGuia" => $anio,
+                "cantidad" => $item->cantidad,
+                "codArticulo" => $item->codarticulo,
+                "estadoProceso" => "0",
+                "importeDetalle" => $item->importe,
+                "item" => 1,
+                "numSerie" => $guia->serie,
+                "numeroGuia" => $guia->numero,
+                "precio" => $item->precio,
+                "tipoGuia" => "N",
+                "unidadMedida" => 1
+            );
+        }
+
+
+        $body = [
+            "anioGuiaRemision" => $anio,
+            "breveteChofer" => null,
+            "codAlmacen" => $guia->codalmacen,
+            "codAlmacenDestino" => null,
+            "codAlmacenOrigen" => null,
+            "codCliente" => null,
+            "codEstacion" => $guia->codestacion,
+            "codListaPrecio" => null,
+            "codProveedor" => $proveedor_id ?? '',
+            "codtrabajador" => $guia->vendedor_id,
+            "comentario" => $guia->comentario,
+            "descuento" => $guia->monto_descuento,
+            "detalle" => $body_detalle,
+            "direccionllegada" =>null,
+            "direccionpartida" => null,
+            "dnichofer" => null,
+            "estadoProceso" => "0",
+            "fechaEmision" => $guia->fecha_emision,
+            "formapago" => $guia->forma_pago_id,
+            "igv" => $guia->monto_igv,
+            "modalidadTransporte" => "18",
+            "nombreTransportista" => null,
+            "nombrechofer" => null,
+            "numSerie" => $guia->serie,
+            "seriefactura" => $guia->pedido_serie,
+            "numeroFactura" => $guia->pedido_numero,
+            "numeroGuia" => $guia->numero,
+            "placavehiculo" => null,
+            "rucTransportista" => null,
+            "tipoGuia" => "N", //N->ingreso; A->Salida
+            "tipoOperacion" => $guia->tipo_operacion_id,
+            "tipomonda" => 1,
+            "totalVenta" => $guia->total_venta,
+            "ubigeollegada" => null,
+            "ubigeopartida" => null,
+            "valorVenta" => $guia->importe_sin_igv,
+        ];
+
+
+        try {
+            $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
+            // dd($storeRemoto);
+            if ($storeRemoto->exito == false) {
+                $procede = false;
+                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+            }
+        } catch (Exception $e) {
+            //throw $th;
+            // dd($e);
+            $procede = false;
+            $msj = "{$msj} <b>No se pudo registrar en DATAMARK";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        if ($procede == false) {
+            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
+
+    }
+
     /**
      * Display the specified resource.
      *
@@ -554,6 +926,7 @@ class GuiaIngresoController extends Controller
     {
         //
     }
+
     public function pdf(GuiaIngreso $guia)
     {
 
@@ -604,6 +977,7 @@ class GuiaIngresoController extends Controller
         // $pdf->getCanvas()->page_text(520, 810, "Pag. {PAGE_NUM} de {PAGE_COUNT}", $font, 10, array(0, 0, 0));
         return $pdf->stream();
     }
+    
     /**
      * Show the form for editing the specified resource.
      *
@@ -650,7 +1024,7 @@ class GuiaIngresoController extends Controller
         // dd($guia);
 
         $procede = true;
-        $msj = "Guia anulada";
+        $msj = "Guia de Ingreso {$guia->serie}-{$guia->numero} Eliminada";
         $msj_tipo = "success";
         $log = "";
 

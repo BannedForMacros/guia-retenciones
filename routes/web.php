@@ -27,6 +27,15 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
+// actualizar vendor\laravel\ui\auth-backend\AuthenticatesUsers.php
+// public function username()
+// {
+//     // return 'email';
+//     return 'username';
+// }
+
+
+
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -71,6 +80,8 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     Route::get('guiaingreso/listarProveedores', 'listarProveedores')->name('guiaingreso.listarProveedores');
     Route::get('guiaingreso/listarArticulos', 'listarArticulos')->name('guiaingreso.listarArticulos');
     Route::post('guiaingreso/listar', 'listar')->name('guiaingreso.listar');
+    Route::post('guiaingreso/modalStore', 'modalStore')->name('guiaingreso.modalStore');
+    Route::post('guiaingreso/storeDataMart', 'storeDataMart')->name('guiaingreso.storeDataMart');
     Route::get('guiaingreso/pdf/{guia}', 'pdf')->name('guiaingreso.pdf');
     Route::get('guiaingreso/continuar/{guia}', 'continuar')->name('guiaingreso.continuar');
     Route::post('guiaingreso/eliminar', 'eliminar')->name('guiaingreso.eliminar');
@@ -80,5 +91,7 @@ Route::controller(GuiaIngresoController::class)->group(function (){
 
 Route::controller(EmpleadoController::class)->group(function () {
     
+    Route::post('empleados/update', 'update')->name('empleados.update');
+
     Route::resource('empleados', EmpleadoController::class)->parameter('empleados', 'empleado')->except('update');
 });

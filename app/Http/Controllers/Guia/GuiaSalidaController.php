@@ -1506,7 +1506,7 @@ class GuiaSalidaController extends Controller
             "totalVenta" => $guia->total_venta,
             "ubigeollegada" => $guia->ubigeo_llegada,
             "ubigeopartida" => $guia->ubigeo_partida,
-            "valorVenta" => $guia->importe_sin_ig,
+            "valorVenta" => $guia->importe_sin_igv,
         ];
 
         // dd($body);

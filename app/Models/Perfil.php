@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Empleado extends Model
+class Perfil extends Model
 {
     use HasFactory;
-    protected $guarded = ['_token'];
+    protected $table = "perfiles";
 }

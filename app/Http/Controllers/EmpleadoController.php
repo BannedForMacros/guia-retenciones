@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Empleado;
+use App\Models\Perfil;
+use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class EmpleadoController extends Controller
 {
@@ -13,7 +18,9 @@ class EmpleadoController extends Controller
      */
     public function index()
     {
-        return view('empleados/index');
+        $list = Empleado::where('activo', 1)->get();
+
+        return view('empleados.index', compact('list'));
     }
 
     /**
@@ -23,8 +30,8 @@ class EmpleadoController extends Controller
      */
     public function create()
     {
-        dd('create empleado');
-
+        // dd('create empleado');
+        return view('empleados.create');
     }
 
     /**
@@ -35,7 +42,58 @@ class EmpleadoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // dd($request->post());
+
+        $datos = $request->post();
+
+        $procede = true;
+        $msj = "Empleado registrado";
+        $msj_tipo = "success";
+        $log = "";
+        $url_redirect = "";
+        try {
+            $empleado = Empleado::create($datos);
+            // dd($empleado);
+            $url_redirect = route('empleados.edit', ['empleado' => $empleado->id]);
+
+        } catch (Exception $e) {
+            //throw $th;
+            // dd($e);
+            $procede = false;
+            $msj = "No se pudo registrar empleado";
+            $msj_tipo = "error";
+            $log = "{$e}";
+
+        }
+
+        if ($procede == true) {
+            $user = new User();
+            $user->name = "{$empleado->ape_paterno} {$empleado->ape_materno}";
+            // $user->email = "{$empleado->nro_documento}@mail.com";
+            $user->empleado_id = $empleado->id;
+            $user->perfil_id = $datos['perfil_id'];
+            $user->username = $datos['usuario'];
+            $user->password_alt = base64_encode($datos['password']);
+            $user->password = Hash::make($datos['password']);
+
+            try {
+                $user->save();
+            } catch (Exception $e) {
+                // dd($e);
+                $procede = false;
+                $msj = "No se pudo registrar Usuario";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+        }
+
+        if ($procede == false) {
+            $del_empleado = Empleado::find($empleado->id);
+            
+            $del_empleado->delete();
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);
     }
 
     /**
@@ -55,9 +113,14 @@ class EmpleadoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Empleado $empleado)
     {
-        //
+        // dd($empleado);
+        $listPerfiles = Perfil::where('activo', 1)->get();
+
+        $user = User::where('empleado_id', $empleado->id)->first();
+
+        return  view('empleados.edit', compact('empleado', 'listPerfiles', 'user'));
     }
 
     /**
@@ -67,9 +130,59 @@ class EmpleadoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        //
+        // dd($request->post());
+
+        $datos = $request->post();
+        $id = $request->post('id');
+        $procede = true;
+        $msj = "Empleado actualizado";
+        $msj_tipo = "success";
+        $log = "";
+        $url_redirect = "";
+
+        $empleado = Empleado::find($id);
+
+        try {
+            unset($datos['id']);
+            // dd($datos);
+            $empleado->update($datos);
+            // dd($empleado);
+            $url_redirect = route('empleados.edit', ['empleado' => $empleado->id]);
+
+        } catch (Exception $e) {
+            //throw $th;
+            // dd($e);
+            $procede = false;
+            $msj = "No se pudo actualizar empleado";
+            $msj_tipo = "error";
+            $log = "{$e}";
+
+        }
+
+        if ($procede == true) {
+            $user = User::where('empleado_id', $empleado->id)->first();
+            $user->name = "{$empleado->ape_paterno} {$empleado->ape_materno}";
+            // $user->email = "{$empleado->nro_documento}@mail.com";
+            $user->empleado_id = $empleado->id;
+            $user->perfil_id = $datos['perfil_id'];
+            $user->username = $datos['usuario'];
+            $user->password_alt = base64_encode($datos['password']);
+            $user->password = Hash::make($datos['password']);
+
+            try {
+                $user->save();
+            } catch (Exception $e) {
+                // dd($e);
+                $procede = false;
+                $msj = "No se pudo registrar Usuario";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);
     }
 
     /**

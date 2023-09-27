@@ -10,8 +10,39 @@
           <input type="hidden" name="id_continuar" value="{{ $guia->id ?? '' }}" >
           @csrf
           <div class="row">
+            <div class="col-md-2">
+              <label class="form-label">Guia Interna</label>
+              <select class="form-select" name="es_guia_interna" id="es_guia_interna">
+                <option value="0">No</option>
+                <option value="1">Si</option>
+              </select>
+            </div>
+            <div class="col-md-2 mb-2" id="div_serie_interna" style="display:none ">
+              <label class="form-label">Serie</label>
+              <select class="form-select" name="serie" id="serie">
+                @foreach ($listSeries ?? [] as $item)
+                  <option value="{{ $item->numserie }}" {{ $item->selected ?? '' }}>
+                    {{ $item->numserie }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+            <div class="col-md-3 mb-2" id="div_serie_externa">
+              <label class="form-label">Serie</label>
+              <input type="text" class="form-control" id="serie_externa" name="serie_externa">
+            </div>
+            <div class="col-md-3 mb-2">
+              <label class="form-label">Numero</label>
+              <input type="text" class="form-control" id="numero" name="numero" >
+            </div>
+
+          </div>
+          <div class="row mt-2">
+
+            
             <div class="col-md-6">
               <div class="row">
+
                 <div class="col-md-3 mb-2">
                   <label class="form-label">Fecha Emision</label>
                   <input type="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
@@ -373,7 +404,10 @@
         </div>
       </div>
     </div>
+
+    <div id="modales"></div>
   </div>
+
   @push('js-scripts')
     <script src="{{ asset('js/guias/ingreso/create.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/ingreso/articulo.js?v=') }}{{ rand() }}"></script>

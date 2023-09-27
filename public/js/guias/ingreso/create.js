@@ -16,6 +16,70 @@ $(document).ready(function () {
   }, 300);
 });
 
+$(document).on('change', '#es_guia_interna', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callEsGuiaInterna();
+});
+
+var callEsGuiaInterna = () => {
+
+  var es_guia_interna = $('#es_guia_interna').val();
+  // console.log({es_guia_interna});
+
+  if (es_guia_interna == 0) {//no es guia interna
+    
+    $('#div_serie_interna').hide();
+    $('#div_serie_externa').show();
+
+  }
+
+  if (es_guia_interna == 1) {// es guia interna
+
+    $('#div_serie_interna').show();
+    $('#div_serie_externa').hide();
+
+    callGetSerie();
+
+  }
+
+}
+
+$(document).on('change', '#serie', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callGetSerie();
+});
+
+var callGetSerie = () => {
+
+  var serie = $('#serie').val();
+
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('serie', serie);
+
+  getSerie(formData);
+}
+
+var getSerie = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.getSerie'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      console.log({response});
+      var serie = response.getSerie;
+      $('#numero').val(serie.nuevo_numero);
+    }
+  };
+  $.ajax(options);
+};
+
+
 var callListarArticulos = () => {
 
 
@@ -380,7 +444,7 @@ var callStore = (guardar_avance = false) => {
   formData.append('comentario', comentario);
   formData.append('guardar_avance', guardar_avance);
 
-  // new Response(formData).text().then(console.log)
+  new Response(formData).text().then(console.log)
   // store(formData);
 
   var procede_store = true;
@@ -410,6 +474,23 @@ var callStore = (guardar_avance = false) => {
       }
     }
 
+    if (procede_store == true) {
+      if (formData.get('es_guia_interna') == 0) {
+        if (formData.get('serie_externa').length <= 0) {
+          procede_store = false;
+          msj_store = `<b>Debe ingresar una serie para la guia</b>`
+        }
+      }
+    }
+    if (procede_store == true) {
+      if (formData.get('es_guia_interna') == 0) {
+        if (formData.get('numero').length <= 0) {
+          procede_store = false;
+          msj_store = `<b>Debe ingresar un numero para la guia</b>`
+        }
+      }
+    }
+
   }
 
 
@@ -430,8 +511,8 @@ var callStore = (guardar_avance = false) => {
       // reverseButtons: !0
     }).then((result) => {
       if (result.isConfirmed) {
-        store(formData);
-  
+        // store(formData);
+        modalStore(formData);
       }
     })
     
@@ -446,6 +527,24 @@ var callStore = (guardar_avance = false) => {
 
 }
 
+var modalStore = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiaingreso.modalStore'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'html',
+    success: function(response){
+      $('#modales').html(response);
+      $('#modalStore').modal('show');
+      store(formData);
+    }
+  };
+  $.ajax(options);
+};
+
+
 var store = function(formData){
   var options = {
     type: 'POST',
@@ -455,20 +554,81 @@ var store = function(formData){
     contentType: false,
     dataType: 'json',
     success: function(response){
-      Swal.fire({
-        html: response.msj,
-        icon: response.msj_tipo,
-      }).then((result) => {
-        if (result) {
-          if (response.procede == true) {
-            window.location.href = response.url_redirect;
-          }
-        }
-      })
+      // Swal.fire({
+      //   html: response.msj,
+      //   icon: response.msj_tipo,
+      // }).then((result) => {
+      //   if (result) {
+      //     if (response.procede == true) {
+      //       window.location.href = response.url_redirect;
+      //     }
+      //   }
+      // })
+
+      $('#li_store').html(response.msj);
+
+      if (response.procede == true) {
+        formData.append('id', response.id);
+        storeDataMart(formData);
+      }
+
     }
   };
   $.ajax(options);
 };
+
+var storeDataMart = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.storeDataMart'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      $('#li_store_datamart').html(response.msj);
+
+      if (response.procede == true) {
+        if (formData.get('guardar_avance') == 'false') {
+          if (formData.get('envio_sunat') == 1) {
+            if (formData.get('id') == '') {
+              formData.append('id', response.id);
+            }
+            facturacionElectronica(formData);
+            
+          }
+          
+        }
+      }
+
+    }
+  };
+  $.ajax(options);
+};
+
+$(document).on('click', '#btnReintentarDataMart', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  // var callGuardarAvance = $(this).data('guardar_avance');
+
+  // $('#modalStore').modal('hide');
+
+  // console.log({callGuardarAvance});
+  // callStore();
+
+  var formData = new FormData();
+  var id = $(this).data('id');
+
+  formData.append('_token', _token);
+  formData.append('id', id);
+
+  $('#li_store_datamart').html(`<b>Registrando en DataMart...</b>
+  <span class=""><i class="fa-solid fa-spinner fa-spin fa-lg"></i></span>`);
+  storeDataMart(formData);
+
+
+});
+
 
 $(document).on('change', '.bonificacion', function(event) {
   event.preventDefault();
