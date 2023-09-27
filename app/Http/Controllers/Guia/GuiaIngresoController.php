@@ -922,18 +922,12 @@ class GuiaIngresoController extends Controller
             $log = "{$e}";
         }
 
-        if ($procede == false) {
-            if ($panel_origen != 'index') {
-                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
-                
-            }
-        }
 
         if ($procede == true) {
             $guia_status = GuiaIngreso::find($guia->id);
             try {
                 $guia_status->enviado_datamarket = 1;
-
+                $guia_status->save();
             } catch (Exception $e) {
                 //throw $th;
                 $procede = false;
@@ -942,6 +936,15 @@ class GuiaIngresoController extends Controller
                 $log = "{$e}";
             }
         }
+
+        if ($procede == false) {
+            if ($panel_origen != 'index') {
+                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+                
+            }
+        }
+
+
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
 
