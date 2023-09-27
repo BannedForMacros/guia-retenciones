@@ -823,10 +823,11 @@ class GuiaIngresoController extends Controller
     
     public function storeDataMart(Request $request)
     {
-        
+        $api_datos = Parametro::find(6)->valor;
+
         $id = $request->post('id');
 
-        $guia = GuiaIngreso::find($store->id);
+        $guia = GuiaIngreso::find($id);
         $fecha = Carbon::parse($guia->fecha_emision);
         $anio = $fecha->year;
 
@@ -834,6 +835,8 @@ class GuiaIngresoController extends Controller
         $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
         $msj_tipo = "success";
         $log = "";
+
+        $detalle = GuiaIngresoDetalle::where('guia_ingreso_id', $guia->id)->get();
 
         foreach ($detalle as $item) {
             $body_detalle[] = array(
@@ -891,10 +894,12 @@ class GuiaIngresoController extends Controller
             "valorVenta" => $guia->importe_sin_igv,
         ];
 
-
+        // dd("{$api_datos}/InsertGuiaDMK");
+        dd(json_encode($body));
         try {
+            
             $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
-            // dd($storeRemoto);
+            dd($storeRemoto);
             if ($storeRemoto->exito == false) {
                 $procede = false;
                 $msj = "No se pudo completar : {$storeRemoto->msgerror}";

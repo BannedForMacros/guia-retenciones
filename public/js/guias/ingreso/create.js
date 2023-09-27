@@ -65,7 +65,7 @@ var callGetSerie = () => {
 var getSerie = function(formData){
   var options = {
     type: 'POST',
-    url: route('guiasalida.getSerie'),
+    url: route('guiaingreso.getSerie'),
     data:formData,
     processData: false,
     contentType: false,
@@ -580,7 +580,7 @@ var store = function(formData){
 var storeDataMart = function(formData){
   var options = {
     type: 'POST',
-    url: route('guiasalida.storeDataMart'),
+    url: route('guiaingreso.storeDataMart'),
     data:formData,
     processData: false,
     contentType: false,

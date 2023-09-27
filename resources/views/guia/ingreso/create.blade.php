@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-3 mb-2" id="div_serie_externa">
               <label class="form-label">Serie</label>
-              <input type="text" class="form-control" id="serie_externa" name="serie_externa">
+              <input type="number" class="form-control" id="serie_externa" name="serie_externa">
             </div>
             <div class="col-md-3 mb-2">
               <label class="form-label">Numero</label>
