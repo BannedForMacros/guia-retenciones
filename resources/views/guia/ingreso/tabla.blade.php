@@ -31,7 +31,12 @@
               @if ($item->guia_estado_id == 4)
               <li><a class="dropdown-item" href="{{ route('guiaingreso.continuar', ['guia'=>$item->id]) }}"><i class="fa fa-edit"></i> Continuar</a></li>
               @endif
-
+              
+              @if ($item->mostrarGuardarDatamarket == true)
+              
+              <li><a class="dropdown-item text-success reenviar_datamarket" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-paper-plane"></i> <b>Re-Enviar DMK</b></a></li>
+              <li><hr class="dropdown-divider"></li>
+              @endif
               @if ($item->mostrar_eliminar == true)
                 <li><a class="dropdown-item text-danger eliminar_guia" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-times"></i> <b>Eliminar</b></a></li>
               @endif

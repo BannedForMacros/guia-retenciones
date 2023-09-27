@@ -139,6 +139,14 @@ class GuiaSalidaController extends Controller
 
 
             $list[$key]->url_pdf = $url_pdf;
+
+            $mostrarGuardarDatamarket = true;
+            if ($value->enviado_datamarket == 1) {
+                $mostrarGuardarDatamarket = false;
+            }
+            
+            $list[$key]->mostrarGuardarDatamarket = $mostrarGuardarDatamarket;
+
         }
         // dd($list);
         $nro = 1;
@@ -1437,6 +1445,7 @@ class GuiaSalidaController extends Controller
 
     public function storeDataMart(Request $request)
     {
+        $panel_origen = $request->post('panel_origen');
 
         $api_datos = Parametro::find(6)->valor;
 
@@ -1515,6 +1524,7 @@ class GuiaSalidaController extends Controller
             // dd($storeRemoto);
             if ($storeRemoto->exito == false) {
                 $procede = false;
+                $msj_tipo = "error";
                 $msj = "No se pudo completar : {$storeRemoto->msgerror}";
             }
         } catch (Exception $e) {
@@ -1527,9 +1537,24 @@ class GuiaSalidaController extends Controller
         }
 
         if ($procede == false) {
-            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+            if ($panel_origen != 'index') {
+                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+            }
         }
         
+        if ($procede == true) {
+            $guia_status = GuiaSalida::find($guia->id);
+            try {
+                $guia_status->enviado_datamarket = 1;
+
+            } catch (Exception $e) {
+                //throw $th;
+                $procede = false;
+                $msj = "No se puedo registrar el envio";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
+        }
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }

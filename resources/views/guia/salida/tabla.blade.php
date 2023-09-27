@@ -30,6 +30,11 @@
           </button>
           <ul class="dropdown-menu">
             {{-- <li><hr class="dropdown-divider"></li> --}}
+            @if ($item->mostrarGuardarDatamarket == true)
+              
+            <li><a class="dropdown-item text-success reenviar_datamarket" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-paper-plane"></i> <b>Re-Enviar DMK</b></a></li>
+            <li><hr class="dropdown-divider"></li>
+            @endif
             @if ($item->guia_estado_id == 4)
               <li><a class="dropdown-item" href="{{ route('guiasalida.continuar', ['guia'=>$item->id]) }}"><i class="fa fa-edit"></i> Continuar</a></li>
             @endif

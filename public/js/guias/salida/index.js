@@ -115,3 +115,57 @@ var anularGuia = function(formData){
   };
   $.ajax(options);
 };
+
+
+
+$(document).on('click', '.reenviar_datamarket', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  var id = $(this).data('id');
+
+  var formData = new FormData();
+  formData.append('_token',_token);
+  formData.append('panel_origen','index');
+  formData.append('id',id);
+
+  Swal.fire({
+    html: `¿<b>Deseas reenviar esta guia a DataMarket</b>?!`,
+    icon: "warning",
+    showCancelButton: !0,
+    confirmButtonText: "Si, Registrar",
+    cancelButtonText: "No, cancelar!",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      
+      storeDataMart(formData);
+      
+    }
+  })
+
+});
+
+
+var storeDataMart = function (formData) {
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.storeDataMart'),
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function (response) {
+      Swal.fire({
+        title: '',
+        html: response.msj,
+        icon: response.msj_tipo,
+        allowOutsideClick : false
+      })
+
+      if (response.procede == true) {
+        callListarGuias();
+      }
+    }
+  };
+  $.ajax(options);
+};

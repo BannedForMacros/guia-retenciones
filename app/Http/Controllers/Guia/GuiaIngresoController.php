@@ -48,7 +48,7 @@ class GuiaIngresoController extends Controller
         }
         
         $list = $consulta->get();
-
+        // dd($list);
 
         foreach ($list as $key => $value) {
             $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
@@ -57,8 +57,16 @@ class GuiaIngresoController extends Controller
                 $mostrar_eliminar = true;
                 
             }
-
+            
             $list[$key]->mostrar_eliminar = $mostrar_eliminar;
+            
+            $mostrarGuardarDatamarket = true;
+            if ($value->enviado_datamarket == 1) {
+                $mostrarGuardarDatamarket = false;
+            }
+            
+            $list[$key]->mostrarGuardarDatamarket = $mostrarGuardarDatamarket;
+
         }
         // dd($list);
         return view('guia.ingreso.tabla', compact('list'));
@@ -824,6 +832,7 @@ class GuiaIngresoController extends Controller
     public function storeDataMart(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
+        $panel_origen = $request->post('panel_origen');
 
         $id = $request->post('id');
 
@@ -914,7 +923,24 @@ class GuiaIngresoController extends Controller
         }
 
         if ($procede == false) {
-            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+            if ($panel_origen != 'index') {
+                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+                
+            }
+        }
+
+        if ($procede == true) {
+            $guia_status = GuiaIngreso::find($guia->id);
+            try {
+                $guia_status->enviado_datamarket = 1;
+
+            } catch (Exception $e) {
+                //throw $th;
+                $procede = false;
+                $msj = "No se puedo registrar el envio";
+                $msj_tipo = "error";
+                $log = "{$e}";
+            }
         }
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
