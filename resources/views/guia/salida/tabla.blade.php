@@ -31,8 +31,11 @@
           <ul class="dropdown-menu">
             {{-- <li><hr class="dropdown-divider"></li> --}}
             @if ($item->mostrarGuardarDatamarket == true)
-              
             <li><a class="dropdown-item text-success reenviar_datamarket" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-paper-plane"></i> <b>Re-Enviar DMK</b></a></li>
+            <li><hr class="dropdown-divider"></li>
+            @endif
+            @if ($item->verReintentoFacturador == true)
+            <li><a class="dropdown-item text-primary reenviar_facturador" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-regular fa-paper-plane"></i> <b>Re-Enviar Facturador</b></a></li>
             <li><hr class="dropdown-divider"></li>
             @endif
             @if ($item->guia_estado_id == 4)

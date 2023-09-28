@@ -131,7 +131,7 @@ class GuiaSalidaController extends Controller
             }
             $mostrar_anular = false;
 
-            if ($value->guia_estado_id == 1) {
+            if ($value->guia_estado_id == 1 or $value->guia_estado_id == 2) {
                 $mostrar_anular = true;
             }
 
@@ -146,6 +146,17 @@ class GuiaSalidaController extends Controller
             }
             
             $list[$key]->mostrarGuardarDatamarket = $mostrarGuardarDatamarket;
+            
+            $verReintentoFacturador = false;
+            if ($value->envio_sunat == 1) {
+                if ($value->enviado_facturador == 0) {
+                    if ($value->guia_estado_id == 1) {
+                        $verReintentoFacturador = true;
+                    }
+                }
+            }
+
+            $list[$key]->verReintentoFacturador = $verReintentoFacturador;
 
         }
         // dd($list);
@@ -1452,6 +1463,7 @@ class GuiaSalidaController extends Controller
         $id = $request->post('id');
 
         $guia = GuiaSalida::find($id);
+        // dd($guia);
 
         $procede = true;
         $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
@@ -1552,7 +1564,25 @@ class GuiaSalidaController extends Controller
 
         if ($procede == false) {
             if ($panel_origen != 'index') {
-                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+                // $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
+                $li_btn = "";
+                if ($guia->envio_sunat == 1) {
+                    $li_btn = "
+                    <button type='button' class='btn btn-dark dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false'>
+                        <span class='visually-hidden'>Toggle Dropdown</span>
+                    </button>
+                    <ul class='dropdown-menu'>
+                        <li><a class='dropdown-item' style='cursor: pointer' id='btnReintentarFacturar' data-id='{$id}'><i class='fa fa-download'></i> <b>Continuar Sunat</b></a></li>
+                    </ul>
+                    
+                    ";
+                }
+                $msj = "{$msj}
+                <div class='btn-group float-end'>
+                    <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>
+                    {$li_btn}
+                </div>";
+
             }
         }
         
@@ -1563,6 +1593,8 @@ class GuiaSalidaController extends Controller
 
     public function facturacionElectronica(Request $request)
     {
+        $panel_origen = $request->post('panel_origen');
+
         $api_facturacion = Parametro::find(7)->valor;
 
         $id = $request->post('id');
@@ -1695,7 +1727,20 @@ class GuiaSalidaController extends Controller
                         // ->put("{$api_facturacion}", $body)->object();
                         ->put("{$api_facturacion}", $body)->object();
                         // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
-                        // dd($send);
+            if ($send == null) {
+                $procede = false;
+                $msj = "No se obtuvo respuesta del facturador";
+                $msj_tipo = "error";
+            }
+            if ($send != null) {
+                // dd($send->Exito);
+                if ($send->Exito == false) {
+                    $procede = false;
+                    $msj = "Ocurrio un error en el facturador: {$send->MensajeError}";
+                    $msj_tipo = "error";
+                }
+            }
+            // dd($send);
             try {
                 $send->CodigoHash;
 
@@ -1745,6 +1790,7 @@ class GuiaSalidaController extends Controller
         if ($procede == true) {//actulizamos el id del envio en la tabla original
 
             $guia->envio_id = $store->id;
+            $guia->enviado_facturador = 1;
             
             try {
 
@@ -1800,8 +1846,9 @@ class GuiaSalidaController extends Controller
         }
 
         if ($procede == false) {
-            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarFacturar' data-id='{$id}'>
-            <i class='fa-regular fa-paper-plane'></i> Reintentar Facturar</button>";
+            if ($panel_origen != 'index') {
+                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarFacturar' data-id='{$id}'> <i class='fa-regular fa-paper-plane'></i> Reintentar Facturar</button>";
+            }
         }
 
 
@@ -1890,7 +1937,7 @@ class GuiaSalidaController extends Controller
         // dd($guia);
 
         $procede = true;
-        $msj = "Guia anulada";
+        $msj = "Guia anulada <br><code>Si la guia fue enviada a sunat tambien debe anularse en la Web Oficial</code>";
         $msj_tipo = "success";
         $log = "";
 

@@ -51,20 +51,35 @@ class EmpleadoController extends Controller
         $msj_tipo = "success";
         $log = "";
         $url_redirect = "";
-        try {
-            $empleado = Empleado::create($datos);
-            // dd($empleado);
-            $url_redirect = route('empleados.edit', ['empleado' => $empleado->id]);
+        
 
-        } catch (Exception $e) {
-            //throw $th;
-            // dd($e);
+        $duplicado = Empleado::Where('nro_documento', $datos['nro_documento'])->where('activo', 1)->first();
+
+        if ($duplicado != null) {
             $procede = false;
-            $msj = "No se pudo registrar empleado";
+            $msj = "Ya existe un empleado con este Nro de Documento";
             $msj_tipo = "error";
-            $log = "{$e}";
-
+            
         }
+
+        if ($procede == true) {
+            
+            try {
+                $empleado = Empleado::create($datos);
+                // dd($empleado);
+                $url_redirect = route('empleados.edit', ['empleado' => $empleado->id]);
+    
+            } catch (Exception $e) {
+                //throw $th;
+                // dd($e);
+                $procede = false;
+                $msj = "No se pudo registrar empleado";
+                $msj_tipo = "error";
+                $log = "{$e}";
+    
+            }
+        }
+
 
         if ($procede == true) {
             $user = new User();
@@ -88,9 +103,12 @@ class EmpleadoController extends Controller
         }
 
         if ($procede == false) {
-            $del_empleado = Empleado::find($empleado->id);
-            
-            $del_empleado->delete();
+            if (($empleado ?? null) != null) {
+                $del_empleado = Empleado::find($empleado->id);
+                
+                $del_empleado->delete();
+                
+            }
         }
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'url_redirect' => $url_redirect]);

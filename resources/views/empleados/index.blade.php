@@ -37,7 +37,7 @@
                   <td class="align-middle">{{ $item->ape_paterno }}</td>
                   <td class="align-middle">{{ $item->ape_materno }}</td>
                   <td class="align-middle">{{ $item->nombres }}</td>
-                  <td class="align-middle">{{ ($item->nombres == '1') ? 'Masculino' : 'Femenino' ; }}</td>
+                  <td class="align-middle">{{ ($item->sexo == '1') ? 'Masculino' : 'Femenino' ; }}</td>
                   <td class="align-middle">
                     <a type="button" class="btn btn-success btn-sm" href="{{ route('empleados.edit', ['empleado'=>$item->id]) }}"><i class="fa fa-edit"></i> Editar</a>
                   </td>

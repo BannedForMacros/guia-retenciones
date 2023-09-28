@@ -133,7 +133,7 @@ $(document).on('click', '.reenviar_datamarket', function(event) {
     html: `¿<b>Deseas reenviar esta guia a DataMarket</b>?!`,
     icon: "warning",
     showCancelButton: !0,
-    confirmButtonText: "Si, Registrar",
+    confirmButtonText: "Si, Reenviar",
     cancelButtonText: "No, cancelar!",
   }).then((result) => {
     if (result.isConfirmed) {
@@ -165,6 +165,60 @@ var storeDataMart = function (formData) {
       if (response.procede == true) {
         callListarGuias();
       }
+    }
+  };
+  $.ajax(options);
+};
+
+
+$(document).on('click', '.reenviar_facturador', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  var id = $(this).data('id');
+
+  var formData = new FormData();
+  formData.append('_token',_token);
+  formData.append('panel_origen','index');
+  formData.append('id',id);
+
+  Swal.fire({
+    html: `¿<b>Deseas reenviar esta guia al Facturador</b>?!`,
+    icon: "warning",
+    showCancelButton: !0,
+    confirmButtonText: "Si, reenviar",
+    cancelButtonText: "No, cancelar!",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      
+      facturacionElectronica(formData);
+      
+    }
+  })
+
+});
+
+var facturacionElectronica = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.facturacionElectronica'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+
+      Swal.fire({
+        title: '',
+        html: response.msj,
+        icon: response.msj_tipo,
+        allowOutsideClick : false
+      })
+
+      if (response.procede == true) {
+        callListarGuias();
+      }
+
     }
   };
   $.ajax(options);
