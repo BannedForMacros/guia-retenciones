@@ -259,6 +259,11 @@ $(document).on('keyup', '.input_cantidad_tr', function(event) {
   /* Act on the event */
 
   var cantidad = $(this).val();
+
+  if (cantidad == '') {
+    cantidad = 0;
+  }
+
   var precio = $(this).parent().parent().find('span[name=span_precio]').text();
   var importe = round((parseInt(cantidad) * parseFloat(precio)),2);
   $(this).parent().parent().find('span[name=span_importe]').html(importe)
@@ -295,6 +300,7 @@ $(document).on('keyup', '.input_porcentaje_descuento_tr', function(event) {
 });
 
 var calcularTotales = () => {
+  // console.log('calculando...');
   var base_calculo = $('#base_calculo').val();
 
   var items = $('#tbody tr').map(function(i, row) {
@@ -318,14 +324,17 @@ var calcularTotales = () => {
   var monto_igv = 0;
   var monto_descuento = 0;
   var peso_total = 0;
+  
 
   $.map(items, function (element, index) {
-    total_cantidad = total_cantidad + parseInt(element.cantidad);
-    total_venta = total_venta + parseFloat(element.importe);
-    peso_total = peso_total + (element.peso * element.cantidad);
-    if (element.porcentaje_descuento != '') {
-      monto_descuento = monto_descuento + parseFloat(element.monto_descuento)
-
+    if (element.cantidad != '') {
+      total_cantidad = total_cantidad + parseInt(element.cantidad ?? 0);
+      total_venta = total_venta + parseFloat(element.importe ?? 0);
+      peso_total = peso_total + (element.peso * (element.cantidad ?? 0));
+      if (element.porcentaje_descuento != '') {
+        monto_descuento = monto_descuento + parseFloat(element.monto_descuento ?? 0)
+      }
+      
     }
   });
 

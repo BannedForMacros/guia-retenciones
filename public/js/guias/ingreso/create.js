@@ -265,6 +265,9 @@ $(document).on('keyup', '.input_cantidad_tr', function(event) {
   /* Act on the event */
 
   var cantidad = $(this).val();
+  if (cantidad == '') {
+    cantidad = 0;
+  }
   var precio = $(this).parent().parent().find('span[name=span_precio]').text();
   // var importe = parseInt(cantidad) * parseFloat(precio);
   var importe = round((parseInt(cantidad) * parseFloat(precio)),2);
@@ -331,11 +334,11 @@ var calcularTotales = () => {
   var peso_total = 0;
 
   $.map(items, function (element, index) {
-    total_cantidad = total_cantidad + parseInt(element.cantidad);
-    total_venta = total_venta + parseFloat(element.importe);
-    peso_total = peso_total + (element.peso * element.cantidad);
+    total_cantidad = total_cantidad + parseInt(element.cantidad ?? 0);
+    total_venta = total_venta + parseFloat(element.importe ?? 0);
+    peso_total = peso_total + (element.peso * (element.cantidad ?? 0));
     if (element.porcentaje_descuento != '') {
-      monto_descuento = monto_descuento + parseFloat(element.monto_descuento)
+      monto_descuento = monto_descuento + parseFloat(element.monto_descuento ?? 0)
 
     }
   });
