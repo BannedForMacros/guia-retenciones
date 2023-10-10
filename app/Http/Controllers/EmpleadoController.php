@@ -190,8 +190,11 @@ class EmpleadoController extends Controller
         $listPerfiles = Perfil::where('activo', 1)->get();
 
         $user = User::where('empleado_id', $empleado->id)->first();
-
-        $listTrabajadores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$empleado->empleado_dmk_id}")->object()->trabajador;
+        $listTrabajadores = [];
+        if ($empleado->empleado_dmk_id != null) {
+            $listTrabajadores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$empleado->empleado_dmk_id}")->object()->trabajador;
+            
+        }
 
         return  view('empleados.edit', compact('empleado', 'listPerfiles', 'user', 'listTrabajadores'));
     }
