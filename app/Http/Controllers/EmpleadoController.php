@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Empleado;
+use App\Models\Parametro;
 use App\Models\Perfil;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class EmpleadoController extends Controller
 {
@@ -31,8 +33,47 @@ class EmpleadoController extends Controller
     public function create()
     {
         // dd('create empleado');
-        return view('empleados.create');
+        $api_datos = Parametro::find(6)->valor;
+
+        $listTrabajadores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador=-1")->object()->trabajador;
+        // dd($listTrabajadores);
+        return view('empleados.create', compact('listTrabajadores'));
     }
+
+    public function getEmpleadoDmk(Request $request)
+    {
+        // dd($request->post());
+        $api_datos = Parametro::find(6)->valor;
+
+        $empleado_codigo = $request->post('empleado_codigo');
+        $procede = true;
+        $msj = "Datos obtenidos de DMK";
+        $msj_tipo = "success";
+        $log = "";
+
+        try {
+            
+            $empleado = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$empleado_codigo}")->object()->trabajador[0];
+            // dd($empleado);
+        } catch (Exception $e) {
+            //throw $th;
+            $procede = false;
+            $msj = "No se pudo completar la consulta a DMK";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+        if ($procede == true) {
+            // dd(explode(' ', $empleado->apellidos, 2));
+            // dd('hola');
+            $explode_apellidos = explode(' ', $empleado->apellidos, 2);
+            // dd($explode_apellidos);
+            $empleado->ape_paterno = $explode_apellidos[0] ?? '';
+            $empleado->ape_materno = $explode_apellidos[1] ?? '';
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'empleado' => $empleado]);
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -60,6 +101,17 @@ class EmpleadoController extends Controller
             $msj = "Ya existe un empleado con este Nro de Documento";
             $msj_tipo = "error";
             
+        }
+        
+        if ($procede == true) {
+            $duplicado_dmk = Empleado::where('empleado_dmk_id', $datos['empleado_dmk_id'])->where('activo',1)->first();
+            
+            if ($duplicado_dmk != null) {
+                $procede = false;
+                $msj = "Ya existe un empleado DNK previamente registrado en nube";
+                $msj_tipo = "error";
+                
+            }
         }
 
         if ($procede == true) {
@@ -133,12 +185,15 @@ class EmpleadoController extends Controller
      */
     public function edit(Empleado $empleado)
     {
+        $api_datos = Parametro::find(6)->valor;
         // dd($empleado);
         $listPerfiles = Perfil::where('activo', 1)->get();
 
         $user = User::where('empleado_id', $empleado->id)->first();
 
-        return  view('empleados.edit', compact('empleado', 'listPerfiles', 'user'));
+        $listTrabajadores = Http::get("{$api_datos}/ObtenerTrabajador?CodigoTrabajador={$empleado->empleado_dmk_id}")->object()->trabajador;
+
+        return  view('empleados.edit', compact('empleado', 'listPerfiles', 'user', 'listTrabajadores'));
     }
 
     /**

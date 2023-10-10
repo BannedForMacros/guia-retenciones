@@ -9,22 +9,36 @@
         <form name="form_update" id="form_update"  onkeydown="return event.key != 'Enter';">
           @csrf
           <input type="text" id="id" name="id" value="{{ $empleado->id }}" hidden>
+
+          <div class="row">
+            <div class="col-md-6">
+              <label class="form-label">Empleado</label>
+              <select class="form-select" name="empleado_dmk_id" id="empleado_dmk_id" autofocus style="width: 100%">
+                @foreach ($listTrabajadores as $item)
+                  <option value="{{ $item->codTrabajador }}">{{ "{$item->apellidos} {$item->nombres}" }}</option>
+                @endforeach
+              </select>
+            </div>
+
+          </div>
+
+
           <div class="row">
             <div class="col-md-3">
               <label class="form-label">Nro Documento</label>
-              <input type="text" class="form-control" name="nro_documento" id="nro_documento" value="{{ $empleado->nro_documento }}" placeholder="Nº Documento" required  autofocus >
+              <input type="text" class="form-control" name="nro_documento" id="nro_documento" value="{{ $empleado->nro_documento }}" placeholder="Nº Documento" required  readonly >
             </div>
             <div class="col-md-3">
               <label class="form-label">Apellido Paterno</label>
-              <input type="text" class="form-control" name="ape_paterno" value="{{ $empleado->ape_paterno }}" placeholder="Apellido Paterno" required>
+              <input type="text" class="form-control" name="ape_paterno" value="{{ $empleado->ape_paterno }}" placeholder="Apellido Paterno"  readonly>
             </div>
             <div class="col-md-3">
               <label class="form-label">Apellido Materno</label>
-              <input type="text" class="form-control" name="ape_materno" value="{{ $empleado->ape_materno }}" placeholder="Apellido Materno" required>
+              <input type="text" class="form-control" name="ape_materno" value="{{ $empleado->ape_materno }}" placeholder="Apellido Materno"  readonly>
             </div>
             <div class="col-md-3">
               <label class="form-label">Nombre</label>
-              <input type="text" class="form-control" name="nombres" value="{{ $empleado->nombres }}" placeholder="Nombres" required>
+              <input type="text" class="form-control" name="nombres" value="{{ $empleado->nombres }}" placeholder="Nombres" required readonly>
             </div>
           </div>
           <div class="row mt-2">

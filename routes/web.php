@@ -71,6 +71,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
 });
+
 Route::controller(GuiaIngresoController::class)->group(function (){
     
     Route::post('guiaingreso/agregarItem', 'agregarItem')->name('guiaingreso.agregarItem');
@@ -91,6 +92,7 @@ Route::controller(GuiaIngresoController::class)->group(function (){
 
 Route::controller(EmpleadoController::class)->group(function () {
     
+    Route::post('empleados/getEmpleadoDmk', 'getEmpleadoDmk')->name('empleados.getEmpleadoDmk');
     Route::post('empleados/update', 'update')->name('empleados.update');
 
     Route::resource('empleados', EmpleadoController::class)->parameter('empleados', 'empleado')->except('update');
