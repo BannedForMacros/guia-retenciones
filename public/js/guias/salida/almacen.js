@@ -64,12 +64,15 @@ var getUbigeosPorAlmacen = function(formData){
         $('#direccion_partida').val(response.direccion);
         
       }
+      
       if (response.tipo == 2) {//destino
         $('#llegada_departamento').html(response.optionsDepartamento);
         $('#llegada_provincia').html(response.optionsProvincia);
         $('#llegada_distrito').html(response.optionsDistrito);
         $('#direccion_llegada').val(response.direccion);
       }
+
+      updateLocalStorage();
     }
   };
   $.ajax(options);

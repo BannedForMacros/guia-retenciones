@@ -13,6 +13,7 @@
       <div class="col-md-12">
         <h5><i class="fa fa-ticket"></i> Guia de Salida</h5>
         <form name="form_store" id="form_store" onkeydown="return event.key != 'Enter';">
+          <input type="hidden" name="save_local_storage" id="save_local_storage" value="false">
           <input type="hidden" name="id_continua" id="id_continua" value="{{ $guia->id ?? '' }}">
           @csrf
           <div class="row">
@@ -70,11 +71,11 @@
                         <div class="col-md-9">
                           <div class="row no-gutters">
                             <div class="col-md-5">
-                              <input type="text" class="form-control" placeholder="Serie" name="pedido_serie"
+                              <input type="text" class="form-control input_pedido_interno" placeholder="Serie" name="pedido_serie" id="pedido_serie"
                                 value="{{ $guia->pedido_serie ?? '' }}">
                             </div>
                             <div class="col-md-7">
-                              <input type="text" class="form-control" placeholder="Numero" name="pedido_numero"
+                              <input type="text" class="form-control input_pedido_interno" placeholder="Numero" name="pedido_numero" id="pedido_numero"
                                 value="{{ $guia->pedido_numero ?? '' }}">
                             </div>
 
@@ -689,5 +690,6 @@
     <script src="{{ asset('js/guias/salida/articulo.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/ubigeo.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/almacen.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/salida/storage.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection

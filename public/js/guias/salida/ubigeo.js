@@ -16,6 +16,7 @@ $(document).on('change', '.ubigeo', function(event) {
   var tag_id = $(this).attr('id');
   // console.log({tag_id});
   callListarUbigeos(tag_id);
+  updateLocalStorage();
 });
 
 var callListarUbigeos = (tag_id) => {
@@ -49,6 +50,7 @@ var listarUbigeos = function(formData){
           callListarUbigeos(response.tag_id);
         }
       }
+      updateLocalStorage();
     }
   };
   $.ajax(options);

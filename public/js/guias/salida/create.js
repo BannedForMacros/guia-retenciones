@@ -48,10 +48,17 @@ var getSerie = function(formData){
       console.log({response});
       var serie = response.getSerie;
       $('#span_numero').val(serie.nuevo_numero);
+      updateLocalStorage();
     }
   };
   $.ajax(options);
 };
+
+$(document).on('change', '#envio-sunat', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  updateLocalStorage();
+});
 
 var callListarArticulos = () => {
 
@@ -227,6 +234,7 @@ $(document).on('change', '#transportista_id', function(event) {
   $('#transportista_ruc').val(data.ruc);
   $('#transportista_nombre').val(data.nombre);
   // console.log({option});
+  updateLocalStorage();
   callGetModalidadTraslado();
 });
 
@@ -242,7 +250,6 @@ $(document).on('click', '#btnAdd', function(event) {
   callAgregarItem();
 
 });
-
 
 $(document).on('click', '.delete_item', function(event) {
   event.preventDefault();
@@ -358,6 +365,8 @@ var calcularTotales = () => {
   $('#peso_bruto_total').val(round(peso_total,2))
 
   // console.log({items});
+
+  updateLocalStorage();
 }
 
 $(document).on('submit', '#form_store', function(event) {
@@ -604,6 +613,7 @@ var callStore = (guardar_avance = false) => {
       showCancelButton: !0,
       confirmButtonText: "Si, Registrar",
       cancelButtonText: "No, cancelar!",
+      allowOutsideClick: false
   
       // reverseButtons: !0
     }).then((result) => {
@@ -775,6 +785,7 @@ var callSetMotivoTraslado = () => {
     console.log('mostramos solo un almacen');
   }
 
+  updateLocalStorage();
 }
 
 $(document).on('change', '#base_calculo', function(event) {
@@ -833,6 +844,8 @@ var callIndicarProveedor = () => {
     $('#div_cliente').show();
     
   }
+
+  updateLocalStorage();
 }
 
 $(document).on('keypress', '#vendedor_codigo', function(event) {
@@ -871,6 +884,7 @@ var getVendedor = function(formData){
     dataType: 'json',
     success: function(response){
       $('#vendedor_id').html(response.options);
+      updateLocalStorage();
     }
   };
   $.ajax(options);
@@ -937,6 +951,8 @@ var getModalidadTraslado = function(formData){
         $('#div_vehiculo').hide();
 
       }
+
+      updateLocalStorage();
     }
   };
   $.ajax(options);
@@ -978,4 +994,27 @@ $(document).on('click', '#btnReintentarFacturar', function(event) {
   formData.append('id', id);
 
   facturacionElectronica(formData);
+});
+
+$(document).on('change', '#pedido_interno', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  // var status = $(this).prop('checked');
+  // console.log({status});
+  updateLocalStorage();
+});
+
+$(document).on('keyup', '.input_pedido_interno', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  updateLocalStorage();
+});
+
+$(document).on('keyup', '#comentario', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+
 });
