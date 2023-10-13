@@ -171,8 +171,6 @@ var getUbigeosStorage = () => {
   return {partida_departamento, partida_provincia, partida_distrito, llegada_departamento, llegada_provincia, llegada_distrito}
 }
 
-
-
 var verificarStorage = () => {
 
   var storage = localStorage.getItem('storageGuiaSalida');
@@ -205,7 +203,6 @@ var verificarStorage = () => {
   }
 
 }
-
 
 var cargarStorage = () => {
 

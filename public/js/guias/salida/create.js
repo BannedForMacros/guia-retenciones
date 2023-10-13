@@ -684,6 +684,7 @@ var store = function(formData){
       if (response.procede == true) {
         formData.append('id', response.id);
         storeDataMart(formData);
+        localStorage.removeItem('storageGuiaSalida')
       }
 
     }
