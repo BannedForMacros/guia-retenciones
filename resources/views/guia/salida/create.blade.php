@@ -663,8 +663,8 @@
             <a type="button" href="{{ route('guiasalida.index') }}" class="btn btn-danger float-start"><i
                 class="fa fa-arrow-left" aria-hidden="true"></i>
               Cancelar</a>
-            {{-- <button class="btn btn-primary float-end" form="form_store"><i class="fa fa-save" aria-hidden="true"></i> Guardar</button> --}}
-            <div class="btn-group float-end">
+            <button class="btn btn-primary float-end" form="form_store"><i class="fa fa-save" aria-hidden="true"></i> Guardar</button>
+            {{-- <div class="btn-group float-end">
               <button type="submit" form="form_store" class="btn btn-primary"><i class="fa fa-save"
                   aria-hidden="true"></i> Guardar</button>
               <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split"
@@ -675,7 +675,7 @@
                 <li><a class="dropdown-item" style="cursor: pointer" id="btnGuardarAvance"><i
                       class="fa fa-download"></i> <b>Guardar Avance</b></a></li>
               </ul>
-            </div>
+            </div> --}}
           </div>
         </div>
 

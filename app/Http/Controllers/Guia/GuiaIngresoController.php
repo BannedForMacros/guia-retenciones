@@ -7,6 +7,7 @@ use App\Models\GuiaEstado;
 use App\Models\GuiaIngreso;
 use App\Models\GuiaIngresoDetalle;
 use App\Models\Parametro;
+use App\Models\Serie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;

@@ -43,6 +43,7 @@ var callEsGuiaInterna = () => {
 
   }
 
+  updateLocalStorage();
 }
 
 $(document).on('change', '#serie', function(event) {
@@ -74,11 +75,11 @@ var getSerie = function(formData){
       console.log({response});
       var serie = response.getSerie;
       $('#numero').val(serie.nuevo_numero);
+      updateLocalStorage();
     }
   };
   $.ajax(options);
 };
-
 
 var callListarArticulos = () => {
 
@@ -247,8 +248,10 @@ $(document).on('change', '#proveedor_id', function(event) {
 
   $('#proveedor_nombre').val(data.proveedor_nombre);
   $('#proveedor_ruc').val(data.proveedor_ruc);
-});
 
+  updateLocalStorage();
+
+});
 
 $(document).on('click', '.delete_item', function(event) {
   event.preventDefault();
@@ -361,6 +364,7 @@ var calcularTotales = () => {
   $('#peso_bruto_total').val(round(peso_total,2));
 
   console.log({items});
+  updateLocalStorage();
 }
 
 $(document).on('submit', '#form_store', function(event) {
@@ -547,7 +551,6 @@ var modalStore = function(formData){
   $.ajax(options);
 };
 
-
 var store = function(formData){
   var options = {
     type: 'POST',
@@ -573,6 +576,7 @@ var store = function(formData){
       if (response.procede == true) {
         formData.append('id', response.id);
         storeDataMart(formData);
+        localStorage.removeItem('storageGuiaIngreso')
       }
 
     }
@@ -632,7 +636,6 @@ $(document).on('click', '#btnReintentarDataMart', function(event) {
 
 });
 
-
 $(document).on('change', '.bonificacion', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -684,6 +687,7 @@ $(document).on('keypress', '#vendedor_codigo', function(event) {
   console.log(event.keyCode);
 
 });
+
 $(document).on('click', '#btnBuscarVendedor', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -712,6 +716,7 @@ var getVendedor = function(formData){
     dataType: 'json',
     success: function(response){
       $('#vendedor_id').html(response.options);
+      updateLocalStorage();
     }
   };
   $.ajax(options);
@@ -748,4 +753,62 @@ $(document).on('keypress', '.input_cantidad_tr', function(event) {
       
     }
   }
+});
+
+$(document).on('keyup', '#numero', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+
+});
+
+$(document).on('change', '#fecha_vencimiento', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+
+});
+
+$(document).on('change', '#tipo_busqueda_proveedor', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+});
+
+$(document).on('keyup', '#condiciones', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+});
+
+$(document).on('keyup', '#pedido_numero', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+});
+
+$(document).on('keyup', '#pedido_serie', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+});
+
+$(document).on('keyup', '#comentario', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  updateLocalStorage();
+});
+
+$(document).on('click', '.radio_relacion_doc', function(event) {
+  // event.preventDefault();
+  /* Act on the event */
+  updateLocalStorage();
+
 });

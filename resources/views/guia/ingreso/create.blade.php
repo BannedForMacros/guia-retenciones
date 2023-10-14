@@ -7,6 +7,7 @@
       <div class="col-md-12">
         <h5><i class="fa fa-ticket"></i> Guia de Ingreso</h5>
         <form name="form_store" id="form_store" onkeydown="return event.key != 'Enter';">
+          <input type="hidden" name="save_local_storage" id="save_local_storage" value="false">
           <input type="hidden" name="id_continuar" value="{{ $guia->id ?? '' }}" >
           @csrf
           <div class="row">
@@ -49,7 +50,7 @@
                 </div>
                 <div class="col-md-3 col-sm-4 mb-2">
                   <label class="form-label">Fecha Vencimiento</label>
-                  <input type="date" class="form-control">
+                  <input type="date" name="fecha_vencimiento" id="fecha_vencimiento" class="form-control">
                 </div>
               </div>
               <div class="row mt-2">
@@ -95,14 +96,14 @@
                   <div class="row">
                     <div class="col-md-4">
                       <div class="form-check">
-                        <input class="form-check-input" type="radio" name="relacion_pedido" id="pedido"
+                        <input class="form-check-input radio_relacion_doc" type="radio" name="relacion_pedido" id="pedido"
                           value="1" {{ (($guia->relacion_pedido ?? '') == 1) ? 'checked' : '' ; }}>
                         <label class="form-check-label" for="pedido">
                           Pedido
                         </label>
                       </div>
                       <div class="form-check">
-                        <input class="form-check-input" type="radio" name="relacion_pedido" id="recepcion"
+                        <input class="form-check-input radio_relacion_doc" type="radio" name="relacion_pedido" id="recepcion"
                           value="2" {{ (($guia->relacion_pedido ?? 2) == 2) ? 'checked' : '' ; }}>
                         <label class="form-check-label" for="recepcion" >
                           Recepcion
@@ -113,10 +114,10 @@
                       {{-- <label class="form-label">Serie-Nro</label> --}}
                       <div class="row">
                         <div class="col-md-4">
-                          <input type="text" class="form-control" name="pedido_serie" placeholder="Serie" value="{{ $guia->pedido_serie ?? '' }}">
+                          <input type="text" class="form-control" name="pedido_serie" id="pedido_serie" placeholder="Serie" value="{{ $guia->pedido_serie ?? '' }}">
                         </div>
                         <div class="col-md-8">
-                          <input type="text" class="form-control" name="pedido_numero" placeholder="Numero" value="{{ $guia->pedido_numero ?? '' }}">
+                          <input type="text" class="form-control" name="pedido_numero" id="pedido_numero" placeholder="Numero" value="{{ $guia->pedido_numero ?? '' }}">
                         </div>
                       </div>
                     </div>
@@ -133,7 +134,7 @@
                   <label class="form-label">Proveedor</label>
                   <div class="row g-2">
                     <div class="col-md-3">
-                      <select id="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
+                      <select id="tipo_busqueda_proveedor" name="tipo_busqueda_proveedor" class="form-select" style="width: 100%">
                         <option value="3">Razon Social</option>
                         <option value="2">RUC</option>
                         <option value="1">Codigo</option>
@@ -383,11 +384,11 @@
             <a type="button" href="{{ route('guiaingreso.index') }}" class="btn btn-danger float-start"><i
                 class="fa fa-arrow-left" aria-hidden="true"></i>
               Cancelar</a>
-            {{-- <button type="submit" form="form_store" class="btn btn-primary float-end" ><i class="fa fa-save" aria-hidden="true"></i>
-              Guardar</button> --}}
+            <button type="submit" form="form_store" class="btn btn-primary float-end" ><i class="fa fa-save" aria-hidden="true"></i>
+              Guardar</button>
 
             <!-- Example split danger button -->
-            <div class="btn-group float-end">
+            {{-- <div class="btn-group float-end">
               <button type="submit" form="form_store" class="btn btn-primary"><i class="fa fa-save"
                   aria-hidden="true"></i> Guardar</button>
               <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split"
@@ -398,7 +399,7 @@
                 <li><a class="dropdown-item" style="cursor: pointer" id="btnGuardarAvance"><i
                       class="fa fa-download"></i> <b>Guardar Avance</b></a></li>
               </ul>
-            </div>
+            </div> --}}
 
           </div>
         </div>
@@ -411,6 +412,7 @@
   @push('js-scripts')
     <script src="{{ asset('js/guias/ingreso/create.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/ingreso/articulo.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/ingreso/storage.js?v=') }}{{ rand() }}"></script>
 
   @endpush
 @endsection

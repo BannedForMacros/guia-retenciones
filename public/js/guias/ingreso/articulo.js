@@ -184,6 +184,8 @@ var agregarItem = function(formData){
           allowOutsideClick : false
         })
       }
+      updateLocalStorage();
+      
       calcularTotales();
 
       asignarFocusCantidad(formData.get('producto_id'));

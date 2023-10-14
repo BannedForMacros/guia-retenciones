@@ -261,7 +261,7 @@ var cargarStorage = () => {
 
   $.map(detalle, function (element, index) {
     console.log(element);
-    var importe = element.cantidad * element.precio_publico;
+    var importe = round((element.cantidad * element.precio_publico),2);
     $('#tbody').prepend(`
       <tr 
         data-producto_id="${element.codigo}" 

@@ -86,6 +86,7 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     Route::get('guiaingreso/pdf/{guia}', 'pdf')->name('guiaingreso.pdf');
     Route::get('guiaingreso/continuar/{guia}', 'continuar')->name('guiaingreso.continuar');
     Route::post('guiaingreso/eliminar', 'eliminar')->name('guiaingreso.eliminar');
+    Route::post('guiaingreso/getSerie', 'getSerie')->name('guiaingreso.getSerie');
 
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
 });
