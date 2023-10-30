@@ -91,6 +91,10 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     Route::post('guiaingreso/eliminar', 'eliminar')->name('guiaingreso.eliminar');
     Route::post('guiaingreso/getSerie', 'getSerie')->name('guiaingreso.getSerie');
 
+    Route::post('guiaingreso/modalOtrasGuias', 'modalOtrasGuias')->name('guiaingreso.modalOtrasGuias');
+    Route::post('guiaingreso/buscarOtrasGuias', 'buscarOtrasGuias')->name('guiaingreso.buscarOtrasGuias');
+    Route::post('guiaingreso/cargarOtraGuia', 'cargarOtraGuia')->name('guiaingreso.cargarOtraGuia');
+
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
 });
 

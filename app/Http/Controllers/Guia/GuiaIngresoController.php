@@ -1113,5 +1113,93 @@ class GuiaIngresoController extends Controller
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
 
+    public function modalOtrasGuias(Request $request)
+    {
+        // dd('hola ');
+        return view('guia.ingreso.modal_otras_guias');
+    }
 
+
+    public function buscarOtrasGuias(Request $request)
+    {
+        $activo = $request->post('activo');
+        $serie = $request->post('serie');
+        $numero = $request->post('numero');
+
+        $consulta = GuiaIngreso::where('activo', $activo);
+        if ($serie != '') {
+            $consulta = $consulta->where('serie', $serie);
+        }
+        if ($numero != '') {
+            $consulta = $consulta->where('numero', $numero);
+        }
+
+        $list = $consulta->get();
+
+        foreach ($list as $key => $item) {
+            $list[$key]->estado_nombre = GuiaEstado::find($item->guia_estado_id)->nombre;
+        }
+        // dd($list);
+        
+        return view('guia.ingreso.tabla_otras_guias', compact('list'));
+    }
+
+    public function cargarOtraGuia(Request $request)
+    {
+        $id = $request->post('id');
+
+        $detalle = GuiaIngresoDetalle::where('guia_ingreso_id', $id)->get();
+        // dd($detalle);
+
+        $tabla = "";
+        $base_clalculo = $request->post('base_calculo');
+
+        foreach ($detalle as $item) {
+            $peso = 0;
+            $unidad = "UNI";
+            $inputCantidad = "<input type='number' class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$item->cantidad}'></input>";
+            $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='{$item->porcentaje_descuento}'></input>";
+            $inputDescuento = "<input type='hidden' name='monto_descuento' value='{$item->monto_descuento}'></input>";
+            $importe = $item->cantidad * $item->precio_publico;
+            $span_precio = $item->precio_publico;
+
+            if ($base_clalculo == 1) {
+                $span_precio = $item->precio_sin_igv;
+                $importe = $item->cantidad * $item->precio_sin_igv;
+            }
+
+
+            $tabla = "
+                <tr
+                    data-producto_id = '{$item->codarticulo}'
+                    data-precio_unitario = {$item->precio}
+                    data-precio_publico = {$item->precio_publico}
+                    data-precio_sin_igv='{$item->precio_sin_igv}'
+                    data-descripcion = '{$item->descripcion}'
+                    data-codigo = '{$item->codarticulo}'
+                    data-peso = '{$peso}'
+                    data-codigo_barra='{$item->codigo_barra}'
+                >
+                    <td class='align-middle'>{$item->codigo_barra}</td>
+                    <td class='align-middle'>{$item->codarticulo}</td>
+                    <td class='align-middle'>{$item->codarticulo}</td>
+                    <td class='align-middle'>{$item->descripcion}</td>
+                    <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
+                    <td class='align-middle'>{$inputCantidad}</td>
+                    <td class='align-middle'>{$unidad}</td>
+                    <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
+                    <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
+                    <td class='align-middle' style='text-align:center'>
+                        <input class='bonificacion' type='checkbox' name='bonificacion' >
+                    </td>
+                    <td class='align-middle text-center'>
+                        <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
+                    </td>
+                </tr>
+            ";
+        }
+
+        return response()->json(['tabla' => $tabla]);
+
+    }
 }
