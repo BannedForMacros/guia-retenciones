@@ -65,6 +65,9 @@ var updateLocalStorage = () => {
     formData.append('proveedor_ruc', $('#proveedor_ruc').val());
   }
 
+
+
+  
   var base_calculo = $('#base_calculo').val();
   formData.append('base_calculo', base_calculo);
 

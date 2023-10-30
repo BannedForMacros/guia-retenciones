@@ -484,7 +484,18 @@
         </form>
 
         <div class="row mt-4">
-          <h5><i class="fa fa-list"></i> Detalle</h5>
+          <div class="col-md-12">
+            <div class="row">
+              <div class="col-md-2">
+                <h5><i class="fa fa-list"></i> Detalle</h5>
+              </div>
+              <div class="col-md-6">
+                <button class="btn btn-sm btn-primary" id="btn_cargar_otras_guias"><i class="fa fa-download"></i> Cargar de Otras Guias</button>
+              </div>
+
+            </div>
+
+          </div>
           <div class="col-md-12">
             <label class="form-label">Articulo</label>
             <form name="form_buscar_articulo" id="form_buscar_articulo">
@@ -691,5 +702,6 @@
     <script src="{{ asset('js/guias/salida/ubigeo.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/almacen.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/storage.js?v=') }}{{ rand() }}"></script>
+    <script src="{{ asset('js/guias/salida/cargar_de_guias.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection
