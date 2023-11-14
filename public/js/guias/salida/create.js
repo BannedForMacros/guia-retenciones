@@ -396,6 +396,7 @@ var callStore = (guardar_avance = false) => {
       'precio_publico' : $(this).data('precio_publico'),
       'precio_sin_igv' : $(this).data('precio_sin_igv'),
       'codigo_barra' : $(this).data('codigo_barra'),
+      'peso' : $(this).data('peso'),
 
     };
   }).get();

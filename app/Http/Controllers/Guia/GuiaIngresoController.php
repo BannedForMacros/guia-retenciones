@@ -1155,7 +1155,8 @@ class GuiaIngresoController extends Controller
         $base_clalculo = $request->post('base_calculo');
 
         foreach ($detalle as $item) {
-            $peso = 0;
+            $peso = $item->peso_unitario;
+            
             $unidad = "UNI";
             $inputCantidad = "<input type='number' class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$item->cantidad}'></input>";
             $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='{$item->porcentaje_descuento}'></input>";

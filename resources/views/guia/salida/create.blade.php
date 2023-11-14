@@ -352,7 +352,10 @@
                   <label class="form-label">Vehiculo</label>
                   <select name="vehiculo_id" id="vehiculo_id" class="form-select">
                     @foreach ($listVehiculos as $item)
+                    @if ($item->estado == 1)
                       <option data-placa="{{ $item->placaVehiculo }}" data-marca="{{ $item->marcaVehiculo }}">Placa:
+                        
+                    @endif
                         {{ $item->placaVehiculo }} - Marca: {{ $item->marcaVehiculo }}</option>
                     @endforeach
                   </select>
