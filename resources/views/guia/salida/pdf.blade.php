@@ -212,6 +212,7 @@
       <thead>
         <th style="height: 1.8rem; width: 6rem;">Cantidad</th>
         <th style="height: 1.8rem; width: 6rem">Codigo</th>
+        <th style="height: 1.8rem; width: 6rem">Barra</th>
         <th style="height: 1.8rem; width: 25rem">Descripcion</th>
         <th style="height: 1.8rem; width: 6rem">Monto</th>
       </thead>
@@ -220,6 +221,7 @@
           <tr style="text-align: center;" class="table_det">
             <td>{{ $item->cantidad }} UNI</td>
             <td>{{ $item->codarticulo }}</td>
+            <td>{{ $item->codigo_barra }}</td>
             <td>{{ $item->descripcion }}</td>
             <td>{{ $item->importe }}</td>
           </tr>

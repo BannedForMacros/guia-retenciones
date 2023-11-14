@@ -238,6 +238,12 @@ $(document).on('change', '#transportista_id', function(event) {
   callGetModalidadTraslado();
 });
 
+$(document).on('change', '#chofer_id', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+  callBrevete();
+});
+
 var callBrevete = () => {
   var brevete = $('#chofer_id').find(':selected').data('brevete_chofer');
   // console.log({brevete});
@@ -335,7 +341,7 @@ var calcularTotales = () => {
 
   $.map(items, function (element, index) {
     if (element.cantidad != '') {
-      total_cantidad = total_cantidad + parseInt(element.cantidad ?? 0);
+      total_cantidad = total_cantidad + parseFloat(element.cantidad ?? 0);
       total_venta = total_venta + parseFloat(element.importe ?? 0);
       peso_total = peso_total + (element.peso * (element.cantidad ?? 0));
       if (element.porcentaje_descuento != '') {

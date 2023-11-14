@@ -998,12 +998,12 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->guia_salida_id = $store->id;
                     $guiaDetalle->codarticulo = $item->codarticulo;
                     $guiaDetalle->precio = $item->precio;
-                    $guiaDetalle->cantidad = $item->cantidad;
+                    $guiaDetalle->cantidad = floatval($item->cantidad);
                     $guiaDetalle->importe = $item->importe;
                     $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
                     $guiaDetalle->peso_unitario = $item->peso;
-                    $guiaDetalle->peso_total = floatval($item->peso) * $item->cantidad;
+                    $guiaDetalle->peso_total = floatval($item->peso) * floatval($item->cantidad);
                     
 
                     $nombreArticulo = $item->descripcion;

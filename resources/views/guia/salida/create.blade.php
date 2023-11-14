@@ -354,7 +354,6 @@
                     @foreach ($listVehiculos as $item)
                     @if ($item->estado == 1)
                       <option data-placa="{{ $item->placaVehiculo }}" data-marca="{{ $item->marcaVehiculo }}">Placa:
-                        
                     @endif
                         {{ $item->placaVehiculo }} - Marca: {{ $item->marcaVehiculo }}</option>
                     @endforeach
@@ -367,9 +366,11 @@
                   <label class="form-label">Chofer</label>
                   <select name="chofer_id" id="chofer_id" class="form-select">
                     @foreach ($listChoferes as $item)
-                      <option data-dni_chofer="{{ $item->dniChofer }}"
+                      @if ($item->estado == 1)
+                        <option data-dni_chofer="{{ $item->dniChofer }}"
                         data-brevete_chofer="{{ $item->breveteChofer }}" data-nombre="{{ $item->nombreChofer }}">
                         {{ $item->nombreChofer }}</option>
+                      @endif
                     @endforeach
                   </select>
                 </div>
