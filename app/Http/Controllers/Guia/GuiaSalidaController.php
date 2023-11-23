@@ -1299,7 +1299,7 @@ class GuiaSalidaController extends Controller
             $body_detalle[] = array(
                 'Correlativo' => $nro++,
                 "CodigoItem" => "{$item->codarticulo}",
-                "Descripcion" => "{$nombre_articulo_format}|{$item->codigo_barra}",
+                "Descripcion" => "{$nombre_articulo_format}  |  {$item->codigo_barra}",
                 "UnidadMedida" => "NIU",
                 "Cantidad" => $item->cantidad,
                 "LineaReferencia" => 1

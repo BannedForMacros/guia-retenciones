@@ -285,7 +285,7 @@
           <tr style="text-align: left;" class="table_det_bottom">
             <td>{{ $nro++ }}</td>
             <td>{{ $item->codarticulo }}</td>
-            <td>{{ $item->descripcion }}</td>
+            <td>{{ $item->descripcion }}  |  {{ $item->codigo_barra }}</td>
             <td style="text-align: right">NIU</td>
             <td style="text-align: right">{{ $item->cantidad }}</td>
           </tr>
