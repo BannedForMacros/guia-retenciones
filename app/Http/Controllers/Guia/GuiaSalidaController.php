@@ -1625,11 +1625,11 @@ class GuiaSalidaController extends Controller
                     'fecha' => $guia->fecha_emision,
                     'tipodocumentorespuesta' => 'PDF'
                 );
-                dd($bodyConsulta);
+                // dd($bodyConsulta);
     
                 $procede = true;
                 $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
-                // dd($getPdf);
+                dd($getPdf);
                 if ($getPdf->success == true) {
                     $storePdf = FacturacionEnvio::find($getEnvioConPdf->id);
                     $storePdf->pdf = $getPdf->data;
