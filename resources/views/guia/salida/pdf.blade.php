@@ -49,23 +49,12 @@
       border-style: solid
     }
 
-    /* .tabla_comprobante {
-      border-left: 0.01em solid black;
-      border-right: 0;
-      border-top: 0.01em solid black;
-      border-bottom: 0;
-      border-collapse: collapse;
-      border-radius: 0px 0px 100px 100px;
-
-    } */
-
-    /* .tabla_comprobante td,
-    .tabla_comprobante th {
-      border-left: 0;
-      border-right: 0.01em solid black;
-      border-top: 0;
-      border-bottom: 0.01em solid black;
-    } */
+    .table_no_rounded {
+      border-radius: 1px;
+      border: 1px;
+      border-color: rgb(88, 88, 88);
+      border-style: solid
+    }
 
     .div_text {
       border-collapse: collapse;
@@ -93,10 +82,24 @@
       height: 1.8rem;
     }
 
+    .table_det_bottom td {
+      border-bottom: 0.01em solid black;
+      height: 1.8rem;
+    }
+
     .table_leyenda td {
       height: 2rem;
       border-bottom-style: solid;
       border-bottom-width: 0.01em
+    }
+
+    .table_titulo_cabecera {
+      border-bottom: 0.12em solid black;
+      height: 1.8rem;
+    }
+    .table_titulo_cabecera_top {
+      border-top: 0.12em solid black;
+      height: 1.8rem;
     }
 
     .td_subtotal {
@@ -111,6 +114,9 @@
       border-style: solid;
       border-width: 0.01em
     }
+    .th_items{
+      background-color: rgba(211, 205, 205, 0.664)
+    }
   </style>
 </head>
 
@@ -118,55 +124,40 @@
 
   <header>
     <div>
-      {{-- <img src={{ url('img/cu/logoweb.png') }} class="logo floatLeft" width="220"> --}}
-
     </div>
   </header>
   <main style='font-size:10px;'>
     {{-- tabla de cabecera --}}
     <table style="margin-top: -6.5rem; width: 100%">
       <tr>
-        <td style="text-align: center; width: 32rem;">
+        <td style="text-align: left; width: 32rem;">
           <img src={{ url('img/logo.png') }} class="logo floatLeft" width="230">
-          <table class="table_rounded" style="width: 100%; height: 5rem; font-size: 10px">
+          <table class="" style="width: 100%; height: 2rem; font-size: 10px; margin-top: -12px">
             <tbody>
               <tr>
-                <td style="text-align: center; font-size: 11px"><b>{{ Str::upper($cabecera->nombre_entidad) }}</b></td>
+                <td style="text-align: left; font-size: 11px"><b>{{ Str::upper($cabecera->nombre_entidad) }}</b></td>
               </tr>
               <tr>
-                <td><b>Direccion: </b>{{ $cabecera->direccion_entidad }}</td>
-              </tr>
-              <tr>
-                <td><b>Telf: </b>{{ $cabecera->telefono_entidad }}</td>
+                <td>{{ $cabecera->direccion_entidad }}</td>
               </tr>
             </tbody>
           </table>
         </td>
         <td></td>
-        <td style="width: 30rem">
-          <table class="table_rounded" style="width: 100%; height: 15rem">
+        <td style="width: 32rem">
+          <table class="table_no_rounded" style="width: 100%; height: 10rem">
             <tbody>
+              <br>
               <tr>
-                <td></td>
+                <td style="text-align: center;font-size: 13px">RUC: {{ $cabecera->ruc_entidad }}</td>
               </tr>
               <tr>
-                <td style="text-align: center; font-size: 22px">GUIA DE SALIDA</td>
+                <td style="text-align: center; font-size: 14px"><b>GUIA DE REMISION REMITENTE ELECTRONICA</b></td>
               </tr>
+
               <tr>
-                {{-- <td style="text-align: center; font-size: 14px; ">E L E C T R O N I C A</td> --}}
-              </tr>
-              <tr>
-                <td><br></td>
-              </tr>
-              <tr>
-                <td style="text-align: center;font-size: 12px">RUC: {{ $cabecera->ruc_entidad }}</td>
-              </tr>
-              <tr>
-                <td><br></td>
-              </tr>
-              <tr>
-                <td style="text-align: center; font-size: 22px">
-                  {{ Str::upper($documento->serie) }}-{{ $documento->numero }} </td>
+                <td style="text-align: center; font-size: 14px">
+                  Nº T{{ Str::upper($documento->serie) }}-{{ $documento->numero }} </td>
               </tr>
               <tr>
                 <td><br></td>
@@ -178,157 +169,143 @@
     </table>
 
     {{-- tabla de datos de persona --}}
-    <table class="table_rounded" style="width: 100%">
+    <table style="width: 100%;" class="table_titulo_cabecera">
+      <tr>
+        <td><b>Datos de inicio de traslado</b></td>
+      </tr>
+    </table>
+    <table class="" style="width: 100%; margin-top: 0.5rem">
       <tbody>
         <tr>
-          @if ($documento->indicar_proveedor == 1)
-            <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->proveedor_nombre }}</td>
-            <td><b>RUC:</b>{{ $documento->proveedor_ruc }}</td>
-          @endif
-          @if ($documento->indicar_proveedor == 0)
-            <td style="width: 36rem"><b>Razon Social:</b> {{ $documento->cliente_razon_social }}</td>
-            <td><b>{{ $documento->cliente_documento_tipo_nombre }}:</b>{{ $documento->cliente_nro_documento }}</td>
-          @endif
+          <td style="width: 8rem"><b>Fecha Emision:</b></td>
+          <td style="width: 8rem">{{ $carbon::parse($documento->fecha_hora_emision)->format('Y-m-d') }}</td>
+          <td style="width: 6rem"><b>Motivo de traslado: </b></td>
+          <td style="width: 18rem">{{ $documento->descripcion_motivo_traslado }}</td>
+          <td style="width: 5rem"> <b>Peso Bruto</b></td>
+          <td style="width: 5rem">{{ $documento->peso_total }} KG</td>
         </tr>
         <tr>
-          <td style="width: 36rem"><b>Fecha Emision:</b>
-            {{ $carbon::parse($documento->fecha_hora_emision)->format('d/m/Y H:i:s') }}</td>
-          <td><b>Direccion:</b> {{ $documento->cliente_direccion }}</td>
+          <td style="width: 8rem"><b>Fecha Inicio:</b></td>
+          <td>{{ $carbon::parse($documento->fecha_hora_emision)->format('Y-m-d') }}</td>
+          <td style="width: 6rem"><b>Modalidad transporte:</td>
+          <td></b> {{ $documento->texto_modalidad_traslado }}</td>
+          <td></td>
         </tr>
-        {{-- <tr>
-          <td style="width: 36rem"><b>Tipo Doc. Ref:</b> {{ $documentoReferencia->documento_tipo_nombre }}</td>
-          <td ><b>Documento Ref:</b> {{ $documentoReferencia->serie }}-{{ $documentoReferencia->numero }}</td>
-        </tr> --}}
         <tr>
-          <td style="width: 36rem"><b>Tipo Moneda:</b> {{ $guia->texto_moneda }}</td>
-          <td><b>Tipo Operacion:</b> {{ $documento->tipo_operacion_nombre }}</td>
+          <td style="width: 8rem"><b>Tipo Moneda:</b> {{ $guia->texto_moneda }}</td>
+          <td><b>Doc. Relacionado:</b> </td>
+          <td></td>
+          <td></td>
         </tr>
         <tr></tr>
       </tbody>
     </table>
 
+    <table style="width: 100%;" class="table_titulo_cabecera_top">
+      <tr>
+        <td><b>Datos destinatario</b></td>
+      </tr>
+    </table>
+
+    <table class="" style="width: 100%; margin-top: -0.2rem">
+      <tbody>
+        <tr>
+          <td style="width: 8rem"><b>Ruc:</b></td>
+          <td style="width: 8rem">{{ $documento->cliente_nro_documento }}</td>
+          <td style="width: 6rem"><b>Razon social: </b></td>
+          <td style="width: 18rem">{{ $documento->cliente_razon_social }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="width: 100%;" class="table_titulo_cabecera_top">
+      <tr>
+        <td><b>Datos del punto de partida y punto de llegada</b></td>
+      </tr>
+    </table>
+
+    <table class="" style="width: 100%; margin-top: -0.2rem">
+      <tbody>
+        <tr>
+          <td style="width: 12rem"><b>Direccion del punto de partida:</b></td>
+          <td style="width: 20rem">{{ $documento->direccion_partida }}</td>
+          <td style="width: 8rem"><b>Ubigeo Partida:</b></td>
+          <td style="width: 12rem">{{ $documento->ubigeo_partida }}</td>
+        </tr>
+        <tr>
+          <td style="width: 12rem"><b>Direccion del punto de llegada:</b></td>
+          <td style="width: 20rem">{{ $documento->direccion_llegada }}</td>
+          <td style="width: 8rem"><b>Ubigeo Llegada:</b></td>
+          <td style="width: 12rem">{{ $documento->ubigeo_llegada }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="width: 100%;" class="table_titulo_cabecera_top">
+      <tr>
+        <td><b>Datos del transportista</b></td>
+      </tr>
+    </table>
+
+    <table class="" style="width: 100%; margin-top: -0.2rem">
+      <tbody>
+        <tr>
+          <td style="width: 6rem"><b>DNI:</b></td>
+          <td style="width: 12rem">{{ $documento->chofer_dni }}</td>
+          <td style="width: 8rem"><b>Conductor:</b></td>
+          <td style="width: 12rem">{{ $documento->chofer_nombre }}</td>
+        </tr>
+        <tr>
+          <td style="width: 6rem"><b>Licencia:</b></td>
+          <td style="width: 12rem">{{ $documento->chofer_brevete }}</td>
+          <td style="width: 8rem"><b>placa Vehiculo:</b></td>
+          <td style="width: 12rem">{{ $documento->vehiculo_placa }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="width: 100%;" class="table_titulo_cabecera_top">
+      <tr>
+        <td><b>Informacion de Bienes trasladados</b></td>
+      </tr>
+    </table>
+
+
     {{-- tabla de detalle items --}}
-    <table class="table_rounded" style="width: 100%; margin-top: 10px; border-spacing: 0; font-size: 10px">
+    <table class="" style="width: 100%; margin-top: 10px; border-spacing: 0; font-size: 10px">
       <thead>
-        <th style="height: 1.8rem; width: 6rem;">Cantidad</th>
-        <th style="height: 1.8rem; width: 6rem">Codigo</th>
-        <th style="height: 1.8rem; width: 6rem">Barra</th>
-        <th style="height: 1.8rem; width: 25rem">Descripcion</th>
-        <th style="height: 1.8rem; width: 6rem">Monto</th>
+        <th style="text-align: left; height: 0.8rem; width: 6rem;" class="th_items">Item</th>
+        <th style="text-align: left; height: 0.8rem; width: 6rem" class="th_items">Codigo Bien</th>
+        <th style="text-align: left; height: 0.8rem; width: 30rem" class="th_items">Descripcion</th>
+        <th style="text-align: right; right: 0.8rem; width: 6rem" class="th_items">Unidad</th>
+        <th style="text-align: right; right: 0.8rem; width: 6rem" class="th_items">Cantidad</th>
       </thead>
       <tbody>
         @foreach ($detalle as $item)
-          <tr style="text-align: center;" class="table_det">
-            <td>{{ $item->cantidad }} UNI</td>
+          <tr style="text-align: left;" class="table_det_bottom">
+            <td>{{ $nro++ }}</td>
             <td>{{ $item->codarticulo }}</td>
-            <td>{{ $item->codigo_barra }}</td>
             <td>{{ $item->descripcion }}</td>
-            <td>{{ $item->importe }}</td>
+            <td style="text-align: right">NIU</td>
+            <td style="text-align: right">{{ $item->cantidad }}</td>
           </tr>
         @endforeach
 
       </tbody>
     </table>
 
-    {{-- tabla de leyenda y subtotal --}}
-    <table style="margin-top: 20px; font-size: 10px">
-      <tbody>
-        <tr>
-          <td style="width: 33rem">
-            <table style="border-spacing: 0;width: 100%; font-size: 10px">
-              <tbody>
-                <tr>
-                  <td colspan="2"><b>SON {{ $guia->total_letras }}</b></td>
-                </tr>
-                <tr class="table_leyenda">
-                  <td colspan="2"><b>Informacion Adicional</b></td>
-                </tr>
-                <tr class="table_leyenda">
-                  <td style="width: 10rem">LEYENDA: </td>
-                  <td></td>
-                </tr>
-
-                <tr class="table_leyenda">
-                  <td>FORMA DE PAGO: </td>
-                  {{-- <td>{{ $guia->texto_forma_pago }}</td> --}}
-                  <td>Contado</td>
-                </tr>
-                <tr class="table_leyenda">
-                  <td>VENDEDOR: </td>
-                  <td>{{ $guia->nombre_cajero }}</td>
-                </tr>
-              </tbody>
-            </table>
-
-          </td>
-          <td style="width: 14rem">
-
-          </td>
-          <td style="width: 16rem">
-            <table style="border-spacing: 0;width: 100%; font-size: 10px">
-              <tbody style="text-align: right">
-                <tr>
-                  <td><b>Op. Gravadas: </b></td>
-                  <td class="td_subtotal" style="width: 6rem; padding-right: 1rem">{{ $guia->total_venta_gravada }}
-                  </td>
-                </tr>
-                <tr>
-                  <td><b>IGV: </b></td>
-                  <td class="td_subtotal" style="width: 6rem; padding-right: 1rem">{{ $guia->total_igv }}</td>
-                </tr>
-                <tr>
-                  <td><b>Precio Venta: </b></td>
-                  <td class="td_subtotal" style="width: 6rem; padding-right: 1rem">{{ $guia->total }}</td>
-                </tr>
-              </tbody>
-            </table>
-
-          </td>
-        </tr>
-      </tbody>
+    <table style="width: 100%;" class="table_titulo_cabecera">
+      <tr>
+        <td><b>Observaciones</b></td>
+      </tr>
     </table>
 
-    {{-- linea de separacion --}}
-    <table style="width: 100%">
+    <table class="" style="width: 100%; margin-top: -0.2rem">
       <tbody>
         <tr>
-          <td class="td_subtotal"></td>
+          <td style="width: 100%">{{ $documento->comentario }}</td>
         </tr>
-      </tbody>
-    </table>
 
-    {{-- tabla de consulta y qr --}}
-
-    <table style="width: 100%; font-size: 10px; margin-top: 10px; display: none">
-      <tbody>
-        <tr>
-          <td style="width: 50rem;">
-
-            <table style="width: 100%; border-spacing: 0" class="table_consulta_qr">
-              <tbody>
-                <tr>
-                  <td>
-                    <span>Consulte comprobante en (https://supermercadosmila/comprobante/32212)</span><br>
-                    <span>Resumen: 1OzT6N9sCcEhSxmBxPt/KEeqRSI=</span><br>
-                    <span>Representación Impresa de la BOLETA DE VENTA ELECTRÓNICA.</span><br>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </td>
-          <td style="width: 6rem"></td>
-          <td style="20rem">
-            <table>
-              <tbody>
-                <tr>
-                  <td style="height: 10rem;">
-                    {!! DNS2D::getBarcodeHTML('44456456564454555656', 'QRCODE', 4, 4) !!}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </td>
-        </tr>
       </tbody>
     </table>
 

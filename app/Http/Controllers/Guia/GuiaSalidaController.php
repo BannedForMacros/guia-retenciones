@@ -1549,7 +1549,11 @@ class GuiaSalidaController extends Controller
             'ruc_entidad' => $ruc_entidad,
         );
         $data['cabecera'] = $cabecera;
-
+        $texto_modalidad_traslado = "TRANSPORTE PUBLICO";
+        if ($guia->modalidad_traslado == '02') {
+            $texto_modalidad_traslado = "TRANSPORTE PRIVADO";
+        }
+        $guia->texto_modalidad_traslado = $texto_modalidad_traslado;
         $data['documento'] = $guia;
         // dd($guia);
 
@@ -1573,8 +1577,16 @@ class GuiaSalidaController extends Controller
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
         // dd($detalle);
         $data['detalle'] = $detalle;
+        $data['nro'] = 1;
 
-
+        $peso_total = 0;
+        foreach ($detalle as $item) {
+            if ($item->peso_total != null) {
+                $peso_total = $peso_total + $item->peso_total;
+            }
+        }
+        $data['documento']->peso_total = $peso_total;
+        // dd($data);
         $pdf = Pdf::loadView('guia.salida.pdf', $data);
         // $('formato', $data);
         $pdf->setPaper('A4', 'portrait');
