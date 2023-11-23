@@ -1394,7 +1394,7 @@ class GuiaSalidaController extends Controller
         $url_button = route('guiasalida.pdfDecode', ['guia'=> $guia->id]);
         
         $procede = true;
-        $msj = "Guia electronica emitida correctamente  <br><a class='btn btn-success' href='{$url_button}' target='_blank'><i class='fa fa-external-link'></i> ver</a>";
+        $msj = "Guia electronica emitida <br><code>Debe esperar a que SUNAT apruebe el envio</code>  <br><a class='btn btn-success' href='{$url_button}' target='_blank'><i class='fa fa-external-link'></i> ver</a>";
         $msj_tipo = "";
         $log = "";
 
@@ -1598,19 +1598,71 @@ class GuiaSalidaController extends Controller
     public function pdfDecode(GuiaSalida $guia)
     {
         // dd($guia);
-        $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->whereNotNull('pdf')->first();
-        // dd($getEnvioConPdf);
+        // $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->whereNotNull('pdf')->first();
+        $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->first();
+        // dd($getEnvioConPdf->pdf);
         // DB::table('users')->whereNotNull()
         // $pdfData = 'JVBERi0xLjQKJcfs...'; // Base64 encoded PDF data
+
         if ($getEnvioConPdf != null) {
-            $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
-            $pdfDataDecoded = base64_decode($pdfData);
-            return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
+            
+            if ($getEnvioConPdf->pdf != null) {
+                $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
+                $pdfDataDecoded = base64_decode($pdfData);
+                return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
+            }
+    
+            if ($getEnvioConPdf->pdf == null) {
+                // dd('verificamos pdf');
+                $credencial = Parametro::find(1)->valor;
+                $api_facturacion_consultas = Parametro::find(8)->valor;
+                $serie_format = str_pad($guia->serie, 3, "0", STR_PAD_LEFT);
+                $bodyConsulta = array(
+                    // 'token' => 'W6quxyHjJnAF268qPLXd16VdBVJvVAcQxpzP1Uek0j5/6IPkpk6yqyPB9sQRN+Ks',
+                    'token' => $credencial,
+                    'serie' => "T{$serie_format}-{$guia->numero}",
+                    'tipodocumentoconsulta' => '09',
+                    'fecha' => $guia->fecha_emision,
+                    'tipodocumentorespuesta' => 'PDF'
+                );
+                // dd($bodyConsulta);
+    
+                $procede = true;
+                $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
+                // dd($getPdf);
+                if ($getPdf->success == true) {
+                    $storePdf = FacturacionEnvio::find($getEnvioConPdf->id);
+                    $storePdf->pdf = $getPdf->data;
+                    try {
+                        $storePdf->save();
+                        
+                    } catch (Exception $e) {
+                        //throw $th;
+                        // dd($e);
+                        $procede = false;
+                    }
+                }
+    
+    
+                if ($procede == true) {
+                    $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->whereNotNull('pdf')->first();
+                    $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
+                    $pdfDataDecoded = base64_decode($pdfData);
+                    return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
+                }
+                if ($procede == false) {
+                    return "No se pudo obtener el PDF";
+                    
+                }
+    
+            }
         }
 
-        if ($getEnvioConPdf == null) {
-            return "No se pudo obtener el PDF";
+        if ($getEnvioConPdf != null) {
+            return ('No existe envio de este comprobante');
         }
+
+
     }
 
     public function anular(Request $request)
