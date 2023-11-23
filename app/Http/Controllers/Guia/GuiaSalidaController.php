@@ -1599,7 +1599,7 @@ class GuiaSalidaController extends Controller
     {
         // dd($guia);
         // $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->whereNotNull('pdf')->first();
-        $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->first();
+        $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->where('activo', 1)->first();
         // dd($getEnvioConPdf->pdf);
         // DB::table('users')->whereNotNull()
         // $pdfData = 'JVBERi0xLjQKJcfs...'; // Base64 encoded PDF data
@@ -1625,7 +1625,7 @@ class GuiaSalidaController extends Controller
                     'fecha' => $guia->fecha_emision,
                     'tipodocumentorespuesta' => 'PDF'
                 );
-                // dd($bodyConsulta);
+                dd($bodyConsulta);
     
                 $procede = true;
                 $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
