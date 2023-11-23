@@ -1629,7 +1629,7 @@ class GuiaSalidaController extends Controller
     
                 $procede = true;
                 $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
-                dd($getPdf);
+                // dd($getPdf);
                 if ($getPdf->success == true) {
                     $storePdf = FacturacionEnvio::find($getEnvioConPdf->id);
                     $storePdf->pdf = $getPdf->data;
@@ -1638,7 +1638,7 @@ class GuiaSalidaController extends Controller
                         
                     } catch (Exception $e) {
                         //throw $th;
-                        // dd($e);
+                        dd($e);
                         $procede = false;
                     }
                 }
