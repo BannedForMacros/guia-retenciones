@@ -1291,8 +1291,8 @@ class GuiaSalidaController extends Controller
         // dd($detalle);
         $nro = 1;
         foreach ($detalle as $item) {
-            // $nombre_articulo_format = utf8_encode($item->descripcion);
-            $nombre_articulo_format = json_encode($item->descripcion, JSON_UNESCAPED_UNICODE);
+            $nombre_articulo_format = utf8_encode($item->descripcion);
+            // $nombre_articulo_format = json_encode($item->descripcion, JSON_UNESCAPED_UNICODE);
             // dd($nombre_articulo_format);
             // $nombre_articulo = $item->descripcion;
             // $nombre_articulo_format = iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $nombre_articulo);
