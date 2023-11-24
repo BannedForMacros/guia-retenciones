@@ -1341,7 +1341,7 @@ class GuiaSalidaController extends Controller
                 "NroDocumento" => $ruc_emisor,
                 "TipoDocumento" => "6",
                 // "NombreRazonSocial" => "Franco Supermercado E.I.R.L."
-                "NombreRazonSocial" => $razon_social_emisor
+                "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($razon_social_emisor)
             ],
             "Destinatario" => [
                 // "NroDocumento" => "20369872274",
@@ -1349,12 +1349,12 @@ class GuiaSalidaController extends Controller
                 // "TipoDocumento" => "6",
                 "TipoDocumento" => "{$cliente_documento_tipo}",
                 // "NombreRazonSocial" => "Luis Ordoñez Villacorta"
-                "NombreRazonSocial" => $guia->cliente_razon_social
+                "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->cliente_razon_social)
             ],
             "Proveedor" => [
                 "NroDocumento" =>  $guia->proveedor_ruc ?? '',
                 "TipoDocumento" => 6,
-                "NombreRazonSocial" => $guia->proveedor_nombre ?? ''
+                "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->proveedor_nombre ?? '')
             ],
             "DocumentoRelacionado" => [
                 // "descripcion" => "Factura",
@@ -1368,7 +1368,7 @@ class GuiaSalidaController extends Controller
             // "CodigoMotivoTraslado" => "01",
             "CodigoMotivoTraslado" => "{$guia->motivo_traslado_id}",
             // "DescripcionMotivoTraslado" => "VENTA",
-            "DescripcionMotivoTraslado" => $guia->descripcion_motivo_traslado,
+            "DescripcionMotivoTraslado" => $this->limpiarCaracteresEspeciales($guia->descripcion_motivo_traslado),
             // "PesoBrutoTotal" => 1,
             "PesoBrutoTotal" => $guia->peso_bruto_total,
             "UnidadPesobrutototal" => "KGM",
@@ -1378,10 +1378,10 @@ class GuiaSalidaController extends Controller
             // "FechaInicioTraslado" => "2023-06-02",
             "FechaInicioTraslado" => $guia->fecha_emision,
             "RucTransportista" => "{$guia->transportista_ruc}",
-            "RazonSocialTransportista" => "{$guia->transportista_nombre}",
+            "RazonSocialTransportista" => $this->limpiarCaracteresEspeciales("{$guia->transportista_nombre}"),
             "NroPlacaVehiculo" => $guia->vehiculo_placa,
             "NroDocumentoConductor" => "{$guia->chofer_dni}",
-            "NombresdelConductor" => "{$guia->chofer_nombre}",
+            "NombresdelConductor" => $this->limpiarCaracteresEspeciales("{$guia->chofer_nombre}"),
             "NrolicenciaConductor" => "{$guia->chofer_brevete}",
             "DireccionPartida" => [
                 "Ubigeo" => "{$guia->ubigeo_partida}",
