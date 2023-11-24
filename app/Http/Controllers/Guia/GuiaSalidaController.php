@@ -1400,7 +1400,7 @@ class GuiaSalidaController extends Controller
             "BienesATransportar" => $body_detalle
         ]; 
         
-        // dd(json_encode($body));
+        dd(json_encode($body));
         // dd($body);
         
         $url_button = route('guiasalida.pdfDecode', ['guia'=> $guia->id]);
