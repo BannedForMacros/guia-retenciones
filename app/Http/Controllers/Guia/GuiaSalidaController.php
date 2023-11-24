@@ -1405,7 +1405,7 @@ class GuiaSalidaController extends Controller
             $send = Http::withHeaders(['Credencial' => $credencial])
                         ->asJson() // Asegurarse de que se envíe como JSON
                         // ->put("{$api_facturacion}", $body)->object();
-                        ->put("{$api_facturacion}", json_encode($body))->object();
+                        ->put("{$api_facturacion}", $body)->object();
                         // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
             if ($send == null) {
                 $procede = false;
