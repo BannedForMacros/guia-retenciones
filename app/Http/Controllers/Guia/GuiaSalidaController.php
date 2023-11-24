@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
+use Normalizer;
 
 class GuiaSalidaController extends Controller
 {
@@ -1292,14 +1293,29 @@ class GuiaSalidaController extends Controller
         $nro = 1;
         foreach ($detalle as $item) {
             // $nombre_articulo_format = $item->descripcion;
-            $nombre_articulo_format = json_encode(utf8_encode($item->descripcion), JSON_UNESCAPED_UNICODE);;
+            // $nombre_articulo_format = json_encode(utf8_encode($item->descripcion), JSON_UNESCAPED_UNICODE);;
             
-            // dd($nombre_articulo_format);
-            // $nombre_articulo_format = json_encode($item->descripcion, JSON_UNESCAPED_UNICODE);
-            // dd($nombre_articulo_format);
-            // $nombre_articulo = $item->descripcion;
-            // $nombre_articulo_format = iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $nombre_articulo);
-            // dd($nombre_articulo_format);
+            function limpiarCaracteresEspeciales($texto) {
+                // Normalizar el texto para tratar caracteres acentuados
+                $textoNormalizado = Normalizer::normalize($texto, Normalizer::FORM_D);
+            
+                // Reemplazar caracteres especiales
+                $textoLimpio = preg_replace('/[^a-zA-Z0-9 ]/u', '', $textoNormalizado);
+            
+                return $textoLimpio;
+            }
+            
+            // Ejemplo de uso
+            // $descripcion = "fanny pi\u00f1a en rodajas x 567gr.";
+            $descripcionLimpia = limpiarCaracteresEspeciales($item->descripcion);
+            
+            // Convertir la cadena a formato JSON
+            // $descripcionJson = json_encode($descripcionLimpia, JSON_UNESCAPED_UNICODE);
+            // $nombre_articulo_format = json_encode($descripcionLimpia, JSON_UNESCAPED_UNICODE);
+            $nombre_articulo_format =$descripcionLimpia;
+            
+            // dd($descripcionJson);
+
             $body_detalle[] = array(
                 'Correlativo' => $nro++,
                 "CodigoItem" => "{$item->codarticulo}",
@@ -1392,7 +1408,7 @@ class GuiaSalidaController extends Controller
             "BienesATransportar" => $body_detalle
         ]; 
         
-        // dd(json_encode($body));
+        dd(json_encode($body));
         // dd($body);
         
         $url_button = route('guiasalida.pdfDecode', ['guia'=> $guia->id]);
