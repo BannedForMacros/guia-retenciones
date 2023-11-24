@@ -1007,8 +1007,15 @@ class GuiaSalidaController extends Controller
                     
 
                     $nombreArticulo = $item->descripcion;
-                    $nombreArticuloLimpio = json_decode('"' . $nombreArticulo . '"');
+                    // dd($nombreArticulo);
+                    // $nombreArticuloLimpio = json_decode('"' . $nombreArticulo . '"');
+                    $nombreArticuloLimpio = $nombreArticulo;
 
+                    // Decodificar el string como JSON
+                    // $decodedString = json_decode('["' . $nombreArticulo . '"]');
+
+                    // Obtener el string limpio
+                    // $nombreArticuloLimpio = $decodedString[0];
                     // $guiaDetalle->descripcion = $item->descripcion;
                     $guiaDetalle->descripcion = $nombreArticuloLimpio;
                     $guiaDetalle->precio_publico = $item->precio_publico;
@@ -1291,11 +1298,13 @@ class GuiaSalidaController extends Controller
         // dd($detalle);
         $nro = 1;
         foreach ($detalle as $item) {
-            $nombre_articulo_format = utf8_encode($item->descripcion);
-            // dd($nombre_articulo_format);
-            // $nombre_articulo = $item->descripcion;
-            // $nombre_articulo_format = iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $nombre_articulo);
-            // dd($nombre_articulo_format);
+            // $nombre_articulo_format = utf8_decode($item->descripcion);
+            $nombre_articulo_format = $item->descripcion;
+            // $nombre_articulo_format = json_encode($item->descripcion, JSON_UNESCAPED_UNICODE);
+            // $nombre_articulo_format = json_encode($item->descripcion, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            // Obtener el string limpio
+            // $nombre_articulo_format = $decodedString[0];
             $body_detalle[] = array(
                 'Correlativo' => $nro++,
                 "CodigoItem" => "{$item->codarticulo}",
@@ -1316,6 +1325,7 @@ class GuiaSalidaController extends Controller
         //         "LineaReferencia" => 1
         //     ]
         // ]
+
         $serie_format = str_pad($guia->serie, 3, '0', STR_PAD_LEFT);
         $body = [
             // "IdDocumento" => "T001-00000070",
@@ -1401,7 +1411,7 @@ class GuiaSalidaController extends Controller
         $credencial = Parametro::find(1)->valor;
         try {
             $send = Http::withHeaders(['Credencial' => $credencial])
-                        ->asJson() // Asegurarse de que se envíe como JSON
+                        // ->asJson() // Asegurarse de que se envíe como JSON
                         // ->put("{$api_facturacion}", $body)->object();
                         ->put("{$api_facturacion}", $body)->object();
                         // ->put('http://161.132.192.240:8180/api/Guia21', $body)->object();
