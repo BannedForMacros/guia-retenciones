@@ -1295,19 +1295,11 @@ class GuiaSalidaController extends Controller
             // $nombre_articulo_format = $item->descripcion;
             // $nombre_articulo_format = json_encode(utf8_encode($item->descripcion), JSON_UNESCAPED_UNICODE);;
             
-            function limpiarCaracteresEspeciales($texto) {
-                // Normalizar el texto para tratar caracteres acentuados
-                $textoNormalizado = Normalizer::normalize($texto, Normalizer::FORM_D);
-            
-                // Reemplazar caracteres especiales
-                $textoLimpio = preg_replace('/[^a-zA-Z0-9 ]/u', '', $textoNormalizado);
-            
-                return $textoLimpio;
-            }
+
             
             // Ejemplo de uso
             // $descripcion = "fanny pi\u00f1a en rodajas x 567gr.";
-            $descripcionLimpia = limpiarCaracteresEspeciales($item->descripcion);
+            $descripcionLimpia = $this->limpiarCaracteresEspeciales($item->descripcion);
             
             // Convertir la cadena a formato JSON
             // $descripcionJson = json_encode($descripcionLimpia, JSON_UNESCAPED_UNICODE);
@@ -1551,6 +1543,16 @@ class GuiaSalidaController extends Controller
 
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
+    }
+
+    function limpiarCaracteresEspeciales($texto) {
+        // Normalizar el texto para tratar caracteres acentuados
+        $textoNormalizado = Normalizer::normalize($texto, Normalizer::FORM_D);
+    
+        // Reemplazar caracteres especiales
+        $textoLimpio = preg_replace('/[^a-zA-Z0-9 ]/u', '', $textoNormalizado);
+    
+        return $textoLimpio;
     }
 
     public function pdf(GuiaSalida $guia)
