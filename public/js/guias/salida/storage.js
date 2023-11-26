@@ -243,11 +243,14 @@ var cargarStorage = () => {
   $('#transportista_nombre').val(storage.transportista_nombre);
   $('#transportista_direccion').val(storage.transportista_direccion);
 
+  callGetModalidadTraslado();
+
   // tipo operacion
   $('#tipo_operacion_id').val(storage.tipo_operacion_id);
   // motivo traslado
   // $('#motivo_traslado_id').val(storage.motivo_traslado_id)
   $('#motivo_traslado_id').html(`<option value="${storage.motivo_traslado_id}">${storage.descripcion_motivo_traslado}</option>`)
+  $('#modalidad_traslado').val(storage.modalidad_traslado);
   callSetMotivoTraslado();
 
   // almacenes
