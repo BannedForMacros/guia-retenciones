@@ -597,6 +597,13 @@ var callStore = (guardar_avance = false) => {
         msj_store = 'El peso debe ser mayor a cero (0)';
       }
     }
+
+    if (procede_store == true) {
+      if (formData.get('direccion_llegada').trim() == formData.get('direccion_partida').trim()) {
+        procede_store = false;
+        msj_store = `<b>Las direcciones no pueden ser las mismas</b>`
+      }
+    }
   }
 
   
