@@ -621,7 +621,7 @@ var callStore = (guardar_avance = false) => {
     }
     
     if (procede_store == true) {
-      if (formData.get('modalidad_traslado').tirm == '') {
+      if (formData.get('modalidad_traslado').trim() == '') {
         procede_store = false;
         msj_store = `<b>No se cargo la modalidad de traslado</b>`;
       }
