@@ -604,14 +604,30 @@ var callStore = (guardar_avance = false) => {
         msj_store = `<b>Las direcciones no pueden ser las mismas</b>`
       }
 
-      if (procede_store == true) {
-        if (formData.get('modalidad_traslado').tirm == '') {
-          procede_store = false;
-          msj_store = `<b>No se cargo la modalidad de traslado</b>`;
-        }
+    }
+    if (procede_store == true) {
+      if (formData.get('direccion_llegada').trim() == '') {
+        procede_store = false;
+        msj_store = `<b>La direccion de llegada no pueden estan en blanco</b>`
       }
 
     }
+    if (procede_store == true) {
+      if (formData.get('direccion_partida').trim() == '') {
+        procede_store = false;
+        msj_store = `<b>La direccion de partida no pueden estan en blanco</b>`
+      }
+
+    }
+    
+    if (procede_store == true) {
+      if (formData.get('modalidad_traslado').tirm == '') {
+        procede_store = false;
+        msj_store = `<b>No se cargo la modalidad de traslado</b>`;
+      }
+    }
+
+
   }
 
   
