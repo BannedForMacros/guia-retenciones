@@ -132,7 +132,7 @@ class GuiaSalidaController extends Controller
             }
             $mostrar_anular = false;
 
-            if ($value->guia_estado_id == 1 or $value->guia_estado_id == 2 or $value->guia_estado_id == 3) {
+            if ($value->guia_estado_id == 1 or $value->guia_estado_id == 2 or $value->guia_estado_id == 3 or $value->guia_estado_id == 5) {
                 $mostrar_anular = true;
             }
 
