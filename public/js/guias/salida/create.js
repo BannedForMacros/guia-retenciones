@@ -627,6 +627,20 @@ var callStore = (guardar_avance = false) => {
       }
     }
 
+    if (procede_store == true) {
+      if (formData.get('ubigeo_llegada_distrito').trim() == '') {
+        procede_store = false;
+        msj_store = `<b>Codigo de Ubigeo no cargado, reintente con buscando de nuevo</b>`
+      }
+    }
+
+    if (procede_store == true) {
+      if (formData.get('ubigeo_partida_distrito').trim() == '') {
+        procede_store = false;
+        msj_store = `<b>Codigo de Ubigeo no cargado, reintente con buscando de nuevo</b>`
+      }
+    }
+
 
   }
 

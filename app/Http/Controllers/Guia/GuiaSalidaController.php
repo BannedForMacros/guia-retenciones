@@ -1385,12 +1385,12 @@ class GuiaSalidaController extends Controller
             "NrolicenciaConductor" => "{$guia->chofer_brevete}",
             "DireccionPartida" => [
                 "Ubigeo" => "{$guia->ubigeo_partida}",
-                "DireccionCompleta" => "{$guia->direccion_partida}",
+                "DireccionCompleta" => $this->limpiarCaracteresEspeciales("{$guia->direccion_partida}"),
                 "codigoanexo" => "{$guia->codigo_anexo_partida}"
             ],
             "DireccionLlegada" => [
                 "Ubigeo" => "{$guia->ubigeo_llegada}",
-                "DireccionCompleta" => "{$guia->direccion_llegada}",
+                "DireccionCompleta" => $this->limpiarCaracteresEspeciales("{$guia->direccion_llegada}"),
                 "codigoanexo" => "{$guia->codigo_anexo_llegada}"
             ],
             "NumeroContenedor" => "",
