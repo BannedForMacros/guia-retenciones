@@ -719,7 +719,10 @@ class GuiaIngresoController extends Controller
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
 
                     $nombreArticulo = $item->descripcion;
-                    $nombreArticuloLimpio = json_decode('"' . $nombreArticulo . '"');
+
+                    $nombreArticuloSinComillas = str_replace('"', '', $nombreArticulo);
+
+                    $nombreArticuloLimpio = json_decode('"' . $nombreArticuloSinComillas . '"');
 
                     // $guiaDetalle->descripcion = $item->descripcion;
                     $guiaDetalle->descripcion = $nombreArticuloLimpio;

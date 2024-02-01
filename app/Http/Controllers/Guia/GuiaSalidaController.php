@@ -1008,10 +1008,7 @@ class GuiaSalidaController extends Controller
                     
 
                     $nombreArticulo = $item->descripcion;
-
-                    // $stringConComillas = 'Este es un "string" con comillas dobles.';
-                    
-                    $nombreArticuloSinComillas = trim($nombreArticulo, '"');
+                    $nombreArticuloSinComillas = str_replace('"', '', $nombreArticulo);
 
                     $nombreArticuloLimpio = json_decode('"' . $nombreArticuloSinComillas . '"');
 
