@@ -1008,7 +1008,8 @@ class GuiaSalidaController extends Controller
                     
 
                     $nombreArticulo = $item->descripcion;
-                    $nombreArticuloSinComillas = str_replace('"', '', $nombreArticulo);
+                    // $nombreArticuloSinComillas = str_replace('"', '', $nombreArticulo);
+                    $nombreArticuloSinComillas = $this->limpiarCaracteres($nombreArticulo);
 
                     $nombreArticuloLimpio = json_decode('"' . $nombreArticuloSinComillas . '"');
 
@@ -1050,6 +1051,12 @@ class GuiaSalidaController extends Controller
 
     }
     
+    function limpiarCaracteres($cadena)
+    {
+        $caracteresEspeciales = ['"', "'"];
+        return str_replace($caracteresEspeciales, '', $cadena);
+    }
+
     public function asignarSerie($serie_busqueda)
     {
         $api_datos = Parametro::find(6)->valor;
