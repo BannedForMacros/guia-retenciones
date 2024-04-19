@@ -3,18 +3,21 @@
 namespace App\Http\Controllers\Guia;
 
 use App\Http\Controllers\Controller;
+use App\Models\Auditoria;
 use App\Models\FacturacionEnvio;
 use App\Models\GuiaEstado;
 use App\Models\GuiaSalida;
 use App\Models\GuiaSalidaDetalle;
 use App\Models\Parametro;
 use App\Models\Serie;
+use App\Models\User;
 use Exception;
 use Faker\Provider\UserAgent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
@@ -969,6 +972,11 @@ class GuiaSalidaController extends Controller
 
         }
 
+        // auditoria store
+        $obsevracion_auditoria = $msj;
+        
+        
+
         // actualizar serie nube
         if ($procede == true) {
             $updateSerie = Serie::find($asignarSerie->serieAsignada->id);
@@ -1046,6 +1054,8 @@ class GuiaSalidaController extends Controller
             $data_guardar_avance  = ($guardar_avance == true) ? 'true' : 'false' ;
             $msj = "{$msj} <br> <button class='btn btn-success btn-sm' data-guardar_avance= '{$data_guardar_avance}' id='btnReintentar'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
         }
+
+        $this->registrarAuditoria($store->id, 1, 'guia_salidas', json_encode($datos), $obsevracion_auditoria);
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'id' => $id]);
 
@@ -1275,6 +1285,7 @@ class GuiaSalidaController extends Controller
         }
         
 
+        $this->registrarAuditoria($guia->id, 1, 'guia_salidas_datamart', json_encode($body), strip_tags($msj));
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
@@ -1486,6 +1497,10 @@ class GuiaSalidaController extends Controller
             }
         }
 
+        if ($procede == true) {//store auditoria
+            $this->registrarAuditoria($guia->id, 1, 'facturacion_envios', json_encode($body), strip_tags($msj));
+        }
+
         if ($procede == true) {//actulizamos el id del envio en la tabla original
 
             $guia->envio_id = $store->id;
@@ -1544,12 +1559,16 @@ class GuiaSalidaController extends Controller
 
         }
 
+
+
         if ($procede == false) {
             if ($panel_origen != 'index') {
                 $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarFacturar' data-id='{$id}'> <i class='fa-regular fa-paper-plane'></i> Reintentar Facturar</button>";
             }
         }
 
+        
+        
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
@@ -1723,6 +1742,10 @@ class GuiaSalidaController extends Controller
             $log = "{$e}";
         }
 
+        if ($procede == true) {//auditoria local
+            $this->registrarAuditoria($guia->id, 3, 'guia_salidas', json_encode($guia), strip_tags($msj));
+        }
+
         if ($procede == true) {
             $api_datos = Parametro::find(6)->valor;
 
@@ -1757,6 +1780,8 @@ class GuiaSalidaController extends Controller
             $guia->save();
         }
 
+        $this->registrarAuditoria($guia->id, 3, 'guia_salidas_datamart', json_encode($body), strip_tags($msj));
+
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
@@ -1766,7 +1791,6 @@ class GuiaSalidaController extends Controller
         // dd('hola ');
         return view('guia\salida\modal_otras_guias');
     }
-
 
     public function buscarOtrasGuias(Request $request)
     {
@@ -1839,6 +1863,37 @@ class GuiaSalidaController extends Controller
         }
 
         return response()->json(['tabla' => $tabla]);
+    }
+
+    public function registrarAuditoria($registro_id, $accion_id, $tabla, $data_json, $observaciones=null)
+    {
+        $procede = true;
+        $msj = "Auditoria registrada";
+        $msj_tipo = "success";
+        $log = "";
+        
+        $empleado_id = User::find(Auth::id())->empleado_id;
+        
+        try {
+            $auditoria = new Auditoria();
+            $auditoria->registro_id = $registro_id;
+            $auditoria->accion_id = $accion_id;
+            $auditoria->tabla = $tabla;
+            $auditoria->data_json = $data_json;
+            $auditoria->observaciones = $observaciones;
+            $auditoria->empleado_id = $empleado_id;
+
+            $auditoria->save();
+        } catch (Exception $e) {
+            //throw $th;
+            $procede = false;
+            $msj = "No se pudo registrar la auditoria";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+
+        return (object) array ('procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log);
+
     }
 
 }
