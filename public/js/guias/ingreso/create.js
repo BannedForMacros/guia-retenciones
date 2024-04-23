@@ -398,9 +398,14 @@ var callStore = (guardar_avance = false) => {
     };
   }).get();
 
+
+
   formData.append('detalle', JSON.stringify(items));
 
   // console.log({items});
+
+
+
   var codestacion = $('#codalmacen').find(':selected').data('codestacion');
   formData.append('codestacion', codestacion)
 
@@ -459,6 +464,8 @@ var callStore = (guardar_avance = false) => {
   new Response(formData).text().then(console.log)
   console.log(formData.get('proveedor_nombre'));
 
+
+
   if (formData.get('guardar_avance') == 'false') {
     
     if (formData.get('vendedor_nombre') == '') {
@@ -499,6 +506,20 @@ var callStore = (guardar_avance = false) => {
     }
 
   }
+
+  // validar negativos
+  // console.log({items});
+
+  $.map(items, function (element, index) {
+    if (procede_store == true) {
+      if (parseFloat(element.cantidad) < 0) {
+        procede_store = false;
+        msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion} <br>tiene un valor negativo = ${element.cantidad}</b>`;
+      }
+    }
+  });
+
+  // procede_store = false;
 
 
 

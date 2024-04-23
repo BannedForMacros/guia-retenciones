@@ -645,6 +645,15 @@ var callStore = (guardar_avance = false) => {
   }
 
   
+  $.map(items, function (element, index) {
+    if (procede_store == true) {
+      if (parseFloat(element.cantidad) < 0) {
+        procede_store = false;
+        msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion} <br>tiene un valor negativo = ${element.cantidad}</b>`;
+      }
+    }
+  });
+
   if (procede_store == true) {
     
     var msj_guardado = `<b>¿Desea registrar esta Guia de Salida?</b>`;
