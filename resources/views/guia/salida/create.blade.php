@@ -543,6 +543,9 @@
               <input type="hidden" id="producto_precio_publico" name="producto_precio_publico">
               <input type="hidden" id="producto_precio_sin_igv" name="producto_precio_sin_igv">
               <input type="hidden" id="producto_peso" name="producto_peso">
+              <input type="hidden" id="producto_cod_unidad" name="producto_cod_unidad">
+              <input type="hidden" id="producto_desc_unidad_medida" name="producto_desc_unidad_medida">
+              <input type="hidden" id="producto_sigla_umfe" name="producto_sigla_umfe">
 
             </div>
 
