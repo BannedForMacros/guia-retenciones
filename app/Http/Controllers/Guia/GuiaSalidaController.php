@@ -1343,7 +1343,8 @@ class GuiaSalidaController extends Controller
                 'Correlativo' => $nro++,
                 "CodigoItem" => "{$item->codarticulo}",
                 "Descripcion" => "{$nombre_articulo_format}  |  {$item->codigo_barra}",
-                "UnidadMedida" => "NIU",
+                // "UnidadMedida" => "NIU",
+                "UnidadMedida" => "{$item->sigla_umfe}",
                 "Cantidad" => $item->cantidad,
                 "LineaReferencia" => 1
             );
