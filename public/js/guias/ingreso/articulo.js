@@ -103,7 +103,10 @@ $(document).on('change', '#producto_select', function(event) {
   $('#producto_precio_publico').val(data.precio_publico);
   $('#producto_precio_sin_igv').val(data.precio_sin_igv);
   $('#producto_peso').val(data.peso);
-
+  $('#producto_cod_unidad').val(data.cod_unidad);
+  $('#producto_desc_unidad_medida').val(data.desc_unidad_medida);
+  $('#producto_sigla_umfe').val(data.sigla_umfe);
+  
   callAgregarItem();
 });
 
