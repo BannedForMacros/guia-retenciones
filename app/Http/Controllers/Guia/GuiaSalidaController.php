@@ -876,7 +876,8 @@ class GuiaSalidaController extends Controller
         // validacion antes del store
         if ($procede == true) {
 
-            $datos['fecha_emision'] = date('Y-m-d');
+            // $datos['fecha_emision'] = date('Y-m-d');
+            $datos['fecha_emision'] = $request->post('fecha_emision');
             $datos['hora_emision'] = date('H:i:s');
 
             if ($datos['indicar_proveedor'] == true) {

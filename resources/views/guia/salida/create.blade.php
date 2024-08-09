@@ -40,7 +40,7 @@
                         </div>
                         <div class="col-md-6 mb-2">
                           <label class="form-label">Fecha Emision</label>
-                          <input type="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
+                          <input type="date" class="form-control" value="{{ date('Y-m-d') }}" name="fecha_emision" id="fecha_emision">
                         </div>
                         <div class="col-md-6 mb-2">
 

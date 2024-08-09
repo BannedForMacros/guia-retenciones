@@ -600,7 +600,8 @@ class GuiaIngresoController extends Controller
 
     public function store(Request $request)
     {
-        
+        // dd($request->post());
+
         $api_datos = Parametro::find(6)->valor;
         $id = "";
         $es_guia_interna = $request->post('es_guia_interna');
@@ -639,7 +640,9 @@ class GuiaIngresoController extends Controller
 
         // validacion antes del store
         if ($procede == true) {
-            $datos['fecha_emision'] = date('Y-m-d');
+            // dd($request->post());
+            // $datos['fecha_emision'] = date('Y-m-d');
+            $datos['fecha_emision'] = $request->post('fecha_emision');
             $datos['hora_emision'] = date('H:i:s');
 
             if ($id_continuar != null) {
