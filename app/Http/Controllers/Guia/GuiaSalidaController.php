@@ -64,7 +64,6 @@ class GuiaSalidaController extends Controller
 
         foreach ($list as $key => $value) {
             // dd($value);
-
             if ($value->envio_id != null) {
                 $getEnvio = FacturacionEnvio::find($value->envio_id);
                 // dd($getEnvio->pdf417);
@@ -77,7 +76,9 @@ class GuiaSalidaController extends Controller
                 $texto_razon_social = $value->cliente_razon_social;
             }
             $list[$key]->texto_razon_social = $texto_razon_social;
-            $url_pdf = route('guiasalida.pdf', ['guia' => $value->id]);
+            $url_pdf = route('guiasalida.pdf', ['guia' => $value->id, 'valorada' => 0]);
+            $url_pdf_valorada = route('guiasalida.pdf', ['guia' => $value->id, 'valorada' => 1]);
+
             if ($value->envio_sunat == 1) {
                 $url_pdf = route('guiasalida.pdfDecode', ['guia' => $value->id]);
             }
@@ -143,6 +144,7 @@ class GuiaSalidaController extends Controller
 
 
             $list[$key]->url_pdf = $url_pdf;
+            $list[$key]->url_pdf_valorada = $url_pdf_valorada;
 
             $mostrarGuardarDatamarket = true;
             if ($value->enviado_datamarket == 1) {
@@ -1596,10 +1598,11 @@ class GuiaSalidaController extends Controller
         return $textoLimpio;
     }
 
-    public function pdf(GuiaSalida $guia)
+    public function pdf(GuiaSalida $guia, $valorada)
     {
 
         // dd($guia);
+        // dd($valorada);
         $data = array();
         $ruc_entidad = Parametro::find(2)->valor;
         $nombreEntidad = Parametro::find(3)->valor;
@@ -1633,6 +1636,7 @@ class GuiaSalidaController extends Controller
             'total_letras' => $total_letras, 
             'nombre_cajero' => 'demo', 
             'total_venta_gravada' => $guia->importe_sin_igv,
+            'monto_descuento' => $guia->monto_descuento,
             'total_igv' => $guia->monto_igv,
             'total' => $guia->total_venta,
         );
@@ -1640,6 +1644,7 @@ class GuiaSalidaController extends Controller
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
         // dd($detalle);
         $data['detalle'] = $detalle;
+        $data['valorada'] = $valorada;
         $data['nro'] = 1;
 
         $peso_total = 0;

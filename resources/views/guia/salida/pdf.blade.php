@@ -1,6 +1,6 @@
 <html>
 @inject('carbon', 'Carbon\Carbon')
-
+  <title>Guia Salida</title>
 <head style='font-size:12px;'>
   <style>
     @page {
@@ -279,6 +279,10 @@
         <th style="text-align: left; height: 0.8rem; width: 30rem" class="th_items">Descripcion</th>
         <th style="text-align: right; right: 0.8rem; width: 6rem" class="th_items">Unidad</th>
         <th style="text-align: right; right: 0.8rem; width: 6rem" class="th_items">Cantidad</th>
+        @if ($valorada == 1)
+          <th style="text-align: right; right: 0.8rem; width: 4rem" class="th_items">Costo</th>
+          <th style="text-align: right; right: 0.8rem; width: 4rem" class="th_items">Total</th>
+        @endif
       </thead>
       <tbody>
         @foreach ($detalle as $item)
@@ -288,10 +292,35 @@
             <td>{{ $item->descripcion }}  |  {{ $item->codigo_barra }}</td>
             <td style="text-align: right">NIU</td>
             <td style="text-align: right">{{ $item->cantidad }}</td>
+            @if ($valorada == 1)
+              <td style="text-align: right">{{ $item->precio_publico }}</td>
+              <td style="text-align: right">{{ $item->importe }}</td>
+            @endif
           </tr>
         @endforeach
 
       </tbody>
+      @if ($valorada == 1)
+        <tfoot>
+          <tr>
+            <td colspan="6" style="text-align: right"><b>Valor Neto</b></td>
+            <td style="text-align: right">{{ $guia->total_venta_gravada }}</td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align: right"><b>Exonerado</b></td>
+            <td style="text-align: right">{{ $guia->monto_descuento }}</td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align: right"><b>I.G.V</b></td>
+            <td style="text-align: right">{{ $guia->total_igv }}</td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align: right"><b>Total</b></td>
+            <td style="text-align: right">{{ $guia->total }}</td>
+          </tr>
+        </tfoot>
+          
+      @endif
     </table>
 
     <table style="width: 100%;" class="table_titulo_cabecera">
