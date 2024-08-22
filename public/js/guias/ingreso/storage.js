@@ -195,7 +195,7 @@ var cargarStorage = () => {
         <td class="align-middle">${element.descripcion}</td>
         <td class="align-middle"><span name="span_precio">${element.precio_publico}</span></td>
         <td class="align-middle"><input type="number" class="form-control form-control-sm input_cantidad_tr" name="cantidad" value="${element.cantidad}"></td>
-        <td class="align-middle">UNI</td>
+        <td class="align-middle">${element.desc_unidad_medida}</td>
         <td class="align-middle"><span name="span_importe">${importe}</span></td>
         <td class="align-middle">
           <input class="form-control form-control-sm input_porcentaje_descuento_tr" name="porcentaje_descuento" value="${element.porcentaje_descuento}"> <input type="hidden" name="monto_descuento" value="${element.monto_descuento}">

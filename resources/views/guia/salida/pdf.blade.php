@@ -290,7 +290,7 @@
             <td>{{ $nro++ }}</td>
             <td>{{ $item->codarticulo }}</td>
             <td>{{ $item->descripcion }}  |  {{ $item->codigo_barra }}</td>
-            <td style="text-align: right">NIU</td>
+            <td style="text-align: right">{{ Str::upper($item->desc_unidad_medida) ?? 'UNI' }}</td>
             <td style="text-align: right">{{ $item->cantidad }}</td>
             @if ($valorada == 1)
               <td style="text-align: right">{{ $item->precio_publico }}</td>

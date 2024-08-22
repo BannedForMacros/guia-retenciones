@@ -213,7 +213,7 @@
       <tbody>
         @foreach ($detalle as $item)
           <tr style="text-align: center;" class="table_det">
-            <td>{{ $item->cantidad }} UNI</td>
+            <td>{{ $item->cantidad }} {{ Str::upper($item->desc_unidad_medida) ?? 'UNI' }}</td>
             <td>{{ $item->codarticulo }}</td>
             <td>{{ $item->descripcion }}</td>
             <td>{{ $item->importe }}</td>

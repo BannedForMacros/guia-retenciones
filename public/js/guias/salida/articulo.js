@@ -77,6 +77,9 @@ var buscarArticuloBarra = function (formData) {
         $('#producto_descripcion').val(data.nombreArticulo);
         $('#producto_precio_publico').val(data.precioPublico);
         $('#producto_precio_sin_igv').val(data.precioSinIGV);
+        $('#producto_cod_unidad').val(data.codUnidad);
+        $('#producto_desc_unidad_medida').val(data.descUnidadMedida);
+        $('#producto_sigla_umfe').val(data.siglaUMFE);
         $('#producto_peso').val(data.peso);
   
         callAgregarItem();

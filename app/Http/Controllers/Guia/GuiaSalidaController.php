@@ -803,7 +803,8 @@ class GuiaSalidaController extends Controller
 
         if ($procede == true) {
 
-            $unidad = "UNI";
+            // $unidad = "UNI";
+            $unidad = $desc_unidad_medida;
             $inputCantidad = "<input type='number' class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$cantidad}'></input>";
             $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='0'></input>";
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
@@ -1084,7 +1085,7 @@ class GuiaSalidaController extends Controller
         if ($procede == true) {
             $msj = "<b>Guia de Salida registrada Nº: {$datos['serie']}-{$datos['numero']}</b>";
             if ($datos['envio_sunat'] == 0) {
-                $link = route('guiasalida.pdf', ['guia' => $store]);
+                $link = route('guiasalida.pdf', ['guia' => $store, 'valorada' => 0]);
                 $msj = "{$msj} <a class='btn btn-sm btn-success' href='{$link}' target='_blank'><i class='fa fa-external-link'></i> Ver</a>";
             }
         }

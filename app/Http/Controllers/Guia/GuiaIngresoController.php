@@ -248,7 +248,8 @@ class GuiaIngresoController extends Controller
 
         if ($procede == true) {
 
-            $unidad = "UNI";
+            // $unidad = "UNI";
+            $unidad = $desc_unidad_medida;
             $inputCantidad = "<input type='number' class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$cantidad}'></input>";
             $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='0'></input>";
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
