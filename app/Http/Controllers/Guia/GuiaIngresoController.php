@@ -991,7 +991,7 @@ class GuiaIngresoController extends Controller
         //
     }
 
-    public function pdf(GuiaIngreso $guia)
+    public function pdf(GuiaIngreso $guia, $valorada)
     {
 
         // dd($guia);
@@ -1025,12 +1025,14 @@ class GuiaIngresoController extends Controller
             'total_letras' => $total_letras, 
             'nombre_cajero' => 'demo', 
             'total_venta_gravada' => $guia->importe_sin_igv,
+            'monto_descuento' => $guia->monto_descuento,
             'total_igv' => $guia->monto_igv,
             'total' => $guia->total_venta,
         );
 
         $detalle = GuiaIngresoDetalle::where('guia_ingreso_id', $guia->id)->get();
         // dd($detalle);
+        $data['valorada'] = $valorada;
         $data['detalle'] = $detalle;
 
 

@@ -1,5 +1,6 @@
 <html>
 @inject('carbon', 'Carbon\Carbon')
+<title>Guia Ingreso</title>
 
 <head style='font-size:12px;'>
   <style>
@@ -191,7 +192,7 @@
         </tr>
         <tr>
           <td style="width: 36rem"><b>Tipo Moneda:</b> {{ $guia->texto_moneda }}</td>
-          <td ><b>Tipo Operacion:</b> {{ $documento->tipo_operacion_nombre }}</td>
+          <td><b>Tipo Operacion:</b> {{ $documento->tipo_operacion_nombre }}</td>
         </tr>
         <tr></tr>
       </tbody>
@@ -204,6 +205,10 @@
         <th style="height: 1.8rem; width: 6rem">Codigo</th>
         <th style="height: 1.8rem; width: 25rem">Descripcion</th>
         <th style="height: 1.8rem; width: 6rem">Monto</th>
+        @if ($valorada == 1)
+          <th style="text-align: right; right: 0.8rem; width: 4rem" class="th_items">Costo</th>
+          <th style="text-align: right; right: 0.8rem; width: 4rem" class="th_items">Total</th>
+        @endif
       </thead>
       <tbody>
         @foreach ($detalle as $item)
@@ -212,11 +217,36 @@
             <td>{{ $item->codarticulo }}</td>
             <td>{{ $item->descripcion }}</td>
             <td>{{ $item->importe }}</td>
+            @if ($valorada == 1)
+              <td style="text-align: right">{{ $item->precio_publico }}</td>
+              <td style="text-align: right">{{ $item->importe }}</td>
+            @endif
           </tr>
-            
         @endforeach
 
       </tbody>
+
+      @if ($valorada == 1)
+        <tfoot >
+          <tr class="table_det">
+            <td colspan="5" style="text-align: right"><b>Valor Neto</b></td>
+            <td style="text-align: right">{{ $guia->total_venta_gravada }}</td>
+          </tr>
+          <tr class="">
+            <td colspan="5" style="text-align: right"><b>Exonerado</b></td>
+            <td style="text-align: right">{{ $guia->monto_descuento }}</td>
+          </tr>
+          <tr class="">
+            <td colspan="5" style="text-align: right"><b>I.G.V</b></td>
+            <td style="text-align: right">{{ $guia->total_igv }}</td>
+          </tr>
+          <tr class="">
+            <td colspan="5" style="text-align: right"><b>Total</b></td>
+            <td style="text-align: right">{{ $guia->total }}</td>
+          </tr>
+        </tfoot>
+      @endif
+
     </table>
 
     {{-- tabla de leyenda y subtotal --}}
@@ -253,7 +283,7 @@
           <td style="width: 14rem">
 
           </td>
-          <td style="width: 16rem" >
+          <td style="width: 16rem">
             <table style="border-spacing: 0;width: 100%; font-size: 10px">
               <tbody style="text-align: right">
                 <tr>
@@ -288,7 +318,7 @@
 
     {{-- tabla de consulta y qr --}}
 
-    <table style="width: 100%; font-size: 10px; margin-top: 10px; display: none" >
+    <table style="width: 100%; font-size: 10px; margin-top: 10px; display: none">
       <tbody>
         <tr>
           <td style="width: 50rem;">

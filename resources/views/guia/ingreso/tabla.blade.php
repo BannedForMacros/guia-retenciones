@@ -21,13 +21,14 @@
 
           <!-- Example split danger button -->
           <div class="btn-group btn-group-sm">
-            <a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a>
+            <a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id, 'valorada' => 0]) }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa fa-external-link"></i> Ver</a>
             <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split"
               data-bs-toggle="dropdown" aria-expanded="false">
               <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu">
-              {{-- <li><hr class="dropdown-divider"></li> --}}
+              <li><a class="dropdown-item text-success" href="{{ route('guiaingreso.pdf', ['guia'=>$item->id, 'valorada' => 1]) }}" target="_blank"><i class="fa fa-file"></i> <b>Guia Valorada</b></a></li>
+              <li><hr class="dropdown-divider"></li>
               @if ($item->guia_estado_id == 4)
               <li><a class="dropdown-item" href="{{ route('guiaingreso.continuar', ['guia'=>$item->id]) }}"><i class="fa fa-edit"></i> Continuar</a></li>
               @endif

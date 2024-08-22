@@ -31,7 +31,7 @@
             <span class="visually-hidden">Toggle Dropdown</span>
           </button>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item text-success" href="{{ $item->url_pdf_valorada }}"  target="_blank"><i class="fa fa-paper-plane"></i> <b>Guia Valorada</b></a></li>
+            <li><a class="dropdown-item text-success" href="{{ $item->url_pdf_valorada }}"  target="_blank"><i class="fa fa-file"></i> <b>Guia Valorada</b></a></li>
             <li><hr class="dropdown-divider"></li>
             @if ($item->mostrarGuardarDatamarket == true)
             <li><a class="dropdown-item text-success reenviar_datamarket" style="cursor: pointer" data-id="{{ $item->id }}"><i class="fa fa-paper-plane"></i> <b>Re-Enviar DMK</b></a></li>
