@@ -537,14 +537,39 @@ class GuiaSalidaController extends Controller
         $codalmacen = $request->get('codalmacen');
         $codlistaprecio = $request->get('codlistaprecio');
 
-        $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
-        ['valor' => $valor, 'tipoconsulta' => 1, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio])->object()->articulos;
+        $procede = true;
+        $msj = "Articulo encontrado";
+        $msj_tipo = "success";
+        $log = "";
 
+        try {
+            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
+            ['valor' => $valor, 'tipoconsulta' => 1, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio])->object()->articulos;
+            
+        } catch (Exception $e) {
+            $procede = false;
+            $msj = "Ocurrio un problema al buscar";
+            $msj_tipo = "error";
+            $log = "{$e}";
+        }
+        
+        if ($procede == true) {
+            // dd(count($getArticulo));
+            if (count($getArticulo) == 0) {
+                $procede = false;
+                $msj = "Arcitulo no encontrado";
+                $msj_tipo = "error";
+                
+            }else{
+                $getArticulo = $getArticulo[0];
+            }
+            
+        }
         // $getArticulo = $listArticulos;
-        $getArticulo = $getArticulo[0];
         // dd($getArticulo);
 
-        return response()->json(['getArticulo' => $getArticulo]);
+        // return response()->json(['getArticulo' => $getArticulo, '']);
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'getArticulo' => $getArticulo]);
     }
 
     public function listarProveedores(Request $request)

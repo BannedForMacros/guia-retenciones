@@ -71,20 +71,34 @@ var buscarArticuloBarra = function (formData) {
     contentType: false,
     dataType: 'json',
     success: function (response) {
-      var data = response.getArticulo
-      console.log({data});
-      $('#producto_id').val(data.codArticulo);
-      $('#producto_codigo_barra').val(data.codBarra);
-      $('#producto_descripcion').val(data.nombreArticulo);
-      $('#producto_precio_publico').val(data.precioPublico);
-      $('#producto_precio_sin_igv').val(data.precioSinIGV);
-      $('#producto_peso').val(data.peso);
 
-      callAgregarItem();
+      if (response.procede == true) {
+        var data = response.getArticulo
+        console.log({data});
+        $('#producto_id').val(data.codArticulo);
+        $('#producto_codigo_barra').val(data.codBarra);
+        $('#producto_descripcion').val(data.nombreArticulo);
+        $('#producto_precio_publico').val(data.precioPublico);
+        $('#producto_precio_sin_igv').val(data.precioSinIGV);
+        $('#producto_peso').val(data.peso);
+  
+        callAgregarItem();
+  
+        setTimeout(() => {
+          $('#producto_valor').val('')
+        }, 100);
+        
+      }
 
-      setTimeout(() => {
-        $('#producto_valor').val('')
-      }, 100);
+      if (response.procede == false) {
+        Swal.fire({
+          title: '',
+          html: response.msj,
+          icon: response.msj_tipo,
+          allowOutsideClick : false
+        })
+      }
+
     }
   };
   $.ajax(options);
