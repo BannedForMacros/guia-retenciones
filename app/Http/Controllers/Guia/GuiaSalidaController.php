@@ -1225,7 +1225,7 @@ class GuiaSalidaController extends Controller
                 "numeroGuia" => $guia->numero,
                 "precio" => $item->precio,
                 "tipoGuia" => "A",
-                "unidadMedida" => 1
+                "unidadMedida" => $item->cod_unidad ?? 1
             );
         }
 
