@@ -519,6 +519,11 @@ var callStore = (guardar_avance = false) => {
         procede_store = false;
         msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion} <br>tiene un valor negativo = ${element.cantidad}</b>`;
       }
+
+      if (parseFloat(element.cantidad) == 0) {
+        procede_store = false;
+        msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion} <br>tiene un cero = ${element.cantidad}</b>`;
+      }
     }
   });
 

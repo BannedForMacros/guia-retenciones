@@ -15,7 +15,7 @@
       <td class="align-middle">{{ "[{$item->proveedor_ruc}] {$item->proveedor_nombre}" }}</td>
       <td class="align-middle">{{ $carbon::parse($item->fecha_emision)->format('d/m/Y') }}</td>
       <td class="align-middle">{{ $item->total_venta }}</td>
-      <td class="align-middle"><a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id]) }}" class="btn btn-primary btn-xs" target="_blank"><i class="fa fa-external-link"></i> Ver</a></td>
+      <td class="align-middle"><a href="{{ route('guiaingreso.pdf', ['guia'=>$item->id, 'valorada' => 1]) }}" class="btn btn-primary btn-xs" target="_blank"><i class="fa fa-external-link"></i> Ver</a></td>
       <td class="align-middle">
         <button class="btn btn-success btn-xs select_otra_guia" data-id="{{ $item->id }}"><i class="fa fa-hand-pointer"></i> Selec</button>
       </td>

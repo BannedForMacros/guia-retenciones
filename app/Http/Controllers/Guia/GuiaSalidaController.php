@@ -1600,16 +1600,13 @@ class GuiaSalidaController extends Controller
 
         }
 
-
-
         if ($procede == false) {
             if ($panel_origen != 'index') {
                 $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarFacturar' data-id='{$id}'> <i class='fa-regular fa-paper-plane'></i> Reintentar Facturar</button>";
             }
         }
 
-        
-        
+
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
@@ -1888,6 +1885,9 @@ class GuiaSalidaController extends Controller
                     data-codigo = '{$item->codarticulo}'
                     data-codigo_barra = '{$item->codigo_barra}'
                     data-peso = '{$peso}'
+                    data-cod_unidad = '{$item->cod_unidad}'
+                    data-desc_unidad_medida = '{$item->desc_unidad_medida}'
+                    data-sigla_umfe = '{$item->sigla_umfe}'
                 >
                     <td class='align-middle'>{$item->codigo_barra}</td>
                     <td class='align-middle'>{$item->codarticulo}</td>

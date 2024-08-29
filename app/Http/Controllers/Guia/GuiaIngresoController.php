@@ -1243,6 +1243,9 @@ class GuiaIngresoController extends Controller
                     data-codigo = '{$item->codarticulo}'
                     data-peso = '{$peso}'
                     data-codigo_barra='{$item->codigo_barra}'
+                    data-cod_unidad = '{$item->cod_unidad}'
+                    data-desc_unidad_medida = '{$item->desc_unidad_medida}'
+                    data-sigla_umfe = '{$item->sigla_umfe}'
                 >
                     <td class='align-middle'>{$item->codigo_barra}</td>
                     <td class='align-middle'>{$item->codarticulo}</td>
