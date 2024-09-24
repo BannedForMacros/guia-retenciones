@@ -507,6 +507,7 @@ class GuiaSalidaController extends Controller
         $codalmacen = $request->get('codalmacen');
         $codlistaprecio = $request->get('codlistaprecio');
         $maximo = 0;
+
         if ($tipoconsulta == 4) {
             $maximo = 2;
         }
@@ -521,7 +522,8 @@ class GuiaSalidaController extends Controller
         // dd($listArticulos);
         $items = array();
         foreach ($listArticulos as $item) {
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? ''   );
+            $stock = $item->stock ?? 0;
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '' , 'stock' => $item->stock ?? 0  );
         }
 
         return response()->json(['items' => $items]);
@@ -776,10 +778,10 @@ class GuiaSalidaController extends Controller
         $cod_unidad = $request->post('cod_unidad') ?? 9;
         $desc_unidad_medida = $request->post('desc_unidad_medida') ?? '';
         $sigla_umfe = $request->post('sigla_umfe') ?? '';
+        $stock = $request->post('stock') ?? 0;
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
-
 
         $items = json_decode($request->post('items'));
 
@@ -830,6 +832,7 @@ class GuiaSalidaController extends Controller
                     data-cod_unidad = '{$cod_unidad}'
                     data-desc_unidad_medida = '{$desc_unidad_medida}'
                     data-sigla_umfe = '{$sigla_umfe}'
+                    data-stock = '{$stock}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -838,6 +841,7 @@ class GuiaSalidaController extends Controller
                     <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
                     <td class='align-middle'>{$inputCantidad}</td>
                     <td class='align-middle'>{$unidad}</td>
+                    <td class='align-middle'>{$stock}</td>
                     <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
                     <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
                     <td class='align-middle text-center'>
@@ -857,7 +861,6 @@ class GuiaSalidaController extends Controller
         // dd($guardar_avance);
         return view('guia.salida.modal-store', compact('envio_sunat', 'guardar_avance'));
     }
-
 
     public function store(Request $request)
     {
@@ -1225,7 +1228,8 @@ class GuiaSalidaController extends Controller
                 "numeroGuia" => $guia->numero,
                 "precio" => $item->precio,
                 "tipoGuia" => "A",
-                "unidadMedida" => $item->cod_unidad ?? 1
+                "unidadMedida" => $item->cod_unidad ?? 1,
+                "descuento" => $item->monto_descuento ?? 0
             );
         }
 

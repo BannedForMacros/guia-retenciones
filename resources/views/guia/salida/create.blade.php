@@ -546,6 +546,7 @@
               <input type="hidden" id="producto_cod_unidad" name="producto_cod_unidad">
               <input type="hidden" id="producto_desc_unidad_medida" name="producto_desc_unidad_medida">
               <input type="hidden" id="producto_sigla_umfe" name="producto_sigla_umfe">
+              <input type="hidden" id="producto_stock" name="producto_stock">
 
             </div>
 
@@ -560,6 +561,7 @@
                     <th class="text-center">Precio</th>
                     <th class="text-center" style="width: 7rem">Cantidad</th>
                     <th class="text-center">Uni</th>
+                    <th class="text-center">stock</th>
                     <th class="text-center">Importe</th>
                     <th class="text-center" style="width: 4rem">Descto</th>
                     <th class="text-center">Accion</th>

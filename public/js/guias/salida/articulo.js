@@ -4,7 +4,6 @@ $(document).on('change', '#tipo_busqueda_articulo', function (event) {
   callFormBusquedaArticulo();
 });
 
-
 var callFormBusquedaArticulo = () => {
   var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
 
@@ -14,7 +13,6 @@ var callFormBusquedaArticulo = () => {
 
   formBusquedaArticulo(formData);
 }
-
 
 var formBusquedaArticulo = function (formData) {
   var options = {
@@ -59,7 +57,6 @@ $(document).on('submit', '#form_buscar_articulo', function (event) {
   buscarArticuloBarra(formData);
 });
 
-
 var buscarArticuloBarra = function (formData) {
   var options = {
     type: 'POST',
@@ -81,6 +78,7 @@ var buscarArticuloBarra = function (formData) {
         $('#producto_desc_unidad_medida').val(data.descUnidadMedida);
         $('#producto_sigla_umfe').val(data.siglaUMFE);
         $('#producto_peso').val(data.peso);
+        $('#producto_stock').val(data.stock);
   
         callAgregarItem();
   
@@ -105,7 +103,6 @@ var buscarArticuloBarra = function (formData) {
   $.ajax(options);
 };
 
-
 $(document).on('change', '#producto_select', function(event) {
   event.preventDefault();
   /* Act on the event */
@@ -121,6 +118,8 @@ $(document).on('change', '#producto_select', function(event) {
   $('#producto_cod_unidad').val(data.cod_unidad);
   $('#producto_desc_unidad_medida').val(data.desc_unidad_medida);
   $('#producto_sigla_umfe').val(data.sigla_umfe);
+  $('#producto_stock').val(data.stock);
+
 
   callAgregarItem();
 });
@@ -141,6 +140,7 @@ var callAgregarItem = () => {
   var cod_unidad = $('#producto_cod_unidad').val();
   var desc_unidad_medida = $('#producto_desc_unidad_medida').val();
   var sigla_umfe = $('#producto_sigla_umfe').val();
+  var stock = $('#producto_stock').val();
   // var precio_publico = data.precio_publico;
   var precio_publico = $('#producto_precio_publico').val();
   // var precio_sin_igv = data.precio_sin_igv;
@@ -173,6 +173,7 @@ var callAgregarItem = () => {
   formData.append('precio_publico', precio_publico);
   formData.append('precio_sin_igv', precio_sin_igv);
   formData.append('peso', peso);
+  formData.append('stock', stock);
   formData.append('cantidad', cantidad);
   formData.append('base_calculo', base_calculo);
   formData.append('tipo_busqueda_articulo', tipo_busqueda_articulo);
@@ -219,7 +220,6 @@ var agregarItem = function(formData){
   $.ajax(options);
 };
 
-
 var limpiarFormArticulo = () => {
   $('#producto_id').val('');
   $('#producto_codigo_barra').val('');
@@ -245,10 +245,6 @@ var asignarFocusCantidad = (codigo_producto) => {
     // };
   })
 
-
-
-
   // console.log({items});
 
 }
-

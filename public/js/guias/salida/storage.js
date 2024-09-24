@@ -50,6 +50,7 @@ var updateLocalStorage = () => {
       'precio_sin_igv': $(this).data('precio_sin_igv'),
       'codigo_barra': $(this).data('codigo_barra'),
       'peso' : $(this).data('peso'),
+      'stock' : $(this).data('stock'),
       'cod_unidad' : $(this).data('cod_unidad'),
       'desc_unidad_medida' : $(this).data('desc_unidad_medida'),
       'sigla_umfe' : $(this).data('sigla_umfe'),
