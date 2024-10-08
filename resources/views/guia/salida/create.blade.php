@@ -547,6 +547,7 @@
               <input type="hidden" id="producto_desc_unidad_medida" name="producto_desc_unidad_medida">
               <input type="hidden" id="producto_sigla_umfe" name="producto_sigla_umfe">
               <input type="hidden" id="producto_stock" name="producto_stock">
+              <input type="hidden" id="producto_costo_articulo" name="producto_costo_articulo">
 
             </div>
 

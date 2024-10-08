@@ -523,7 +523,7 @@ class GuiaSalidaController extends Controller
         $items = array();
         foreach ($listArticulos as $item) {
             $stock = $item->stock ?? 0;
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '' , 'stock' => $item->stock ?? 0  );
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '' , 'stock' => $item->stock ?? 0, 'costo_articulo' => $item->costoArticulo  );
         }
 
         return response()->json(['items' => $items]);
@@ -779,6 +779,7 @@ class GuiaSalidaController extends Controller
         $desc_unidad_medida = $request->post('desc_unidad_medida') ?? '';
         $sigla_umfe = $request->post('sigla_umfe') ?? '';
         $stock = $request->post('stock') ?? 0;
+        $costo_articulo = number_format($request->post('costo_articulo'),2) ?? 0;
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
@@ -833,6 +834,7 @@ class GuiaSalidaController extends Controller
                     data-desc_unidad_medida = '{$desc_unidad_medida}'
                     data-sigla_umfe = '{$sigla_umfe}'
                     data-stock = '{$stock}'
+                    data-costo_articulo = '{$costo_articulo}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -865,7 +867,6 @@ class GuiaSalidaController extends Controller
     public function store(Request $request)
     {
         // dd($request->post());
-
         $api_datos = Parametro::find(6)->valor;
         $id = "";
 
@@ -902,7 +903,6 @@ class GuiaSalidaController extends Controller
             $msj_tipo = $asignarSerie->msj_tipo;
             $log = $asignarSerie->log;
         }
-
 
         // validacion antes del store
         if ($procede == true) {
@@ -995,7 +995,6 @@ class GuiaSalidaController extends Controller
             }
         }
 
-
         //registro en store
         if ($procede == true) {
 
@@ -1014,8 +1013,6 @@ class GuiaSalidaController extends Controller
         // auditoria store
         $obsevracion_auditoria = $msj;
         
-        
-
         // actualizar serie nube
         if ($procede == true) {
             $updateSerie = Serie::find($asignarSerie->serieAsignada->id);
@@ -1048,6 +1045,9 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->precio = $item->precio;
                     $guiaDetalle->cantidad = floatval($item->cantidad);
                     $guiaDetalle->importe = $item->importe;
+                    $guiaDetalle->costo_articulo = $item->costo_articulo ?? 0;
+                    $costo_total = $item->costo_articulo * $item->cantidad;
+                    $guiaDetalle->costo_total = number_format($costo_total, 2);
                     $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
                     $guiaDetalle->peso_unitario = $item->peso;
@@ -1069,6 +1069,10 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->cod_unidad = $item->cod_unidad;
                     $guiaDetalle->desc_unidad_medida = $item->desc_unidad_medida;
                     $guiaDetalle->sigla_umfe = $item->sigla_umfe;
+
+                    $costo_total = ($item->costo_articulo ?? 0) * $item->cantidad;
+                    $guiaDetalle->costo_articulo = $item->costo_articulo ?? 0;
+                    $guiaDetalle->costo_total = $costo_total;
 
                     try {
                         $guiaDetalle->save();
