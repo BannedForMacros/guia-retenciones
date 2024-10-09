@@ -222,6 +222,8 @@ class GuiaIngresoController extends Controller
         $cod_unidad = $request->post('cod_unidad') ?? 9;
         $desc_unidad_medida = $request->post('desc_unidad_medida') ?? '';
         $sigla_umfe = $request->post('sigla_umfe') ?? '';
+        $costo_articulo = number_format($request->post('costo_articulo'),2) ?? 0;
+
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
@@ -275,6 +277,8 @@ class GuiaIngresoController extends Controller
                     data-cod_unidad = '{$cod_unidad}'
                     data-desc_unidad_medida = '{$desc_unidad_medida}'
                     data-sigla_umfe = '{$sigla_umfe}'
+                    data-costo_articulo = '{$costo_articulo}'
+
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -363,7 +367,8 @@ class GuiaIngresoController extends Controller
         // dd($listArticulos);
         $items = array();
         foreach ($listArticulos as $item) {
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '' );
+            $stock = $item->stock ?? 0;
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '', 'costo_articulo' => $item->costoArticulo );
         }
 
         return response()->json(['items' => $items]);
@@ -773,6 +778,10 @@ class GuiaIngresoController extends Controller
                     $guiaDetalle->cod_unidad = $item->cod_unidad;
                     $guiaDetalle->desc_unidad_medida = $item->desc_unidad_medida;
                     $guiaDetalle->sigla_umfe = $item->sigla_umfe;
+
+                    $costo_total = ($item->costo_articulo ?? 0) * $item->cantidad;
+                    $guiaDetalle->costo_articulo = $item->costo_articulo ?? 0;
+                    $guiaDetalle->costo_total = $costo_total;
 
                     try {
                         $guiaDetalle->save();

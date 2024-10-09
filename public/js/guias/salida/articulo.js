@@ -79,6 +79,8 @@ var buscarArticuloBarra = function (formData) {
         $('#producto_sigla_umfe').val(data.siglaUMFE);
         $('#producto_peso').val(data.peso);
         $('#producto_stock').val(data.stock);
+        $('#producto_costo_articulo').val(data.costo_articulo);
+
   
         callAgregarItem();
   

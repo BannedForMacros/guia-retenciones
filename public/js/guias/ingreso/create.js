@@ -397,6 +397,7 @@ var callStore = (guardar_avance = false) => {
       'cod_unidad' : $(this).data('cod_unidad'),
       'desc_unidad_medida' : $(this).data('desc_unidad_medida'),
       'sigla_umfe' : $(this).data('sigla_umfe'),
+      'costo_articulo' : $(this).data('costo_articulo'),
       
     };
   }).get();

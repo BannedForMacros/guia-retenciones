@@ -84,6 +84,8 @@ var buscarArticuloBarra = function (formData) {
         $('#producto_desc_unidad_medida').val(data.descUnidadMedida);
         $('#producto_sigla_umfe').val(data.siglaUMFE);
         $('#producto_peso').val(data.peso);
+        $('#producto_costo_articulo').val(data.costo_articulo);
+
   
         callAgregarItem();
   
@@ -123,6 +125,8 @@ $(document).on('change', '#producto_select', function(event) {
   $('#producto_cod_unidad').val(data.cod_unidad);
   $('#producto_desc_unidad_medida').val(data.desc_unidad_medida);
   $('#producto_sigla_umfe').val(data.sigla_umfe);
+  $('#producto_costo_articulo').val(data.costo_articulo);
+
   
   callAgregarItem();
 });
@@ -148,6 +152,8 @@ var callAgregarItem = () => {
   // var precio_sin_igv = data.precio_sin_igv;
   var precio_sin_igv = $('#producto_precio_sin_igv').val();
   var peso = $('#producto_peso').val();
+  var costo_articulo = $('#producto_costo_articulo').val();
+
 
   var base_calculo = $('#base_calculo').val();
   var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
@@ -175,6 +181,7 @@ var callAgregarItem = () => {
   formData.append('precio_publico', precio_publico);
   formData.append('precio_sin_igv', precio_sin_igv);
   formData.append('peso', peso);
+  formData.append('costo_articulo', costo_articulo);
   formData.append('cantidad', cantidad);
   formData.append('base_calculo', base_calculo);
   formData.append('tipo_busqueda_articulo', tipo_busqueda_articulo);

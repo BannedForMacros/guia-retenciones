@@ -97,6 +97,7 @@ var updateLocalStorage = () => {
       'precio_sin_igv': $(this).data('precio_sin_igv'),
       'codigo_barra': $(this).data('codigo_barra'),
       'peso' : $(this).data('peso'),
+      'costo_articulo' : $(this).data('costo_articulo'),
       'cod_unidad' : $(this).data('cod_unidad'),
       'desc_unidad_medida' : $(this).data('desc_unidad_medida'),
       'sigla_umfe' : $(this).data('sigla_umfe'),
@@ -185,6 +186,7 @@ var cargarStorage = () => {
         data-codigo="${element.codarticulo}" 
         data-codigo_barra="${element.codigo_barra}" 
         data-peso="${element.peso}"
+        data-costo_articulo="${element.costo_articulo}"
         data-cod_unidad="${element.cod_unidad}"
         data-desc_unidad_medida="${element.desc_unidad_medida}"
         data-sigla_umfe="${element.sigla_umfe}"
