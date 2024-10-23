@@ -294,8 +294,8 @@
             <td style="text-align: right">{{ $item->cantidad }}</td>
             @if ($valorada == 1)
               {{-- <td style="text-align: right">{{ $item->precio_publico }}</td> --}}
-              <td style="text-align: right">{{ $item->costo_articulo }}</td>
-              <td style="text-align: right">{{ $item->costo_total }}</td>
+              <td style="text-align: right">{{ $item->precio_publico }}</td>
+              <td style="text-align: right">{{ $item->importe }}</td>
             @endif
           </tr>
         @endforeach
