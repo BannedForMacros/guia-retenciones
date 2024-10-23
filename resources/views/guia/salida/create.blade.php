@@ -559,12 +559,13 @@
                     <th class="text-center">Codigo</th>
                     <th class="text-center">Cod. Int</th>
                     <th class="text-center">Descripcion</th>
-                    <th class="text-center">Precio</th>
+                    <th class="text-center" ><span id="th_tipo_precio">Precio</span></th>
                     <th class="text-center" style="width: 7rem">Cantidad</th>
                     <th class="text-center">Uni</th>
                     <th class="text-center">stock</th>
                     <th class="text-center">Importe</th>
                     <th class="text-center" style="width: 4rem">Descto</th>
+                    <th class="text-center" hidden>Coso Art.</th>
                     <th class="text-center">Accion</th>
                   </thead>
                   <tbody id="tbody">

@@ -297,6 +297,7 @@ var cargarStorage = () => {
         <td class="align-middle">
           <input class="form-control form-control-sm input_porcentaje_descuento_tr" name="porcentaje_descuento" value="${element.porcentaje_descuento}"> <input type="hidden" name="monto_descuento" value="${element.monto_descuento}">
         </td>
+        <td>${element.costo_articulo}</td>
         <td class="align-middle text-center">
             <button class="btn btn-danger btn-sm delete_item"><i class="fa fa-times-circle"></i></button>
         </td>

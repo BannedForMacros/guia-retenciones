@@ -50,10 +50,15 @@ $(document).on('submit', '#form_buscar_articulo', function (event) {
   var codlistaprecio = $('#codlistaprecio').val();
   var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
   var tipo = $('#tipo_busqueda_articulo').val();
+  var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+
   formData.append('codalmacen', codalmacen);
   formData.append('codlistaprecio', codlistaprecio);
   formData.append('codestacion', codestacion);
   formData.append('tipo', tipo);
+  formData.append('indicar_proveedor', indicar_proveedor);
+
+
   buscarArticuloBarra(formData);
 });
 

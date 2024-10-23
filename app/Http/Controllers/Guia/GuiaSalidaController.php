@@ -506,7 +506,11 @@ class GuiaSalidaController extends Controller
         $codestacion = $request->get('codestacion');
         $codalmacen = $request->get('codalmacen');
         $codlistaprecio = $request->get('codlistaprecio');
+        // $indicar_proveedor = $request->get('indicar_proveedor');
+        $indicar_proveedor = ($request->get('indicar_proveedor') == 'true') ? true : false;
         $maximo = 0;
+
+        // dd($indicar_proveedor);
 
         if ($tipoconsulta == 4) {
             $maximo = 2;
@@ -523,7 +527,27 @@ class GuiaSalidaController extends Controller
         $items = array();
         foreach ($listArticulos as $item) {
             $stock = $item->stock ?? 0;
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '' , 'stock' => $item->stock ?? 0, 'costo_articulo' => $item->costoArticulo  );
+            $precioPublico = $item->precioPublico;
+            $precioSinIGV = $item->precioSinIGV;
+            if ($indicar_proveedor == true) {
+                $precioPublico = $item->costoArticulo;
+                $precioSinIGV = number_format(($item->costoArticulo / (1+0.18)),2);
+            }
+
+            $items[] = (object) array(
+                'id' => $item->codArticulo, 
+                'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}",
+                'codigo_barra' => $item->codBarra,
+                'descripcion' => $item->nombreArticulo,
+                'precio_publico' => $precioPublico,
+                'precio_sin_igv' => $precioSinIGV,
+                'peso' => $item->peso ?? 0,
+                'cod_unidad' => $item->codUnidad,
+                'desc_unidad_medida' => $item->descUnidadMedida ?? '',
+                'sigla_umfe' => $item->siglaUMFE ?? '',
+                'stock' => $item->stock ?? 0,
+                'costo_articulo' => $item->costoArticulo
+            );
         }
 
         return response()->json(['items' => $items]);
@@ -538,6 +562,8 @@ class GuiaSalidaController extends Controller
         $codestacion = $request->get('codestacion');
         $codalmacen = $request->get('codalmacen');
         $codlistaprecio = $request->get('codlistaprecio');
+        $indicar_proveedor = ($request->get('indicar_proveedor') == 'true') ? true : false;
+        // dd($indicar_proveedor);
 
         $procede = true;
         $msj = "Articulo encontrado";
@@ -564,11 +590,19 @@ class GuiaSalidaController extends Controller
                 
             }else{
                 $getArticulo = $getArticulo[0];
+                $getArticulo->costo_articulo = $getArticulo->costoArticulo ?? 0;
+                if ($indicar_proveedor == true) {
+                    // dd('validamos');
+                    $precioPublico = $getArticulo->costoArticulo;
+                    $precioSinIGV = number_format(($getArticulo->costoArticulo / (1+0.18)),2);
+                    $getArticulo->precioPublico = number_format($precioPublico,2);
+                    $getArticulo->precioSinIGV = number_format($precioSinIGV,2);
+                }
+                // dd($getArticulo);
             }
             
         }
         // $getArticulo = $listArticulos;
-        // dd($getArticulo);
 
         // return response()->json(['getArticulo' => $getArticulo, '']);
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'getArticulo' => $getArticulo]);
@@ -819,7 +853,6 @@ class GuiaSalidaController extends Controller
                 $importe = $cantidad * $precio_sin_igv;
             }
             
-
             $tr = "
                 <tr
                     data-producto_id = '{$producto_id}'
@@ -846,6 +879,7 @@ class GuiaSalidaController extends Controller
                     <td class='align-middle'>{$stock}</td>
                     <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
                     <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
+                    <td class='align-middle' hidden>{$costo_articulo}</td>
                     <td class='align-middle text-center'>
                         <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
                     </td>

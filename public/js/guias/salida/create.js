@@ -62,7 +62,6 @@ $(document).on('change', '#envio-sunat', function(event) {
 
 var callListarArticulos = () => {
 
-
   $(`#producto_select`).select2({
     theme: "bootstrap-5",
     containerCssClass: "select2--small",
@@ -75,6 +74,7 @@ var callListarArticulos = () => {
         var codlistaprecio = $('#codlistaprecio').val();
         var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
         var tipo = $('#tipo_busqueda_articulo').val();
+        var indicar_proveedor = $('#indicar_proveedor').prop('checked');
 
 
         var query = {
@@ -84,6 +84,7 @@ var callListarArticulos = () => {
           codlistaprecio: codlistaprecio,
           codestacion: codestacion,
           tipo: tipo,
+          indicar_proveedor: indicar_proveedor,
         }
         return query;
       },
@@ -646,10 +647,8 @@ var callStore = (guardar_avance = false) => {
       }
     }
 
-
   }
 
-  
   $.map(items, function (element, index) {
     if (procede_store == true) {
       if (parseFloat(element.cantidad) < 0) {
@@ -719,6 +718,7 @@ $(document).on('change', '#proveedor_id', function(event) {
 
   $('#proveedor_nombre').val(data_proveedor.proveedor_nombre);
   $('#proveedor_ruc').val(data_proveedor.proveedor_ruc);
+
 });
 
 var modalStore = function(formData){
@@ -914,11 +914,12 @@ var callIndicarProveedor = () => {
   var status = $('#indicar_proveedor').prop('checked')
 
   var tipo_operacion_id = $('#tipo_operacion_id').val();
-
-
+  $('#th_tipo_precio').text('Precio')
+  
   if (status == true) {
     $('#div_proveedor').show();
     $('#div_cliente').hide();
+    $('#th_tipo_precio').text('Costo')
   } else {
     $('#div_proveedor').hide();
     $('#div_cliente').show();
@@ -926,6 +927,7 @@ var callIndicarProveedor = () => {
   }
 
   updateLocalStorage();
+
 }
 
 $(document).on('keypress', '#vendedor_codigo', function(event) {
