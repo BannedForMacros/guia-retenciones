@@ -1315,7 +1315,7 @@ class GuiaSalidaController extends Controller
             "valorVenta" => $guia->importe_sin_igv,
         ];
 
-        // dd($body);
+        dd($body);
         try {
             $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
             // dd($storeRemoto);

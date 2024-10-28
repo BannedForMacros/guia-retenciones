@@ -17,6 +17,9 @@ $(document).ready(function () {
     callSetMotivoTraslado();
     calcularTotales();
   }, 300);
+
+  console.log({VALIDAR_STOCK});
+  
 });
 
 $(document).on('change', '#serie', function(event) {
@@ -664,6 +667,8 @@ var callStore = (guardar_avance = false) => {
     
     if (procede_store == true) {
       if (VALIDAR_STOCK == true) {
+        console.log('vlidacion de stock');
+        
         if (element.stock < parseInt(element.cantidad)) {
           procede_store = false;
           msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion} <br>tiene stock menor a ${element.cantidad}</b>`;

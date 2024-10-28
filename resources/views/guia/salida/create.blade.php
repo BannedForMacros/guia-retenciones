@@ -709,7 +709,7 @@
   </div>
   @push('js-scripts')
     <script type="text/javascript">
-      const VALIDAR_STOCK = {!! json_encode($validar_stock) !!}
+      const VALIDAR_STOCK = {!! json_encode(($validar_stock) ? true : false  ) !!}
     </script>
 
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
