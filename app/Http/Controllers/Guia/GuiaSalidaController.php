@@ -279,10 +279,10 @@ class GuiaSalidaController extends Controller
         $verChofer = 'display: none';
         $verVehiculo = 'display: none';
 
-        $validar_peso = Parametro::find(10)->valor;
-        // dd($validar_peso);
+        $validar_stock = Parametro::find(10)->valor;
+        // dd($validar_stock);
 
-        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino', 'verChofer', 'verVehiculo', 'validar_peso'));
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino', 'verChofer', 'verVehiculo', 'validar_stock'));
     }
 
     public function continuar(GuiaSalida $guia)
@@ -1274,6 +1274,7 @@ class GuiaSalidaController extends Controller
             );
         }
 
+        // dd($guia);
         $body = [
             "anioGuiaRemision" => $anio,
             "breveteChofer" => $guia->brevete,
@@ -1283,7 +1284,7 @@ class GuiaSalidaController extends Controller
             "codCliente" => $guia->cliente_id,
             "codEstacion" => $guia->codestacion,
             "codListaPrecio" => $guia->codlistaprecio,
-            "codProveedor" => $guia->proveedor_id ?? '',
+            "codProveedor" => $guia->proveedor_id ?? 0,
             "codtrabajador" => $guia->vendedor_id,
             "comentario" => $guia->comentario,
             "descuento" => $guia->monto_descuento,
@@ -1717,12 +1718,12 @@ class GuiaSalidaController extends Controller
         $data['nro'] = 1;
 
         $peso_total = 0;
-        foreach ($detalle as $item) {
-            if ($item->peso_total != null) {
-                $peso_total = $peso_total + $item->peso_total;
-            }
-        }
-        $data['documento']->peso_total = $peso_total;
+        // foreach ($detalle as $item) {
+        //     if ($item->peso_total != null) {
+        //         $peso_total = $peso_total + $item->peso_total;
+        //     }
+        // }
+        $data['documento']->peso_total = $guia->peso_bruto_total;
         // dd($data);
         $pdf = Pdf::loadView('guia.salida.pdf', $data);
         // $('formato', $data);
