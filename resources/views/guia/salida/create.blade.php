@@ -708,6 +708,10 @@
     <div id="modales"></div>
   </div>
   @push('js-scripts')
+    <script type="text/javascript">
+      const VALIDAR_PESO = {!! json_encode($validar_peso) !!}
+    </script>
+
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/articulo.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/ubigeo.js?v=') }}{{ rand() }}"></script>

@@ -279,7 +279,10 @@ class GuiaSalidaController extends Controller
         $verChofer = 'display: none';
         $verVehiculo = 'display: none';
 
-        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino', 'verChofer', 'verVehiculo'));
+        $validar_peso = Parametro::find(10)->valor;
+        // dd($validar_peso);
+
+        return view('guia.salida.create', compact('listSeries','listProveedores', 'listFormasPago', 'listTipoOperacion', 'listPrecios', 'listAlmacenes', 'listArticulos', 'listClientes', 'listVendedores', 'listVehiculos', 'listChoferes', 'listUbigeosDepartamentoPartida', 'listUbigeosProvinciaPartida', 'listUbigeosDistritoPartida', 'listUbigeosDepartamentoLlegada', 'listUbigeosProvinciaLlegada', 'listUbigeosDistritoLlegada', 'listAlmacenOrigen', 'listAlmacenDestino', 'verChofer', 'verVehiculo', 'validar_peso'));
     }
 
     public function continuar(GuiaSalida $guia)
@@ -1280,7 +1283,7 @@ class GuiaSalidaController extends Controller
             "codCliente" => $guia->cliente_id,
             "codEstacion" => $guia->codestacion,
             "codListaPrecio" => $guia->codlistaprecio,
-            "codProveedor" => $proveedor_id ?? '',
+            "codProveedor" => $guia->proveedor_id ?? '',
             "codtrabajador" => $guia->vendedor_id,
             "comentario" => $guia->comentario,
             "descuento" => $guia->monto_descuento,
@@ -1288,6 +1291,7 @@ class GuiaSalidaController extends Controller
             "direccionllegada" => $guia->direccion_llegada,
             "direccionpartida" => $guia->direccion_partida,
             "dnichofer" => $guia->chofer_dni,
+            "esproveedor" => $guia->indicar_proveedor,
             "estadoProceso" => "0",
             "fechaEmision" => $guia->fecha_emision,
             "formapago" => $guia->forma_pago_id,

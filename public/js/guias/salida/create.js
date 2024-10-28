@@ -17,6 +17,8 @@ $(document).ready(function () {
     callSetMotivoTraslado();
     calcularTotales();
   }, 300);
+  console.log(VALIDAR_PESO);
+  
 });
 
 $(document).on('change', '#serie', function(event) {
@@ -590,19 +592,22 @@ var callStore = (guardar_avance = false) => {
       }
     }
   
+    if (VALIDAR_PESO == true) {
     if (procede_store == true) {
-      if (peso_bruto_total == '') {
-        procede_store = false;
-        msj_store = 'Debe indicar el Peso Total';
+        if (peso_bruto_total == '') {
+          procede_store = false;
+          msj_store = 'Debe indicar el Peso Total';
+        }
+        
+      }
+      if (procede_store == true) {
+        if (peso_bruto_total <= 0) {
+          procede_store = false;
+          msj_store = 'El peso debe ser mayor a cero (0)';
+        }
       }
     }
 
-    if (procede_store == true) {
-      if (peso_bruto_total <= 0) {
-        procede_store = false;
-        msj_store = 'El peso debe ser mayor a cero (0)';
-      }
-    }
 
     if (procede_store == true) {
       if (formData.get('direccion_llegada').trim() == formData.get('direccion_partida').trim()) {
