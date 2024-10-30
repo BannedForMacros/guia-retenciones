@@ -18,7 +18,6 @@ $(document).ready(function () {
     calcularTotales();
   }, 300);
 
-  console.log({VALIDAR_STOCK});
   
 });
 
@@ -666,7 +665,9 @@ var callStore = (guardar_avance = false) => {
     console.log(element.stock, element.cantidad);
     
     if (procede_store == true) {
-      if (VALIDAR_STOCK == true) {
+      var validar_stock = ($('#validar_stock').val() == 'true') ? true : false 
+
+      if (validar_stock == true) {
         console.log('vlidacion de stock');
         
         if (element.stock < parseInt(element.cantidad)) {

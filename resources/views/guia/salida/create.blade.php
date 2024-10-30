@@ -706,11 +706,9 @@
 
     </div>
     <div id="modales"></div>
+    <input type="hidden" id="validar_stock" value="{{ $validar_stock }}">
   </div>
   @push('js-scripts')
-    <script type="text/javascript">
-      const VALIDAR_STOCK = {!! json_encode(($validar_stock) ? true : false  ) !!}
-    </script>
 
     <script src="{{ asset('js/guias/salida/create.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/guias/salida/articulo.js?v=') }}{{ rand() }}"></script>
