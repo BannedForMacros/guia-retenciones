@@ -15,6 +15,15 @@
         <form name="form_store" id="form_store" onkeydown="return event.key != 'Enter';">
           <input type="hidden" name="save_local_storage" id="save_local_storage" value="false">
           <input type="hidden" name="id_continua" id="id_continua" value="{{ $guia->id ?? '' }}">
+
+          <input type="hidden" name="cliente_transf_id" value="{{ $clienteTransferencia->codCliente ?? ''}}">
+          <input type="hidden" name="cliente_transf_razon_social" value="{{ $clienteTransferencia->razonSocial ?? ''}}">
+
+          <input type="hidden" name="cliente_transf_nro_documento" value="{{ $clienteTransferencia->rucCliente ?? ''}}">
+          <input type="hidden" name="cliente_transf_documento_tipo_nombre" value="RUC">
+          <input type="hidden" name="cliente_transf_direccion" value="{{ $clienteTransferencia->direccion ?? '' }}">
+
+
           @csrf
           <div class="row">
             <div class="col-md-12">
