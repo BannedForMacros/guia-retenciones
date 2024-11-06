@@ -1941,7 +1941,8 @@ class GuiaSalidaController extends Controller
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='{$item->monto_descuento}'></input>";
             $span_precio = $item->precio_publico;
             $importe = $item->cantidad * $item->precio_publico;
-
+            $stock = 0;
+            $costo_articulo = $item->costo_articulo ?? 0;
             $tabla .= "
                 <tr
                     data-producto_id = '{$item->codarticulo}'
@@ -1955,6 +1956,8 @@ class GuiaSalidaController extends Controller
                     data-cod_unidad = '{$item->cod_unidad}'
                     data-desc_unidad_medida = '{$item->desc_unidad_medida}'
                     data-sigla_umfe = '{$item->sigla_umfe}'
+                    data-stock = '{$stock}'
+                    data-costo_articulo = '{$costo_articulo}'
                 >
                     <td class='align-middle'>{$item->codigo_barra}</td>
                     <td class='align-middle'>{$item->codarticulo}</td>
@@ -1963,8 +1966,10 @@ class GuiaSalidaController extends Controller
                     <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
                     <td class='align-middle'>{$inputCantidad}</td>
                     <td class='align-middle'>{$unidad}</td>
+                    <td class='align-middle'>{$stock}</td>
                     <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
                     <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
+                    <td class='align-middle' hidden>{$costo_articulo}</td>
                     <td class='align-middle text-center'>
                         <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
                     </td>
