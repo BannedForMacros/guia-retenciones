@@ -365,6 +365,24 @@ var calcularTotales = () => {
     monto_igv = round((importe_sin_igv * 0.18),2);
   }
 
+  const IGV_RATE = 0.18; // Tasa de IGV (18%)
+
+  
+  if (base_calculo == 1) {
+    var total_venta_con_igv = 0;
+    $.map(items, function (element, index) {
+      if (element.cantidad != '') {
+        total_venta_con_igv = total_venta_con_igv + (parseFloat(element.importe ?? 0) * (1 + IGV_RATE) );
+      }
+    });
+    total_venta_con_igv = round(total_venta_con_igv,2);
+    console.log({total_venta, total_venta_con_igv});
+    total_venta = total_venta_con_igv;
+  }
+
+  
+
+
   $('#total_items').val(total_items)
   $('#total_cantidad').val(total_cantidad)
   $('#total_venta').val(total_venta)
