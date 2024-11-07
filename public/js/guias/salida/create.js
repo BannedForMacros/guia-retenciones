@@ -378,6 +378,7 @@ var calcularTotales = () => {
     total_venta_con_igv = round(total_venta_con_igv,2);
     console.log({total_venta, total_venta_con_igv});
     total_venta = total_venta_con_igv;
+    monto_igv = round((total_venta - importe_sin_igv) ,2);
   }
 
 
