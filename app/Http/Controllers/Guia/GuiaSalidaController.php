@@ -553,8 +553,8 @@ class GuiaSalidaController extends Controller
             $precioPublico = $item->precioPublico;
             $precioSinIGV = $item->precioSinIGV;
             if ($indicar_proveedor == true) {
-                $precioPublico = $item->costoArticulo;
-                $precioSinIGV = number_format(($item->costoArticulo / (1+0.18)),2);
+                $precioSinIGV = $item->costoArticulo;
+                $precioPublico = number_format(($item->costoArticulo * (1+0.18)),2);
             }
 
             $items[] = (object) array(
@@ -616,8 +616,8 @@ class GuiaSalidaController extends Controller
                 $getArticulo->costo_articulo = $getArticulo->costoArticulo ?? 0;
                 if ($indicar_proveedor == true) {
                     // dd('validamos');
-                    $precioPublico = $getArticulo->costoArticulo;
-                    $precioSinIGV = number_format(($getArticulo->costoArticulo / (1+0.18)),2);
+                    $precioSinIGV = $getArticulo->costoArticulo;
+                    $precioPublico = number_format(($getArticulo->costoArticulo * (1+0.18)),2);
                     $getArticulo->precioPublico = number_format($precioPublico,2);
                     $getArticulo->precioSinIGV = number_format($precioSinIGV,2);
                 }
@@ -837,6 +837,8 @@ class GuiaSalidaController extends Controller
         $sigla_umfe = $request->post('sigla_umfe') ?? '';
         $stock = $request->post('stock') ?? 0;
         $costo_articulo = number_format($request->post('costo_articulo'),2) ?? 0;
+        $igv = 0.18; // Definir el porcentaje del IGV
+        $costo_con_igv = number_format($costo_articulo * (1 + $igv), 2);
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
@@ -891,6 +893,7 @@ class GuiaSalidaController extends Controller
                     data-sigla_umfe = '{$sigla_umfe}'
                     data-stock = '{$stock}'
                     data-costo_articulo = '{$costo_articulo}'
+                    data-costo_con_igv = '{$costo_con_igv}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -1457,6 +1460,22 @@ class GuiaSalidaController extends Controller
         //     ]
         // ]
         $serie_format = str_pad($guia->serie, 3, '0', STR_PAD_LEFT);
+
+        $destinatario = array(
+            'NroDocumento' => $guia->cliente_nro_documento,
+            "TipoDocumento" => "{$cliente_documento_tipo}",
+            "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->cliente_razon_social)
+        );
+        
+        if ($guia->indicar_proveedor == 1) {
+            
+            $destinatario = array(
+                'NroDocumento' => $guia->proveedor_ruc ?? '',
+                "TipoDocumento" => 6,
+                "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->proveedor_nombre ?? '')
+            );
+        }
+
         $body = [
             // "IdDocumento" => "T001-00000070",
             "IdDocumento" => "T{$serie_format}-{$guia->numero}",
@@ -1471,14 +1490,15 @@ class GuiaSalidaController extends Controller
                 // "NombreRazonSocial" => "Franco Supermercado E.I.R.L."
                 "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($razon_social_emisor)
             ],
-            "Destinatario" => [
-                // "NroDocumento" => "20369872274",
-                "NroDocumento" => $guia->cliente_nro_documento,
-                // "TipoDocumento" => "6",
-                "TipoDocumento" => "{$cliente_documento_tipo}",
-                // "NombreRazonSocial" => "Luis Ordoñez Villacorta"
-                "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->cliente_razon_social)
-            ],
+            "Destinatario" => $destinatario,
+            // "Destinatario" => [
+            //     // "NroDocumento" => "20369872274",
+            //     "NroDocumento" => $guia->cliente_nro_documento,
+            //     // "TipoDocumento" => "6",
+            //     "TipoDocumento" => "{$cliente_documento_tipo}",
+            //     // "NombreRazonSocial" => "Luis Ordoñez Villacorta"
+            //     "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->cliente_razon_social)
+            // ],
             "Proveedor" => [
                 "NroDocumento" =>  $guia->proveedor_ruc ?? '',
                 "TipoDocumento" => 6,

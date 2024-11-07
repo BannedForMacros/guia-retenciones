@@ -380,8 +380,6 @@ var calcularTotales = () => {
     total_venta = total_venta_con_igv;
   }
 
-  
-
 
   $('#total_items').val(total_items)
   $('#total_cantidad').val(total_cantidad)

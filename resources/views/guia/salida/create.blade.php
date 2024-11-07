@@ -627,8 +627,8 @@
               <div class="col-md-3">
                 <label class="form-label">Base Calculo</label>
                 <select class="form-select" name="base_calculo" id="base_calculo">
-                  <option value="2" {{ ($guia->base_calculo ?? '') == 2 ? 'selected' : '' }}>Con IGV</option>
                   <option value="1" {{ ($guia->base_calculo ?? '') == 1 ? 'selected' : '' }}>Sin IGV</option>
+                  <option value="2" {{ ($guia->base_calculo ?? '') == 2 ? 'selected' : '' }}>Con IGV</option>
                 </select>
               </div>
             </div>
