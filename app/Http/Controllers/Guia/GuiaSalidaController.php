@@ -1733,7 +1733,6 @@ class GuiaSalidaController extends Controller
         $data['documento'] = $guia;
         // dd($guia);
 
-
         $formatter = new NumeroALetras();
         $texto_moneda = 'soles';
         $total_letras = $formatter->toInvoice($guia->total_venta, 2, $texto_moneda);
