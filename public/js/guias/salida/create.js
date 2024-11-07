@@ -744,6 +744,8 @@ $(document).on('change', '#proveedor_id', function(event) {
   $('#proveedor_nombre').val(data_proveedor.proveedor_nombre);
   $('#proveedor_ruc').val(data_proveedor.proveedor_ruc);
 
+  limpiarDetalle();
+
 });
 
 var modalStore = function(formData){
@@ -846,6 +848,8 @@ $(document).on('change', '#tipo_operacion_id', function(event) {
 
   callSetMotivoTraslado();
 
+  limpiarDetalle();
+
 });
 
 var callSetMotivoTraslado = () => {
@@ -932,6 +936,8 @@ $(document).on('change', '#indicar_proveedor', function(event) {
   event.preventDefault();
   /* Act on the event */
   callIndicarProveedor();
+
+  limpiarDetalle();
 });
 
 var callIndicarProveedor = () => {
@@ -1125,3 +1131,14 @@ $(document).on('keyup', '#comentario', function(event) {
   updateLocalStorage();
 
 });
+
+
+var limpiarDetalle = () => {
+
+  $('#tbody').html('');
+
+  updateLocalStorage();
+
+  calcularTotales();
+
+}
