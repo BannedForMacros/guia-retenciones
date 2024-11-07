@@ -294,8 +294,15 @@
             <td style="text-align: right">{{ $item->cantidad }}</td>
             @if ($valorada == 1)
               {{-- <td style="text-align: right">{{ $item->precio_publico }}</td> --}}
-              <td style="text-align: right">{{ $item->precio_publico }}</td>
-              <td style="text-align: right">{{ $item->importe }}</td>
+              @if ($documento->base_calculo == 1)
+                <td style="text-align: right">{{ $item->precio_sin_igv }}</td>
+                <td style="text-align: right">{{ $item->importe }}</td>
+                  
+              @else
+                <td style="text-align: right">{{ $item->precio_publico }}</td>
+                <td style="text-align: right">{{ $item->importe }}</td>
+                  
+              @endif
             @endif
           </tr>
         @endforeach
