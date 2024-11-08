@@ -50,6 +50,11 @@ var listarUbigeos = function(formData){
           callListarUbigeos(response.tag_id);
         }
       }
+
+      // setTimeout(() => {
+      //   validarDireccionProveedor();
+      // }, 200);
+
       updateLocalStorage();
     }
   };

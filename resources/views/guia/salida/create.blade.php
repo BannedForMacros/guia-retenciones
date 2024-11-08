@@ -210,6 +210,7 @@
                       value="{{ $guia->proveedor_nombre ?? '' }}">
                     <input type="hidden" name="proveedor_ruc" id="proveedor_ruc"
                       value="{{ $guia->proveedor_ruc ?? '' }}">
+                    <input class="form-control" type="text" name="proveedor_direccion" id="proveedor_direccion">
                   </div>
                 </div>
                 <div class="col-md-12" hidden>

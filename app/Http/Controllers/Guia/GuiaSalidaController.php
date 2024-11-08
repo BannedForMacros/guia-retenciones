@@ -654,7 +654,7 @@ class GuiaSalidaController extends Controller
         $items = array();
         foreach ($listItems as $item) {
 
-            $items[] = (object) array('id' => $item->codProveedor, 'text' => "[{$item->ruc}] {$item->nombreproveedor}", 'proveedor_nombre' => $item->nombreproveedor, 'proveedor_ruc' => $item->ruc);
+            $items[] = (object) array('id' => $item->codProveedor, 'text' => "[{$item->ruc}] {$item->nombreproveedor}", 'proveedor_nombre' => $item->nombreproveedor, 'proveedor_ruc' => $item->ruc, 'proveedor_direccion' => $item->direccion ?? '');
         }
 
         return response()->json(['items' => $items]);

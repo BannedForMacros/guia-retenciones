@@ -740,11 +740,18 @@ $(document).on('change', '#proveedor_id', function(event) {
   event.preventDefault();
   /* Act on the event */
   var data_proveedor = $('#proveedor_id').select2('data')[0];
+  console.log(data_proveedor);
+  
 
   $('#proveedor_nombre').val(data_proveedor.proveedor_nombre);
   $('#proveedor_ruc').val(data_proveedor.proveedor_ruc);
+  $('#proveedor_direccion').val(data_proveedor.proveedor_direccion);
 
   limpiarDetalle();
+
+  setTimeout(() => {
+    validarDireccionProveedor();
+  }, 200);
 
 });
 
@@ -850,6 +857,9 @@ $(document).on('change', '#tipo_operacion_id', function(event) {
 
   limpiarDetalle();
 
+  setTimeout(() => {
+    validarDireccionProveedor();
+  }, 200);
 });
 
 var callSetMotivoTraslado = () => {
@@ -938,6 +948,10 @@ $(document).on('change', '#indicar_proveedor', function(event) {
   callIndicarProveedor();
 
   limpiarDetalle();
+
+  setTimeout(() => {
+    validarDireccionProveedor();
+  }, 200);
 });
 
 var callIndicarProveedor = () => {
@@ -1140,5 +1154,22 @@ var limpiarDetalle = () => {
   updateLocalStorage();
 
   calcularTotales();
+
+}
+
+var validarDireccionProveedor = () => {
+
+  var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+
+  console.log({indicar_proveedor});
+  var proveedor_id = $('#proveedor_id').val();
+
+  if (indicar_proveedor == true) {
+    if (proveedor_id != null) {
+      // console.log(' se toma direccion ');
+      var proveedor_direccion = $('#proveedor_direccion').val();
+      $('#direccion_llegada').val(proveedor_direccion);
+    }
+  }
 
 }
