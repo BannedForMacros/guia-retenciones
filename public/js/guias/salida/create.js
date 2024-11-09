@@ -281,7 +281,7 @@ $(document).on('keyup', '.input_cantidad_tr', function(event) {
   }
 
   var precio = $(this).parent().parent().find('span[name=span_precio]').text();
-  var importe = round((parseInt(cantidad) * parseFloat(precio)),2);
+  var importe = round((parseFloat(cantidad) * parseFloat(precio)),2);
   $(this).parent().parent().find('span[name=span_importe]').html(importe)
   
   setTimeout(() => {
