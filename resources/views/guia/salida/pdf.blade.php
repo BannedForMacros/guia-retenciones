@@ -1,6 +1,7 @@
 <html>
 @inject('carbon', 'Carbon\Carbon')
-  <title>Guia Salida</title>
+<title>Guia Salida</title>
+
 <head style='font-size:12px;'>
   <style>
     @page {
@@ -97,6 +98,7 @@
       border-bottom: 0.12em solid black;
       height: 1.8rem;
     }
+
     .table_titulo_cabecera_top {
       border-top: 0.12em solid black;
       height: 1.8rem;
@@ -114,7 +116,8 @@
       border-style: solid;
       border-width: 0.01em
     }
-    .th_items{
+
+    .th_items {
       background-color: rgba(211, 205, 205, 0.664)
     }
   </style>
@@ -209,12 +212,21 @@
 
     <table class="" style="width: 100%; margin-top: -0.2rem">
       <tbody>
-        <tr>
-          <td style="width: 8rem"><b>Ruc:</b></td>
-          <td style="width: 8rem">{{ $documento->cliente_nro_documento }}</td>
-          <td style="width: 6rem"><b>Razon social: </b></td>
-          <td style="width: 18rem">{{ $documento->cliente_razon_social }}</td>
-        </tr>
+        @if ($documento->indicar_proveedor == 0)
+          <tr>
+            <td style="width: 8rem"><b>Ruc:</b></td>
+            <td style="width: 8rem">{{ $documento->cliente_nro_documento }}</td>
+            <td style="width: 6rem"><b>Razon social: </b></td>
+            <td style="width: 18rem">{{ $documento->cliente_razon_social }}</td>
+          </tr>
+        @else
+          <tr>
+            <td style="width: 8rem"><b>Ruc:</b></td>
+            <td style="width: 8rem">{{ $documento->proveedor_ruc }}</td>
+            <td style="width: 6rem"><b>Razon social: </b></td>
+            <td style="width: 18rem">{{ $documento->proveedor_nombre }}</td>
+          </tr>
+        @endif
       </tbody>
     </table>
 
@@ -289,7 +301,7 @@
           <tr style="text-align: left;" class="table_det_bottom">
             <td>{{ $nro++ }}</td>
             <td>{{ $item->codarticulo }}</td>
-            <td>{{ $item->descripcion }}  |  {{ $item->codigo_barra }}</td>
+            <td>{{ $item->descripcion }} | {{ $item->codigo_barra }}</td>
             <td style="text-align: right">{{ Str::upper($item->desc_unidad_medida) ?? 'UNI' }}</td>
             <td style="text-align: right">{{ $item->cantidad }}</td>
             @if ($valorada == 1)
@@ -297,11 +309,9 @@
               @if ($documento->base_calculo == 1)
                 <td style="text-align: right">{{ $item->precio_sin_igv }}</td>
                 <td style="text-align: right">{{ $item->importe }}</td>
-                  
               @else
                 <td style="text-align: right">{{ $item->precio_publico }}</td>
                 <td style="text-align: right">{{ $item->importe }}</td>
-                  
               @endif
             @endif
           </tr>
@@ -327,7 +337,6 @@
             <td style="text-align: right">{{ $guia->total }}</td>
           </tr>
         </tfoot>
-          
       @endif
     </table>
 
