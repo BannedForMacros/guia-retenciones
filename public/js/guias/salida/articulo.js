@@ -51,6 +51,7 @@ $(document).on('submit', '#form_buscar_articulo', function (event) {
   var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
   var tipo = $('#tipo_busqueda_articulo').val();
   var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+  
 
   formData.append('codalmacen', codalmacen);
   formData.append('codlistaprecio', codlistaprecio);
@@ -85,6 +86,8 @@ var buscarArticuloBarra = function (formData) {
         $('#producto_peso').val(data.peso);
         $('#producto_stock').val(data.stock);
         $('#producto_costo_articulo').val(data.costo_articulo);
+        $('#producto_afecto').val(data.afecto);
+        
 
   
         callAgregarItem();
@@ -127,6 +130,7 @@ $(document).on('change', '#producto_select', function(event) {
   $('#producto_sigla_umfe').val(data.sigla_umfe);
   $('#producto_stock').val(data.stock);
   $('#producto_costo_articulo').val(data.costo_articulo);
+  $('#producto_afecto').val(data.afecto);
 
 
   callAgregarItem();
@@ -155,6 +159,7 @@ var callAgregarItem = () => {
   // var precio_sin_igv = data.precio_sin_igv;
   var precio_sin_igv = $('#producto_precio_sin_igv').val();
   var peso = $('#producto_peso').val();
+  var afecto = $('#producto_afecto').val();
 
   var base_calculo = $('#base_calculo').val();
   var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
@@ -187,6 +192,7 @@ var callAgregarItem = () => {
   formData.append('cantidad', cantidad);
   formData.append('base_calculo', base_calculo);
   formData.append('tipo_busqueda_articulo', tipo_busqueda_articulo);
+  formData.append('afecto', afecto);
 
   formData.append('items', JSON.stringify(items));
   if (formData.get('producto_id') != '') {

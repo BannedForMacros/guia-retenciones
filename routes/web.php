@@ -71,6 +71,7 @@ Route::controller(GuiaSalidaController::class)->group(function (){
     Route::post('guiasalida/modalOtrasGuias', 'modalOtrasGuias')->name('guiasalida.modalOtrasGuias');
     Route::post('guiasalida/buscarOtrasGuias', 'buscarOtrasGuias')->name('guiasalida.buscarOtrasGuias');
     Route::post('guiasalida/cargarOtraGuia', 'cargarOtraGuia')->name('guiasalida.cargarOtraGuia');
+    Route::post('guiasalida/validarMesAbierto', 'validarMesAbierto')->name('guiasalida.validarMesAbierto');
     
     Route::resource('guiasalida', GuiaSalidaController::class)->parameter('guiasalida', 'guia')->except('update');
 });

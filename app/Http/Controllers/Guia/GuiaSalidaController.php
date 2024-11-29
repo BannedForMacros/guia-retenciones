@@ -548,13 +548,17 @@ class GuiaSalidaController extends Controller
 
         // dd($listArticulos);
         $items = array();
-        foreach ($listArticulos as $item) {
+        foreach (($listArticulos ?? []) as $item) {
+            $afecto = 1;
             $stock = $item->stock ?? 0;
             $precioPublico = $item->precioPublico;
             $precioSinIGV = $item->precioSinIGV;
             if ($indicar_proveedor == true) {
                 $precioSinIGV = $item->costoArticulo;
                 $precioPublico = number_format(($item->costoArticulo * (1+0.18)),2);
+            }
+            if ($item->tipoIgv != 1) {
+                $afecto = 0;
             }
 
             $items[] = (object) array(
@@ -569,7 +573,8 @@ class GuiaSalidaController extends Controller
                 'desc_unidad_medida' => $item->descUnidadMedida ?? '',
                 'sigla_umfe' => $item->siglaUMFE ?? '',
                 'stock' => $item->stock ?? 0,
-                'costo_articulo' => $item->costoArticulo
+                'costo_articulo' => $item->costoArticulo,
+                'afecto' => $afecto
             );
         }
 
@@ -621,6 +626,12 @@ class GuiaSalidaController extends Controller
                     $getArticulo->precioPublico = number_format($precioPublico,2);
                     $getArticulo->precioSinIGV = number_format($precioSinIGV,2);
                 }
+                $afecto = 1;
+                if ($getArticulo->tipoIgv != 1) {
+                    $afecto = 0;
+                }
+
+                $getArticulo->afecto = $afecto;
                 // dd($getArticulo);
             }
             
@@ -842,6 +853,7 @@ class GuiaSalidaController extends Controller
         // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
+        $afecto = $request->post('afecto');
 
         $items = json_decode($request->post('items'));
 
@@ -894,6 +906,7 @@ class GuiaSalidaController extends Controller
                     data-stock = '{$stock}'
                     data-costo_articulo = '{$costo_articulo}'
                     data-costo_con_igv = '{$costo_con_igv}'
+                    data-afecto = '{$afecto}'
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -2029,6 +2042,48 @@ class GuiaSalidaController extends Controller
 
         return (object) array ('procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log);
 
+    }
+
+    public function validarMesAbierto(Request $request)
+    {
+        // dd($request->post());
+        $fecha_emision = $request->post('fecha_emision');
+
+        $fecha = Carbon::parse($fecha_emision);
+
+        $mes = $fecha->format('m');
+        $anio = $fecha->format('Y');
+
+        $procede = true;
+        $msj = "Mes abierto";
+        $msj_tipo = "error";
+        $log = "";
+
+        try {
+            $api_datos = Parametro::find(6)->valor;
+
+            $response = Http::post("{$api_datos}/ValidaMesAbierto", 
+                ['anio' => $anio, 'mes' => $mes]
+            )->object();
+            // dd($response->exito);
+        } catch (Exception $e) {
+            //throw $th;
+            dd($e);
+            $procede = false;
+            $msj = "Error al obtener mes abierto";
+            $log = "{$e}";
+        }
+
+        if ($procede == true) {
+            if (($response->exito ?? false) != true) {
+                $procede = false;
+                $msj = "Mes no esta abierto para emision";
+                $msj_tipo = "error";
+                // $log = "";
+            }
+        }
+
+        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
 
 }

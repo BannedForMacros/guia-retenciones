@@ -55,6 +55,7 @@ var updateLocalStorage = () => {
       'cod_unidad' : $(this).data('cod_unidad'),
       'desc_unidad_medida' : $(this).data('desc_unidad_medida'),
       'sigla_umfe' : $(this).data('sigla_umfe'),
+      'afecto' : $(this).data('afecto'),
     };
   }).get();
 
@@ -285,6 +286,7 @@ var cargarStorage = () => {
         data-desc_unidad_medida="${element.desc_unidad_medida}"
         data-sigla_umfe="${element.sigla_umfe}"
         data-stock = "${element.stock}"
+        data-afecto = "${ (element.afecto == 0) ? 0 : 1 }"
         >
         <td class="align-middle">${element.codigo_barra}</td>
         <td class="align-middle">${element.codigo}</td>

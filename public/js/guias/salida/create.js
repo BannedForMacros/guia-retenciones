@@ -320,6 +320,7 @@ var calcularTotales = () => {
   var base_calculo = $('#base_calculo').val();
 
   var items = $('#tbody tr').map(function(i, row) {
+
       return {
         'producto_id' : $(this).data('producto_id'),
         'cantidad' :  $(this).find('input[name=cantidad]').val(),
@@ -327,8 +328,11 @@ var calcularTotales = () => {
         'porcentaje_descuento' :  $(this).find('input[name=porcentaje_descuento]').val(),
         'monto_descuento' :  $(this).find('input[name=monto_descuento]').val(),
         'peso' : $(this).data('peso'),
+        'afecto' : $(this).data('afecto'),
+        
   
       };
+
 
   }).get();
 
@@ -340,6 +344,7 @@ var calcularTotales = () => {
   var monto_igv = 0;
   var monto_descuento = 0;
   var peso_total = 0;
+  console.log({items});
   
 
   $.map(items, function (element, index) {
@@ -918,17 +923,20 @@ $(document).on('change', '#base_calculo', function(event) {
   $('#tbody tr').map(function(i, row) {
     // console.log($(this).data());
     var cantidad = $(this).find('input[name=cantidad]').val();
-
-    var precio_unitario = $(this).data('precio_unitario');
-    if (base_calculo == 1) {
-      var precio_unitario = $(this).data('precio_sin_igv');
+    var afecto = $(this).data('afecto');
+    if (afecto == 1) {
+      var precio_unitario = $(this).data('precio_unitario');
+      if (base_calculo == 1) {
+        var precio_unitario = $(this).data('precio_sin_igv');
+      }
+      
+      $(this).find('span[name=span_precio]').html(precio_unitario);
+      
+      var importe = round((parseFloat(precio_unitario) * cantidad),2);
+      
+      $(this).find('span[name=span_importe]').html(importe);
+      
     }
-    
-    $(this).find('span[name=span_precio]').html(precio_unitario);
-    
-    var importe = round((parseFloat(precio_unitario) * cantidad),2);
-    
-    $(this).find('span[name=span_importe]').html(importe);
 
   })
 
@@ -1173,3 +1181,51 @@ var validarDireccionProveedor = () => {
   }
 
 }
+
+$(document).on('change', '#fecha_emision', function(event) {
+  event.preventDefault();
+  /* Act on the event */
+
+  callValidarMesAbierto();
+
+});
+
+
+var callValidarMesAbierto = () => {
+
+  var fecha_emision = $('#fecha_emision').val();
+
+  var formData = new FormData();
+  formData.append('_token', _token);
+  formData.append('fecha_emision', fecha_emision);
+
+  validarMesAbierto(formData);
+}
+
+var validarMesAbierto = function(formData){
+  var options = {
+    type: 'POST',
+    url: route('guiasalida.validarMesAbierto'),
+    data:formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response){
+      if (response.procede == true) {
+        $('#div_btn_guardar').show();
+      }
+
+      if (response.procede == false) {
+        $('#div_btn_guardar').hide();
+
+        Swal.fire({
+          html: response.msj,
+          icon: response.msj_tipo
+        })
+
+      }
+
+    }
+  };
+  $.ajax(options);
+};
