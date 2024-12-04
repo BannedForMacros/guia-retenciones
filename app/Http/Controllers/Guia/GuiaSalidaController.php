@@ -884,6 +884,8 @@ class GuiaSalidaController extends Controller
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
             $span_precio = $precio_publico;
             $importe = $cantidad * $precio_publico;
+            $importe_sin_igv = $cantidad * $precio_sin_igv;
+            $span_precio_sin_igv = $precio_sin_igv;
             
             if ($base_clalculo == 1) {
                 $span_precio = $precio_sin_igv;
@@ -912,11 +914,17 @@ class GuiaSalidaController extends Controller
                     <td class='align-middle'>{$producto_id}</td>
                     <td class='align-middle'>{$cod_plu}</td>
                     <td class='align-middle'>{$descripcion}</td>
-                    <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
+                    <td class='align-middle'>
+                        <span name='span_precio'>{$span_precio}</span>
+                        <span name='span_precio_sin_igv' hidden>{$span_precio_sin_igv}</span>
+                    </td>
                     <td class='align-middle'>{$inputCantidad}</td>
                     <td class='align-middle'>{$unidad}</td>
                     <td class='align-middle'>{$stock}</td>
-                    <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
+                    <td class='align-middle'>
+                        <span name='span_importe'>{$importe}</span>
+                        <span name='span_importe_sin_igv' hidden>{$importe_sin_igv}</span>
+                    </td>
                     <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
                     <td class='align-middle' hidden>{$costo_articulo}</td>
                     <td class='align-middle text-center'>

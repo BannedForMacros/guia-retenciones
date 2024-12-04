@@ -321,7 +321,7 @@
       @if ($valorada == 1)
         <tfoot>
           <tr>
-            <td colspan="6" style="text-align: right"><b>Valor Neto</b></td>
+            <td colspan="6" style="text-align: right"><b>SubTotal</b></td>
             <td style="text-align: right">{{ $guia->total_venta_gravada }}</td>
           </tr>
           <tr>

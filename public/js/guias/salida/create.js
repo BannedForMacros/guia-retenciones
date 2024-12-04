@@ -282,7 +282,13 @@ $(document).on('keyup', '.input_cantidad_tr', function(event) {
 
   var precio = $(this).parent().parent().find('span[name=span_precio]').text();
   var importe = round((parseFloat(cantidad) * parseFloat(precio)),2);
+  
+  var precio_sin_igv = $(this).parent().parent().find('span[name=span_precio_sin_igv]').text();
+  var importe_sin_igv = round((parseFloat(cantidad) * parseFloat(precio_sin_igv)),2);
+
+
   $(this).parent().parent().find('span[name=span_importe]').html(importe)
+  $(this).parent().parent().find('span[name=span_importe_sin_igv]').html(importe_sin_igv)
   
   setTimeout(() => {
     calcularTotales();
@@ -315,7 +321,78 @@ $(document).on('keyup', '.input_porcentaje_descuento_tr', function(event) {
   }, 300);
 });
 
+
 var calcularTotales = () => {
+
+  var base_calculo = $('#base_calculo').val();
+
+  var items = $('#tbody tr').map(function(i, row) {
+      return {
+        'producto_id' : $(this).data('producto_id'),
+        'cantidad' :  $(this).find('input[name=cantidad]').val(),
+        'importe' :  $(this).find('span[name=span_importe]').text(),
+        'importe_sin_igv' :  $(this).find('span[name=span_importe_sin_igv]').text(),
+        'porcentaje_descuento' :  $(this).find('input[name=porcentaje_descuento]').val(),
+        'monto_descuento' :  $(this).find('input[name=monto_descuento]').val(),
+        'peso' : $(this).data('peso'),
+        'afecto' : $(this).data('afecto'),
+      };
+  }).get();
+
+  var total_items = items.length;
+  var peso_total = 0;
+  var total_igv = 0;
+  var total_sin_igv = 0;
+  var monto_descuento = 0;
+
+  console.log({items});
+  
+  $.map(items, function (element, index) {
+    if (element.cantidad != '') {
+      total_cantidad = total_cantidad + parseFloat(element.cantidad ?? 0);
+      // total_venta = total_venta + parseFloat(element.importe ?? 0);
+      peso_total = peso_total + (element.peso * (element.cantidad ?? 0));
+      if (element.porcentaje_descuento != '') {
+        monto_descuento = monto_descuento + parseFloat(element.monto_descuento ?? 0)
+      }
+      
+    }
+  });
+
+
+  $.map(items, function (element, index) {
+
+    if (element.cantidad != '') {
+      var igv_item = 0;
+      total_sin_igv = total_sin_igv + parseFloat(element.importe_sin_igv ?? 0)
+      if (element.afecto == 1) { //afecto por igv
+        
+        igv_item = parseFloat(element.importe_sin_igv) * 0.18;
+        console.log({igv_item});
+      }
+
+      total_igv = total_igv + igv_item;
+    }
+
+  });
+
+  console.log({total_sin_igv, total_igv});
+  
+  var total_venta = total_sin_igv + total_igv;
+
+  $('#total_items').val(total_items)
+  $('#total_cantidad').val(total_cantidad)
+  $('#importe_sin_igv').val(round(total_sin_igv,2))
+  $('#monto_igv').val(round(total_igv,2))
+  $('#total_venta').val(round(total_venta,2))
+  $('#monto_descuento').val(round(monto_descuento,2))
+  $('#peso_bruto_total').val(round(peso_total,2))
+
+
+}
+
+
+var calcularTotales2 = () => {
   // console.log('calculando...');
   var base_calculo = $('#base_calculo').val();
 
@@ -325,6 +402,7 @@ var calcularTotales = () => {
         'producto_id' : $(this).data('producto_id'),
         'cantidad' :  $(this).find('input[name=cantidad]').val(),
         'importe' :  $(this).find('span[name=span_importe]').text(),
+        'importe_sin_igv' :  $(this).find('span[name=span_importe_sin_igv]').text(),
         'porcentaje_descuento' :  $(this).find('input[name=porcentaje_descuento]').val(),
         'monto_descuento' :  $(this).find('input[name=monto_descuento]').val(),
         'peso' : $(this).data('peso'),
@@ -457,10 +535,6 @@ var calcularTotales = () => {
 
   updateLocalStorage();
 }
-
-
-
-
 
 $(document).on('submit', '#form_store', function(event) {
   event.preventDefault();
@@ -988,6 +1062,7 @@ $(document).on('change', '#base_calculo', function(event) {
     var afecto = $(this).data('afecto');
     if (afecto == 1) {
       var precio_unitario = $(this).data('precio_unitario');
+      var precio_unitario_sin_igv = $(this).data('precio_sin_igv');
       if (base_calculo == 1) {
         var precio_unitario = $(this).data('precio_sin_igv');
       }
@@ -995,8 +1070,10 @@ $(document).on('change', '#base_calculo', function(event) {
       $(this).find('span[name=span_precio]').html(precio_unitario);
       
       var importe = round((parseFloat(precio_unitario) * cantidad),2);
+      var importe_sin_igv = round((parseFloat(precio_unitario_sin_igv) * cantidad),2);
       
       $(this).find('span[name=span_importe]').html(importe);
+      $(this).find('span[name=span_importe_sin_igv]').html(importe_sin_igv);
       
     }
 
