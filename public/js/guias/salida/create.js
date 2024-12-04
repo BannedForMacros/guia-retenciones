@@ -362,52 +362,93 @@ var calcularTotales = () => {
   // importe_sin_igv = round((total_venta / 1.18),2);
   // monto_igv = round((importe_sin_igv * 0.18),2);
 
-  total_venta = round(total_venta,2)
-  importe_sin_igv = total_venta;
+  // total_venta = round(total_venta,2)
+  // importe_sin_igv = total_venta;
+  // importe_sin_igv = 0;
 
-  if (base_calculo == 2) {
-    importe_sin_igv = round((total_venta / 1.18),2);
-    monto_igv = round((importe_sin_igv * 0.18),2);
-  }
+  // if (base_calculo == 2) {
+  //   importe_sin_igv = round((total_venta / 1.18),2);
+  //   monto_igv = round((importe_sin_igv * 0.18),2);
+  // }
 
-  const IGV_RATE = 0.18; // Tasa de IGV (18%)
+  // const IGV_RATE = 0.18; // Tasa de IGV (18%)
+  const IGV_RATE = 1.18; // Tasa de IGV (18%)
 
   
-  if (base_calculo == 1) {
+  if (base_calculo == 1 || base_calculo == 2) {
     var total_venta_con_igv = 0;
     var total_calculo_afecto = 0;
     var monto_igv_afecto = 0;
+    
+  
+    // $.map(items, function (element, index) {
+    //   if (element.cantidad != '') {
+    //     total_venta_con_igv = total_venta_con_igv + (parseFloat(element.importe ?? 0) * (1 + IGV_RATE) );
+        
+    //     if (element.afecto == 1) {
+    //       total_calculo_afecto = total_calculo_afecto + (parseFloat(element.importe ?? 0) * (1 + IGV_RATE)  );
+    //       monto_igv_afecto = (parseFloat(element.importe ?? 0) * (1 + IGV_RATE) ) - (element.importe ?? 0);
+    //       console.log({total_calculo_afecto, monto_igv_afecto});
+    //       // importe_sin_igv = importe_sin_igv + (parseFloat(element.importe ?? 0) * (1 + IGV_RATE)  );
+    //       importe_sin_igv = importe_sin_igv + (parseFloat(element.importe ?? 0) );
+    //     }
+    //     if (element.afecto == 0) {
+    //       importe_sin_igv = importe_sin_igv + parseFloat(element.importe ?? 0);
+    //     }
+
+    //   }
+    // });
 
     $.map(items, function (element, index) {
       if (element.cantidad != '') {
-        total_venta_con_igv = total_venta_con_igv + (parseFloat(element.importe ?? 0) * (1 + IGV_RATE) );
-        
-        if (element.afecto == 1) {
-          total_calculo_afecto = total_calculo_afecto + (parseFloat(element.importe ?? 0) * (1 + IGV_RATE)  );
-          monto_igv_afecto = (parseFloat(element.importe ?? 0) * (1 + IGV_RATE) ) - (element.importe ?? 0);
-          console.log({total_calculo_afecto, monto_igv_afecto});
+        if (element.afecto == 1) { //es afecto a igv
+          var item_importe = parseFloat(element.importe ?? 0);
+          var igv_item =  parseFloat(item_importe) - (item_importe / IGV_RATE);
+          if (base_calculo == 1) { //sin igv
+            var igv_item = 0;
+          }
+          var item_sin_igv = item_importe - igv_item;
+          console.log({igv_item});
           
         }
+
+        if (element.afecto == 0) {// no es afecto a igv
+          var igv_item = 0;
+          var item_importe = parseFloat(element.importe ?? 0);
+          var item_sin_igv = item_importe;
+          console.log({igv_item});
+          
+        }
+
+        importe_sin_igv = importe_sin_igv + item_sin_igv;
+        monto_igv = monto_igv + igv_item;
+        
       }
+
+
+      total_venta = importe_sin_igv + monto_igv;
     });
 
-    total_venta_con_igv = round(total_venta_con_igv,2);
-    
-    console.log({total_venta, total_venta_con_igv});
 
-    total_venta = total_venta_con_igv;
-    // monto_igv = round((total_venta - importe_sin_igv) ,2);
-    // monto_igv = round((total_calculo_afecto - importe_sin_igv) ,2);
-    monto_igv = monto_igv_afecto;
+    // total_venta_con_igv = round(total_venta_con_igv,2);
+    
+    // console.log({total_venta, total_venta_con_igv});
+
+    // total_venta = total_venta_con_igv;
+    // // monto_igv = round((total_venta - importe_sin_igv) ,2);
+    // // monto_igv = round((total_calculo_afecto - importe_sin_igv) ,2);
+    // monto_igv = round(monto_igv_afecto,2);
+
+    
   }
 
 
   $('#total_items').val(total_items)
   $('#total_cantidad').val(total_cantidad)
-  $('#importe_sin_igv').val(importe_sin_igv)
-  $('#monto_igv').val(monto_igv)
-  var input_total_venta = parseFloat(importe_sin_igv) + parseFloat(monto_igv);
-  $('#total_venta').val(round(input_total_venta,2))
+  $('#importe_sin_igv').val(round(importe_sin_igv,2))
+  $('#monto_igv').val(round(monto_igv,2))
+  // var input_total_venta = parseFloat(importe_sin_igv) + parseFloat(monto_igv);
+  $('#total_venta').val(round(total_venta,2))
   // $('#total_venta').val(total_venta)
   $('#monto_descuento').val(round(monto_descuento,2))
   $('#peso_bruto_total').val(round(peso_total,2))
