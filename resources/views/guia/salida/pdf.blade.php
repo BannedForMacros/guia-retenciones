@@ -324,10 +324,10 @@
             <td colspan="6" style="text-align: right"><b>SubTotal</b></td>
             <td style="text-align: right">{{ $guia->total_venta_gravada }}</td>
           </tr>
-          <tr>
+          {{-- <tr>
             <td colspan="6" style="text-align: right"><b>Exonerado</b></td>
             <td style="text-align: right">{{ $guia->monto_descuento }}</td>
-          </tr>
+          </tr> --}}
           <tr>
             <td colspan="6" style="text-align: right"><b>I.G.V</b></td>
             <td style="text-align: right">{{ $guia->total_igv }}</td>
