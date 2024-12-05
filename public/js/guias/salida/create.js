@@ -388,7 +388,6 @@ var calcularTotales = () => {
   $('#monto_descuento').val(round(monto_descuento,2))
   $('#peso_bruto_total').val(round(peso_total,2))
 
-
 }
 
 
@@ -408,7 +407,6 @@ var calcularTotales2 = () => {
         'peso' : $(this).data('peso'),
         'afecto' : $(this).data('afecto'),
         
-  
       };
 
 
@@ -1060,9 +1058,14 @@ $(document).on('change', '#base_calculo', function(event) {
     // console.log($(this).data());
     var cantidad = $(this).find('input[name=cantidad]').val();
     var afecto = $(this).data('afecto');
+    var precio_unitario_sin_igv = $(this).data('precio_sin_igv');
+
+    var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+    console.log({indicar_proveedor});
+    
+
     if (afecto == 1) {
       var precio_unitario = $(this).data('precio_unitario');
-      var precio_unitario_sin_igv = $(this).data('precio_sin_igv');
       if (base_calculo == 1) {
         var precio_unitario = $(this).data('precio_sin_igv');
       }
@@ -1070,12 +1073,12 @@ $(document).on('change', '#base_calculo', function(event) {
       $(this).find('span[name=span_precio]').html(precio_unitario);
       
       var importe = round((parseFloat(precio_unitario) * cantidad),2);
-      var importe_sin_igv = round((parseFloat(precio_unitario_sin_igv) * cantidad),2);
       
       $(this).find('span[name=span_importe]').html(importe);
-      $(this).find('span[name=span_importe_sin_igv]').html(importe_sin_igv);
       
     }
+    var importe_sin_igv = round((parseFloat(precio_unitario_sin_igv) * cantidad),2);
+    $(this).find('span[name=span_importe_sin_igv]').html(importe_sin_igv);
 
   })
 

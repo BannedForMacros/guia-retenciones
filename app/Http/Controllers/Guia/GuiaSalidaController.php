@@ -618,6 +618,7 @@ class GuiaSalidaController extends Controller
                 
             }else{
                 $getArticulo = $getArticulo[0];
+                // dd($getArticulo);
                 $getArticulo->costo_articulo = $getArticulo->costoArticulo ?? 0;
                 if ($indicar_proveedor == true) {
                     // dd('validamos');
@@ -629,6 +630,8 @@ class GuiaSalidaController extends Controller
                 $afecto = 1;
                 if ($getArticulo->tipoIgv != 1) {
                     $afecto = 0;
+                    $getArticulo->precioPublico = number_format($getArticulo->precioSinIGV,2);
+                    $getArticulo->precioSinIGV = number_format($getArticulo->precioSinIGV,2);
                 }
 
                 $getArticulo->afecto = $afecto;
