@@ -32,6 +32,9 @@ var updateLocalStorage = () => {
   formData.append('peso_bruto_total', peso_bruto_total);
   // formData.append('descripcion_motivo_traslado', descripcion_motivo_traslado);
 
+  var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+  formData.append('indicar_proveedor', indicar_proveedor);
+
   // new Response(formData).text().then(console.log)
 
   // console.log({storageGuiaSalida});
@@ -42,6 +45,7 @@ var updateLocalStorage = () => {
       'precio': $(this).find('span[name=span_precio]').text(),
       'cantidad': $(this).find('input[name=cantidad]').val(),
       'importe': $(this).find('span[name=span_importe]').text(),
+      'importe_sin_igv': $(this).find('span[name=span_importe_sin_igv]').text(),
       'porcentaje_descuento': $(this).find('input[name=porcentaje_descuento]').val(),
       'monto_descuento': $(this).find('input[name=monto_descuento]').val(),
       'descripcion': $(this).data('descripcion'),
@@ -266,47 +270,66 @@ var cargarStorage = () => {
 
   // ubigeos
 
+  if (storage.indicar_proveedor == 'true') {
+    // console.log('indicamos proveedor');
+  $('#indicar_proveedor').prop('checked', true)
+
+    callIndicarProveedor();
+  }
+
+
   asignarUbigeosStorage(storage.ubigeos);
 
-  $.map(detalle, function (element, index) {
-    console.log(element);
-    var importe = round((element.cantidad * element.precio_publico),2);
-    $('#tbody').prepend(`
-      <tr 
-        data-producto_id="${element.codigo}" 
-        data-precio_unitario="${element.precio_publico}" 
-        data-precio_publico="${element.precio_publico}" 
-        data-precio_sin_igv="${element.precio_sin_igv}" 
-        data-descripcion="${element.descripcion}" 
-        data-codigo="${element.codarticulo}" 
-        data-codigo_barra="${element.codigo_barra}" 
-        data-peso="${element.peso}"
-        data-costo_articulo="${element.costo_articulo}"
-        data-cod_unidad="${element.cod_unidad}"
-        data-desc_unidad_medida="${element.desc_unidad_medida}"
-        data-sigla_umfe="${element.sigla_umfe}"
-        data-stock = "${element.stock}"
-        data-afecto = "${ (element.afecto == 0) ? 0 : 1 }"
-        >
-        <td class="align-middle">${element.codigo_barra}</td>
-        <td class="align-middle">${element.codigo}</td>
-        <td class="align-middle">${element.codarticulo}</td>
-        <td class="align-middle">${element.descripcion}</td>
-        <td class="align-middle"><span name="span_precio">${element.precio_publico}</span></td>
-        <td class="align-middle"><input type="number" class="form-control form-control-sm input_cantidad_tr" name="cantidad" value="${element.cantidad}"></td>
-        <td class="align-middle">${element.desc_unidad_medida}</td>
-        <td class="align-middle">${element.stock}</td>
-        <td class="align-middle"><span name="span_importe">${importe}</span></td>
-        <td class="align-middle">
-          <input class="form-control form-control-sm input_porcentaje_descuento_tr" name="porcentaje_descuento" value="${element.porcentaje_descuento}"> <input type="hidden" name="monto_descuento" value="${element.monto_descuento}">
-        </td>
-        <td hidden>${element.costo_articulo}</td>
-        <td class="align-middle text-center">
-            <button class="btn btn-danger btn-sm delete_item"><i class="fa fa-times-circle"></i></button>
-        </td>
-      </tr>
-    `);
-  });
+
+  setTimeout(() => {
+    $.map(detalle, function (element, index) {
+      console.log(element);
+      var importe = round((element.cantidad * element.precio_publico),2);
+      $('#tbody').prepend(`
+        <tr 
+          data-producto_id="${element.codigo}" 
+          data-precio_unitario="${element.precio_publico}" 
+          data-precio_publico="${element.precio_publico}" 
+          data-precio_sin_igv="${element.precio_sin_igv}" 
+          data-descripcion="${element.descripcion}" 
+          data-codigo="${element.codarticulo}" 
+          data-codigo_barra="${element.codigo_barra}" 
+          data-peso="${element.peso}"
+          data-costo_articulo="${element.costo_articulo}"
+          data-cod_unidad="${element.cod_unidad}"
+          data-desc_unidad_medida="${element.desc_unidad_medida}"
+          data-sigla_umfe="${element.sigla_umfe}"
+          data-stock = "${element.stock}"
+          data-afecto = "${ (element.afecto == 0) ? 0 : 1 }"
+          >
+          <td class="align-middle">${element.codigo_barra}</td>
+          <td class="align-middle">${element.codigo}</td>
+          <td class="align-middle">${element.codarticulo}</td>
+          <td class="align-middle">${element.descripcion}</td>
+          <td class="align-middle">
+            <span name="span_precio">${element.precio_publico}</span>
+            <span name='span_precio_sin_igv' hidden>${element.precio_sin_igv}</span>
+          </td>
+          <td class="align-middle"><input type="number" class="form-control form-control-sm input_cantidad_tr" name="cantidad" value="${element.cantidad}"></td>
+          <td class="align-middle">${element.desc_unidad_medida}</td>
+          <td class="align-middle">${element.stock}</td>
+          <td class="align-middle">
+            <span name="span_importe">${importe}</span>
+            <span name='span_importe_sin_igv' hidden>${element.importe_sin_igv}</span>
+          </td>
+          <td class="align-middle">
+            <input class="form-control form-control-sm input_porcentaje_descuento_tr" name="porcentaje_descuento" value="${element.porcentaje_descuento}"> <input type="hidden" name="monto_descuento" value="${element.monto_descuento}">
+          </td>
+          <td hidden>${element.costo_articulo}</td>
+          <td class="align-middle text-center">
+              <button class="btn btn-danger btn-sm delete_item"><i class="fa fa-times-circle"></i></button>
+          </td>
+        </tr>
+      `);
+    });
+    
+  }, 300);
+
 
 
   $('#comentario').val(storage.comentario);
@@ -317,7 +340,8 @@ var cargarStorage = () => {
   $('#save_local_storage').val('true');
 
   setTimeout(() => {
-    calcularTotales();
+    // calcularTotales();
+    callBaseCalculo();
   }, 300);
 
 }

@@ -556,9 +556,15 @@ class GuiaSalidaController extends Controller
             if ($indicar_proveedor == true) {
                 $precioSinIGV = $item->costoArticulo;
                 $precioPublico = number_format(($item->costoArticulo * (1+0.18)),2);
+                $precioPublico = number_format($precioPublico,2);
+                $precioSinIGV = number_format($precioSinIGV,2);
             }
             if ($item->tipoIgv != 1) {
                 $afecto = 0;
+
+                $precioPublico = number_format($precioSinIGV,2);
+                $precioSinIGV = number_format($precioSinIGV,2);
+
             }
 
             $items[] = (object) array(
@@ -1975,6 +1981,13 @@ class GuiaSalidaController extends Controller
         // dd($detalle);
 
         $tabla = "";
+
+        foreach (($detalle ?? []) as $key => $item) {
+            # code...
+        }
+
+
+
         foreach ($detalle as $item) {
             $peso = $item->peso_unitario;
 
@@ -1986,6 +1999,10 @@ class GuiaSalidaController extends Controller
             $importe = $item->cantidad * $item->precio_publico;
             $stock = 0;
             $costo_articulo = $item->costo_articulo ?? 0;
+
+            $importe_sin_igv = $cantidad * $precio_sin_igv;
+            $span_precio_sin_igv = $precio_sin_igv;
+
             $tabla .= "
                 <tr
                     data-producto_id = '{$item->codarticulo}'

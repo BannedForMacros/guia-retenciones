@@ -344,8 +344,10 @@ var calcularTotales = () => {
   var total_igv = 0;
   var total_sin_igv = 0;
   var monto_descuento = 0;
+  var total_cantidad = 0;
 
   console.log({items});
+  console.log({total_items});
   
   $.map(items, function (element, index) {
     if (element.cantidad != '') {
@@ -377,7 +379,8 @@ var calcularTotales = () => {
   });
 
   console.log({total_sin_igv, total_igv});
-  
+    console.log({total_cantidad});
+    
   var total_venta = total_sin_igv + total_igv;
 
   $('#total_items').val(total_items)
@@ -387,6 +390,10 @@ var calcularTotales = () => {
   $('#total_venta').val(round(total_venta,2))
   $('#monto_descuento').val(round(monto_descuento,2))
   $('#peso_bruto_total').val(round(peso_total,2))
+
+
+  updateLocalStorage();
+
 
 }
 
@@ -1050,7 +1057,14 @@ $(document).on('change', '#base_calculo', function(event) {
   event.preventDefault();
   /* Act on the event */
 
-  var base_calculo = $(this).val();
+  callBaseCalculo();
+
+
+});
+
+var callBaseCalculo = () => {
+
+  var base_calculo = $('#base_calculo').val();
 
   console.log({base_calculo});
 
@@ -1084,7 +1098,8 @@ $(document).on('change', '#base_calculo', function(event) {
 
   calcularTotales();
 
-});
+
+}
 
 $(document).on('click', '#btnGuardarAvance', function(event) {
   event.preventDefault();
