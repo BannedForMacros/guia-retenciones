@@ -1063,7 +1063,8 @@ $(document).on('change', '#base_calculo', function(event) {
 });
 
 var callBaseCalculo = () => {
-
+  console.log('generado base calculo...');
+  
   var base_calculo = $('#base_calculo').val();
 
   console.log({base_calculo});

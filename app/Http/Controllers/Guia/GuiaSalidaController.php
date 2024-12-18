@@ -568,6 +568,7 @@ class GuiaSalidaController extends Controller
             }
 
             $items[] = (object) array(
+
                 'id' => $item->codArticulo, 
                 'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}",
                 'codigo_barra' => $item->codBarra,
@@ -582,6 +583,7 @@ class GuiaSalidaController extends Controller
                 'costo_articulo' => $item->costoArticulo,
                 'afecto' => $afecto
             );
+
         }
 
         return response()->json(['items' => $items]);
@@ -1975,38 +1977,98 @@ class GuiaSalidaController extends Controller
 
     public function cargarOtraGuia(Request $request)
     {
+        // dd($request->post());
         $id = $request->post('id');
+        $indicar_proveedor = $request->post('indicar_proveedor');
+        $base_calculo = $request->post('base_calculo');
+
+
+        $tipoconsulta = 2; //por codigo producto
+        $codestacion = 1;
+        $codalmacen = 1;
+        $codlistaprecio = 1;
+        
 
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $id)->get();
         // dd($detalle);
 
         $tabla = "";
 
+        $api_datos = Parametro::find(6)->valor;
+
         foreach (($detalle ?? []) as $key => $item) {
-            # code...
+            // dd($item);
+            $afecto = 1;
+            $valor = $item->codarticulo;
+            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
+                ['valor' => $valor, 'tipoconsulta' => $tipoconsulta, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio]
+            )->object()->articulos;
+
+            $getArticulo = $getArticulo[0];
+            
+            $detalle[$key]->stock = $getArticulo->stock ?? 0;
+
+            $precioPublico = $getArticulo->precioPublico;
+            $precioSinIGV = $getArticulo->precioSinIGV;
+            // dd($getArticulo);
+            if ($indicar_proveedor == true) {
+                // dd($precioPublico);
+                $precioSinIGV = $getArticulo->costoArticulo;
+                $precioPublico = number_format(($getArticulo->costoArticulo * (1+0.18)),2);
+                $precioPublico = number_format($precioPublico,2);
+                $precioSinIGV = number_format($precioSinIGV,2);
+            }
+
+            if ($getArticulo->tipoIgv != 1) {
+                $afecto = 0;
+
+                $precioPublico = number_format($precioSinIGV,2);
+                $precioSinIGV = number_format($precioSinIGV,2);
+
+            }
+            // dd($precioPublico);
+
+            $detalle[$key]->afecto = $afecto;
+            $detalle[$key]->precio_publico = $precioPublico;
+            $detalle[$key]->precio_sin_igv = $precioSinIGV;
+            $detalle[$key]->peso = $getArticulo->peso ?? 0;
+
+            // dd($getArticulo);            
         }
 
+        // dd($detalle);
 
-
-        foreach ($detalle as $item) {
+        foreach (($detalle ?? []) as $item) {
             $peso = $item->peso_unitario;
+            $igv = 0.18; // Definir el porcentaje del IGV
 
             $unidad = "UNI";
+
             $inputCantidad = "<input type='number' class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$item->cantidad}'></input>";
+
             $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='{$item->porcentaje_descuento}'></input>";
+
             $inputDescuento = "<input type='hidden' name='monto_descuento' value='{$item->monto_descuento}'></input>";
-            $span_precio = $item->precio_publico;
-            $importe = $item->cantidad * $item->precio_publico;
+
             $stock = 0;
             $costo_articulo = $item->costo_articulo ?? 0;
+            $costo_con_igv = number_format($costo_articulo * (1 + $igv), 2);
+            
+            $importe_sin_igv = $item->cantidad * $item->precio_sin_igv;
+            $span_precio_sin_igv = $item->precio_sin_igv;
+            $span_precio = $item->precio_publico;
+            $importe = $item->cantidad * $item->precio_publico;
 
-            $importe_sin_igv = $cantidad * $precio_sin_igv;
-            $span_precio_sin_igv = $precio_sin_igv;
+            if ($base_calculo == 1) {
+                $span_precio = $item->precio_sin_igv;
+                $importe = $item->cantidad * $item->precio_sin_igv;
+            }
+            
 
             $tabla .= "
                 <tr
                     data-producto_id = '{$item->codarticulo}'
-                    data-precio_unitario = {$item->codarticulo}
+                    data-precio_unitario = {$item->precio_publico}
                     data-precio_publico = {$item->precio_publico}
                     data-precio_sin_igv='{$item->precio_sin_igv}'
                     data-descripcion = '{$item->descripcion}'
@@ -2018,16 +2080,25 @@ class GuiaSalidaController extends Controller
                     data-sigla_umfe = '{$item->sigla_umfe}'
                     data-stock = '{$stock}'
                     data-costo_articulo = '{$costo_articulo}'
+                    data-costo_con_igv = '{$costo_con_igv}'
+                    data-afecto = '{$item->afecto}'
+
                 >
                     <td class='align-middle'>{$item->codigo_barra}</td>
                     <td class='align-middle'>{$item->codarticulo}</td>
                     <td class='align-middle'>{$item->codarticulo}</td>
                     <td class='align-middle'>{$item->descripcion}</td>
-                    <td class='align-middle'><span name='span_precio'>{$span_precio}</span></td>
+                    <td class='align-middle'>
+                        <span name='span_precio'>{$span_precio}</span>
+                        <span name='span_precio_sin_igv' hidden>{$span_precio_sin_igv}</span>
+                    </td>
                     <td class='align-middle'>{$inputCantidad}</td>
                     <td class='align-middle'>{$unidad}</td>
                     <td class='align-middle'>{$stock}</td>
-                    <td class='align-middle'><span name='span_importe'>{$importe}</span></td>
+                    <td class='align-middle'>
+                        <span name='span_importe'>{$importe}</span>
+                        <span name='span_importe_sin_igv' hidden>{$importe_sin_igv}</span>
+                    </td>
                     <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
                     <td class='align-middle' hidden>{$costo_articulo}</td>
                     <td class='align-middle text-center'>

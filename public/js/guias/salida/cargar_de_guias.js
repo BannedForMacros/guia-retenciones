@@ -4,6 +4,7 @@ $(document).on('click', '#btn_cargar_otras_guias', function(event) {
 
   var formData = new FormData();
   formData.append('_token', _token);
+
   new Response(formData).text().then(console.log)
 
   modalOtrasGuias(formData);
@@ -64,6 +65,20 @@ $(document).on('click', '.select_otra_guia', function(event) {
   formData.append('_token', _token);
   formData.append('id', id);
 
+  var indicar_proveedor = $('#indicar_proveedor').prop('checked');
+  formData.append('indicar_proveedor', indicar_proveedor);
+  var base_calculo = $('#base_calculo').val();
+  formData.append('base_calculo', base_calculo);
+
+  // Swal.fire({
+  //   title: 'Generando Vista Previa...',
+  //   text: 'Por favor espera un momento.',
+  //   allowOutsideClick: false,
+  //   didOpen: () => {
+  //     Swal.showLoading();
+  //   }
+  // });
+
   cargarOtraGuia(formData);
   
 });
@@ -77,12 +92,16 @@ var cargarOtraGuia = function(formData){
     contentType: false,
     dataType: 'json',
     success: function(response){
+      
+      Swal.close();
+
       $('#tbody').html('');
       $('#modalOtrasGuias').modal('hide');
 
       $('#tbody').html(response.tabla);
       setTimeout(() => {
-        calcularTotales();
+        // calcularTotales();
+        callBaseCalculo();
       }, 300);
     }
   };
