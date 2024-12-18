@@ -70,14 +70,14 @@ $(document).on('click', '.select_otra_guia', function(event) {
   var base_calculo = $('#base_calculo').val();
   formData.append('base_calculo', base_calculo);
 
-  // Swal.fire({
-  //   title: 'Generando Vista Previa...',
-  //   text: 'Por favor espera un momento.',
-  //   allowOutsideClick: false,
-  //   didOpen: () => {
-  //     Swal.showLoading();
-  //   }
-  // });
+  Swal.fire({
+    title: 'Cargando guia anulada...',
+    text: 'Por favor espera un momento.',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
 
   cargarOtraGuia(formData);
   
