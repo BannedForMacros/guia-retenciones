@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
 use Normalizer;
+use Illuminate\Support\Facades\Log;
+
 
 class GuiaSalidaController extends Controller
 {
@@ -58,7 +60,7 @@ class GuiaSalidaController extends Controller
         }
 
         $list = $consulta->get();
-        
+
         $api_facturacion_consultar_estado = Parametro::find(9)->valor;
         $ruc_entidad = Parametro::find(2)->valor;
 
@@ -83,56 +85,51 @@ class GuiaSalidaController extends Controller
                 $url_pdf = route('guiasalida.pdfDecode', ['guia' => $value->id]);
             }
 
-            if ($value->guia_estado_id == 1) {
-                if ($value->envio_sunat == 1) {
-                    $actualizar_estado = false;
-                    $serie_format = str_pad($value->serie, 3, '0', STR_PAD_LEFT);
-                    $body_consultar_estado = [
-                        "rucremitente" => "{$ruc_entidad}",
-                        "serienumero" => "T{$serie_format}-{$value->numero}"
-                    ];
+            if ((int)$value->guia_estado_id === 1 && (int)$value->envio_sunat === 1) {
 
-                    
-                    try {
-                        $estadoSunat = Http::post("{$api_facturacion_consultar_estado}", $body_consultar_estado)->object();
-                        // dd($estadoSunat);
-                        if ($estadoSunat->estado != null ) {
-                            $actualizar_estado = true;
-                            if ($estadoSunat->estado =='A') {//Aceptado
-                                $nuevo_estado = 2;//aceptada
-                            }
-                            if ($estadoSunat->estado =='B') {//Rechazado
-                                $nuevo_estado = 3;//aceptada
-                            }
-                            if ($estadoSunat->estado =='O') {//Observado
-                                $nuevo_estado = 5;//observada
-                            }
-                            $mensaje_sunat = $estadoSunat->mensaje;
+                $serie_format = str_pad($value->serie, 3, '0', STR_PAD_LEFT);
+                $body_consultar_estado = [
+                    'rucremitente' => (string)$ruc_entidad,
+                    'serienumero'  => "T{$serie_format}-{$value->numero}",
+                ];
+
+                try {
+                    $estadoSunat = Http::post($api_facturacion_consultar_estado, $body_consultar_estado)->object();
+
+                    if ($estadoSunat && property_exists($estadoSunat, 'estado') && $estadoSunat->estado !== null) {
+
+                        $estadoApi = strtoupper(trim((string)$estadoSunat->estado));
+                        $nuevo_estado = null;
+
+                        // Mapa según tu tabla guia_estados
+                        switch ($estadoApi) {
+                            case 'A': $nuevo_estado = 2; break; // Aceptada
+                            case 'B': $nuevo_estado = 3; break; // Rechazada
+                            case 'O': $nuevo_estado = 5; break; // Observado
                         }
-                    } catch (Exception $e) {
-                        //throw $th;
-                    }
 
+                        if (!is_null($nuevo_estado) && (int)$nuevo_estado !== (int)$value->guia_estado_id) {
+                            // Actualiza en BD
+                            $guia = GuiaSalida::find($value->id);
+                            if ($guia) {
+                                $guia->guia_estado_id = $nuevo_estado;
+                                $guia->mensaje_estado_sunat = $estadoSunat->mensaje ?? null;
+                                $guia->save();
+                            }
 
-                    if ($actualizar_estado == true) {
-                        $guia_upt_status = GuiaSalida::find($value->id);
-                        // dd($guia_upt_status);
-                        $guia_upt_status->guia_estado_id = $nuevo_estado;
-                        $guia_upt_status->mensaje_estado_sunat = $mensaje_sunat;
-                        
-                        try {
-                            $guia_upt_status->save();
+                            // Refleja en el listado en memoria
                             $value->guia_estado_id = $nuevo_estado;
-                            $list[$key]->estado_nombre = GuiaEstado::find($value->guia_estado_id)->nombre;
-                        } catch (Exception $e) {
-                            //throw $th;
+                            $list[$key]->estado_nombre = GuiaEstado::find($nuevo_estado)->nombre;
                         }
                     }
 
-
+                } catch (\Throwable $e) {
+                    // registra el error; no cortamos el flujo del listado
+                    \Log::error('Error consultando estado SUNAT', [
+                        'guia_id' => $value->id,
+                        'mensaje' => $e->getMessage(),
+                    ]);
                 }
-
-
             }
             $mostrar_anular = false;
 
@@ -150,9 +147,9 @@ class GuiaSalidaController extends Controller
             if ($value->enviado_datamarket == 1) {
                 $mostrarGuardarDatamarket = false;
             }
-            
+
             $list[$key]->mostrarGuardarDatamarket = $mostrarGuardarDatamarket;
-            
+
             $verReintentoFacturador = false;
             if ($value->envio_sunat == 1) {
                 if ($value->enviado_facturador == 0) {
@@ -183,18 +180,18 @@ class GuiaSalidaController extends Controller
             }
         }
 
-        
+
         // dd($getSerie);
         $serieLocal = Serie::where('serie', $getSerie->numserie)->first();
         // dd($serieLocal);
-        
+
         if ($serieLocal == null) {
             $getSerie->nuevo_numero = str_pad(($getSerie->ultimoValormarket + 1), 4, "0", STR_PAD_LEFT);
         }
-        
+
         if ($serieLocal != null) {
             $getSerie->nuevo_numero = str_pad(($serieLocal->numero + 1), 4, "0", STR_PAD_LEFT);
-            
+
         }
 
         return response()->json(['getSerie' => $getSerie]);
@@ -286,8 +283,8 @@ class GuiaSalidaController extends Controller
         $valor_cliente_transferencia = Parametro::find(2)->valor;
 
         try {
-            
-            $getClienteTransferencia = Http::post("{$api_datos}/obtenerCliente", 
+
+            $getClienteTransferencia = Http::post("{$api_datos}/obtenerCliente",
             ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
             ->object()->cliente;
             $clienteTransferencia = $getClienteTransferencia[0];
@@ -298,7 +295,7 @@ class GuiaSalidaController extends Controller
             $log = "{$e}";
             dd('no se pudo cargar datos cliente transferencia');
         }
-        
+
         // dd($clienteTransferencia);
 
 
@@ -349,7 +346,7 @@ class GuiaSalidaController extends Controller
             }
             $listAlmacenOrigen[$key]->selected = $selected;
         }
-        
+
         foreach ($listAlmacenDestino as $key => $value) {
             $selected = "";
             if ($value->codAlmacen == $guia->cod_almacen_destino) {
@@ -388,7 +385,7 @@ class GuiaSalidaController extends Controller
             $listSeries[$key]->selected = $selected;
         }
         // dd($listSeries);
-        
+
         foreach ($listVendedores as $key => $value) {
             $selected = "";
             if ($value->codTrabajador == $guia->vendedor_id) {
@@ -398,24 +395,24 @@ class GuiaSalidaController extends Controller
             $listVendedores[$key]->selected = $selected;
         }
 
-        
+
         $listTransportistas = Http::post("{$api_datos}/ObtenerTransportista", ['valor' => $guia->transportista_ruc, 'tipo' => 3])->object()->transportistas;
         foreach ($listTransportistas as $key => $value) {
             $listTransportistas[$key]->texto_transportista = "[{$value->rucTransportista}] {$value->nombreTransportista}";
         }
         // dd($listTransportistas);
-        
+
         // dd($guia);
-        
+
         // ubigeos de partida
         $listUbigeosDepartamentoPartida = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
-        
+
         foreach ($listUbigeosDepartamentoPartida as $key => $value) {
             $selected = '';
             if (trim($value->codUbigeo) == $guia->ubigeo_partida_departamento) {
                 $selected = "selected";
             }
-            $listUbigeosDepartamentoPartida[$key]->selected = $selected; 
+            $listUbigeosDepartamentoPartida[$key]->selected = $selected;
         }
         // dd($guia->ubigeo_partida_provincia);
         $listUbigeosProvinciaPartida = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => $guia->ubigeo_partida_departamento, 'tipoConsulta' => 2 ])->object()->ubigeos;
@@ -440,13 +437,13 @@ class GuiaSalidaController extends Controller
         // dd($listUbigeosDepartamentoPartida);
         // ubigeos de legada
         $listUbigeosDepartamentoLlegada = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => '', 'tipoConsulta' => 1 ])->object()->ubigeos;
-        
+
         foreach ($listUbigeosDepartamentoLlegada as $key => $value) {
             $selected = '';
             if (trim($value->codUbigeo) == $guia->ubigeo_llegada_departamento) {
                 $selected = "selected";
             }
-            $listUbigeosDepartamentoLlegada[$key]->selected = $selected; 
+            $listUbigeosDepartamentoLlegada[$key]->selected = $selected;
         }
 
 
@@ -497,7 +494,7 @@ class GuiaSalidaController extends Controller
         $options = "";
         foreach ($getVendedor as $item) {
             $options .= "<option value='{$item->codTrabajador}'
-            
+
                 data-vendedor_nombre = '{$item->apellidos} {$item->nombres}'
             >{$item->apellidos} {$item->nombres}</option>";
         }
@@ -538,12 +535,12 @@ class GuiaSalidaController extends Controller
         if ($tipoconsulta == 4) {
             $maximo = 2;
         }
-        
+
         if (strlen($valor) > $maximo) {
-            $listArticulos = Http::post("{$api_datos}/ObtenerArticulo", 
+            $listArticulos = Http::post("{$api_datos}/ObtenerArticulo",
                 ['valor' => $valor, 'tipoconsulta' => $tipoconsulta, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio]
             )->object()->articulos;
-            
+
         }
 
         // dd($listArticulos);
@@ -569,8 +566,8 @@ class GuiaSalidaController extends Controller
 
             $items[] = (object) array(
 
-                'id' => $item->codArticulo, 
-                'text' => "[{$item->codBarra}] {$item->nombreArticulo} - stock {$stock}",
+                'id' => $item->codArticulo,
+                'text' => "[{$item->codBarra}] {$item->nombreArticulo} - unidad:({$item->descUnidadMedida}) - stock {$stock}  ",
                 'codigo_barra' => $item->codBarra,
                 'descripcion' => $item->nombreArticulo,
                 'precio_publico' => $precioPublico,
@@ -607,23 +604,23 @@ class GuiaSalidaController extends Controller
         $log = "";
 
         try {
-            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
+            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo",
             ['valor' => $valor, 'tipoconsulta' => 1, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio])->object()->articulos;
-            
+
         } catch (Exception $e) {
             $procede = false;
             $msj = "Ocurrio un problema al buscar";
             $msj_tipo = "error";
             $log = "{$e}";
         }
-        
+
         if ($procede == true) {
             // dd(count($getArticulo));
             if (count($getArticulo) == 0) {
                 $procede = false;
                 $msj = "Arcitulo no encontrado";
                 $msj_tipo = "error";
-                
+
             }else{
                 $getArticulo = $getArticulo[0];
                 // dd($getArticulo);
@@ -645,7 +642,7 @@ class GuiaSalidaController extends Controller
                 $getArticulo->afecto = $afecto;
                 // dd($getArticulo);
             }
-            
+
         }
         // $getArticulo = $listArticulos;
 
@@ -656,7 +653,7 @@ class GuiaSalidaController extends Controller
     public function listarProveedores(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
-        
+
         $valor = trim($request->get('term'));
         $tipo = $request->get('tipo');//busqueda por razon social
         // dd($request->all());
@@ -666,10 +663,10 @@ class GuiaSalidaController extends Controller
         }
 
         if (strlen($valor) > $maximo) {
-            $listItems = Http::post("{$api_datos}/ObtenerProveedores", 
+            $listItems = Http::post("{$api_datos}/ObtenerProveedores",
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->proveedores;
-            
+
         }
 
         // dd($listItems);
@@ -690,10 +687,10 @@ class GuiaSalidaController extends Controller
         $tipo = $request->get('tipo_busqueda_cliente');//busqueda por razon social
         // dd($request->all());
         if (strlen($valor) > 2) {
-            $listClientes = Http::post("{$api_datos}/obtenerCliente", 
+            $listClientes = Http::post("{$api_datos}/obtenerCliente",
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->cliente;
-            
+
         }
 
         // dd($listClientes);
@@ -720,10 +717,10 @@ class GuiaSalidaController extends Controller
         $tipo = 1;//busqueda por nombre
         // dd($request->all());
         if (strlen($valor) >= 0) {
-            $listItems = Http::post("{$api_datos}/ObtenerTransportista", 
+            $listItems = Http::post("{$api_datos}/ObtenerTransportista",
                 ['valor' => $valor, 'tipo' => $tipo]
             )->object()->transportistas;
-            
+
         }
 
         // dd($listItems);
@@ -744,7 +741,7 @@ class GuiaSalidaController extends Controller
         $tipo_ubigeo = $request->post('tipo_ubigeo');
         $next = false;
         $procede = true;
-        $listUbigeos = Http::post("{$api_datos}/ObtieneUbigeos", 
+        $listUbigeos = Http::post("{$api_datos}/ObtieneUbigeos",
             ['codigoUbigeo' => $codigoUbigeo, 'tipoConsulta' => $tipoConsulta ]
         )->object()->ubigeos;
 
@@ -793,7 +790,7 @@ class GuiaSalidaController extends Controller
             }
             $optionsDepartamento .= "<option value='{$codUbigeo}' {$selected}>{$item->descripcion}</option>";
         }
-        
+
         $getUbigeoProvincia = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => "{$ubigeoDepartamento}", 'tipoConsulta' => 2 ])->object()->ubigeos;
         // dd($getUbigeoProvincia);
         $optionsProvincia = '';
@@ -805,7 +802,7 @@ class GuiaSalidaController extends Controller
             }
             $optionsProvincia .= "<option value='{$codUbigeo}' {$selected}>{$item->descripcion}</option>";
         }
-        
+
         $getUbigeoDistrito = Http::post("{$api_datos}/ObtieneUbigeos", ['codigoUbigeo' => "{$ubigeoProvincia}", 'tipoConsulta' => 3 ])->object()->ubigeos;
         // dd($getUbigeoDistrito);
         $optionsDistrito = '';
@@ -833,7 +830,7 @@ class GuiaSalidaController extends Controller
 
         $modalidad_traslado = '01';//publico
         $verChofer = false;
-        
+
         if ($entidad_ruc == $transportista_ruc) {
             $modalidad_traslado = '02';//privado
             $verChofer = true;
@@ -842,11 +839,12 @@ class GuiaSalidaController extends Controller
         return response()->json(['modalidad_traslado' => $modalidad_traslado, 'verChofer' => $verChofer]);
     }
 
+// Reemplaza tu función actual con esta en tu GuiaSalidaController.php
+
     public function agregarItem(Request $request)
     {
-        // dd($request->post());
+        // ... (todo tu código inicial para obtener variables no cambia)
         $api_datos = Parametro::find(6)->valor;
-
         $producto_id = $request->post('producto_id');
         $codigo_barra = $request->post('codigo_barra');
         $cod_plu = $request->post('cod_plu');
@@ -859,15 +857,12 @@ class GuiaSalidaController extends Controller
         $sigla_umfe = $request->post('sigla_umfe') ?? '';
         $stock = $request->post('stock') ?? 0;
         $costo_articulo = number_format($request->post('costo_articulo'),2) ?? 0;
-        $igv = 0.18; // Definir el porcentaje del IGV
+        $igv = 0.18;
         $costo_con_igv = number_format($costo_articulo * (1 + $igv), 2);
-        // $cantidad = $request->post('cantidad');
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
         $afecto = $request->post('afecto');
-
         $items = json_decode($request->post('items'));
-
         $procede = true;
         $msj = "Datos obtenidos";
         $msj_tipo = "success";
@@ -888,66 +883,69 @@ class GuiaSalidaController extends Controller
 
         if ($procede == true) {
 
-            // $unidad = "UNI";
             $unidad = $desc_unidad_medida;
             $inputCantidad = "<input type='number' class='form-control form-control-sm input_cantidad_tr' name='cantidad' value='{$cantidad}'></input>";
-            $inputPorcentajeDescuento = "<input class='form-control form-control-sm input_porcentaje_descuento_tr' name='porcentaje_descuento' value='0'></input>";
-            $inputDescuento = "<input type='hidden' name='monto_descuento' value='0'></input>";
+            $celda_descuento_html = <<<HTML
+            <td class='align-middle'>
+                <input type="number" class="form-control form-control-sm valor_descuento_tr" value="0">
+            </td>
+            HTML;
             $span_precio = $precio_publico;
             $importe = $cantidad * $precio_publico;
             $importe_sin_igv = $cantidad * $precio_sin_igv;
             $span_precio_sin_igv = $precio_sin_igv;
-            
+
             if ($base_clalculo == 1) {
                 $span_precio = $precio_sin_igv;
                 $importe = $cantidad * $precio_sin_igv;
             }
-            
+
             $tr = "
-                <tr
-                    data-producto_id = '{$producto_id}'
-                    data-precio_unitario = {$precio_publico}
-                    data-precio_publico = {$precio_publico}
-                    data-precio_sin_igv='{$precio_sin_igv}'
-                    data-descripcion = '{$descripcion}'
-                    data-codigo = '{$cod_plu}'
-                    data-codigo_barra = '{$codigo_barra}'
-                    data-peso = '{$peso}'
-                    data-cod_unidad = '{$cod_unidad}'
-                    data-desc_unidad_medida = '{$desc_unidad_medida}'
-                    data-sigla_umfe = '{$sigla_umfe}'
-                    data-stock = '{$stock}'
-                    data-costo_articulo = '{$costo_articulo}'
-                    data-costo_con_igv = '{$costo_con_igv}'
-                    data-afecto = '{$afecto}'
-                >
-                    <td class='align-middle'>{$codigo_barra}</td>
-                    <td class='align-middle'>{$producto_id}</td>
-                    <td class='align-middle'>{$cod_plu}</td>
-                    <td class='align-middle'>{$descripcion}</td>
-                    <td class='align-middle'>
-                        <span name='span_precio'>{$span_precio}</span>
-                        <span name='span_precio_sin_igv' hidden>{$span_precio_sin_igv}</span>
-                    </td>
-                    <td class='align-middle'>{$inputCantidad}</td>
-                    <td class='align-middle'>{$unidad}</td>
-                    <td class='align-middle'>{$stock}</td>
-                    <td class='align-middle'>
-                        <span name='span_importe'>{$importe}</span>
-                        <span name='span_importe_sin_igv' hidden>{$importe_sin_igv}</span>
-                    </td>
-                    <td class='align-middle'>{$inputPorcentajeDescuento} {$inputDescuento}</td>
-                    <td class='align-middle' hidden>{$costo_articulo}</td>
-                    <td class='align-middle text-center'>
-                        <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
-                    </td>
-                </tr>
-            ";
+            <tr
+                data-producto_id = '{$producto_id}'
+                data-precio_unitario = {$precio_publico}
+                data-precio_publico = {$precio_publico}
+                data-precio_sin_igv='{$precio_sin_igv}'
+                data-descripcion = '{$descripcion}'
+                data-codigo = '{$cod_plu}'
+                data-codigo_barra = '{$codigo_barra}'
+                data-peso = '{$peso}'
+                data-cod_unidad = '{$cod_unidad}'
+                data-desc_unidad_medida = '{$desc_unidad_medida}'
+                data-sigla_umfe = '{$sigla_umfe}'
+                data-stock = '{$stock}'
+                data-costo_articulo = '{$costo_articulo}'
+                data-costo_con_igv = '{$costo_con_igv}'
+                data-afecto = '{$afecto}'
+            >
+                <td class='align-middle'>{$codigo_barra}</td>
+                <td class='align-middle'>{$producto_id}</td>
+                <td class='align-middle'>{$cod_plu}</td>
+                <td class='align-middle'>{$descripcion}</td>
+                <td class='align-middle'>
+                    <span name='span_precio'>{$span_precio}</span>
+                    <span name='span_precio_sin_igv' hidden>{$span_precio_sin_igv}</span>
+                </td>
+                <td class='align-middle'>{$inputCantidad}</td>
+                <td class='align-middle'>{$unidad}</td>
+                <td class='align-middle'>{$stock}</td>
+                <td class='align-middle'>
+                    <span name='span_importe'>{$importe}</span>
+                    <span name='span_importe_sin_igv' hidden>{$importe_sin_igv}</span>
+                </td>
+
+                {$celda_descuento_html}
+
+                <td class='align-middle' hidden>{$costo_articulo}</td>
+                <td class='align-middle text-center'>
+                    <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
+                </td>
+            </tr>
+        ";
         }
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'tr' => $tr]);
     }
-
     public function modalStore(Request $request)
     {
         $envio_sunat = $request->post('envio_sunat');
@@ -968,14 +966,14 @@ class GuiaSalidaController extends Controller
         $guardar_avance = $datos['guardar_avance'];
 
         $datos['indicar_proveedor'] = ($datos['indicar_proveedor'] ?? '' == 'on') ? true : false ;
-        
+
         $procede = true;
         $msj_tipo = "success";
         $log = "";
         $datos['guia_estado_id'] = 1; //registrado-emitida
-        
+
         $url_redirect = route('guiasalida.index');
-        
+
         // asignamos existencia de serie en BD
         if ($guardar_avance == false) {
             $msj = "Guia registrada";
@@ -988,7 +986,7 @@ class GuiaSalidaController extends Controller
             $msj = "Avance de guia registrada";
             $datos['guia_estado_id'] = 4;//estado avance
         }
-        
+
         // se inicia registro
         if ($procede == false ) {
             $msj = $asignarSerie->msj;
@@ -999,9 +997,11 @@ class GuiaSalidaController extends Controller
         // validacion antes del store
         if ($procede == true) {
 
+
             // $datos['fecha_emision'] = date('Y-m-d');
             $datos['fecha_emision'] = $request->post('fecha_emision');
             $datos['hora_emision'] = date('H:i:s');
+            $datos['fecha_inicio_traslado'] = $request->post('fecha_inicio_traslado') ?: null;
 
             if ($datos['indicar_proveedor'] == true) {
                 $proveedor_id = ($datos['proveedor_id'] ?? null) ? $datos['proveedor_id'] : null ;
@@ -1022,8 +1022,8 @@ class GuiaSalidaController extends Controller
                 $valor_cliente_transferencia = Parametro::find(2)->valor;
 
                 // try {
-                    
-                //     $getClientePorRuc = Http::post("{$api_datos}/obtenerCliente", 
+
+                //     $getClientePorRuc = Http::post("{$api_datos}/obtenerCliente",
                 //     ['valor' => $valor_cliente_transferencia, 'tipo' => 2])
                 //         ->object()->cliente;
 
@@ -1041,7 +1041,7 @@ class GuiaSalidaController extends Controller
                     $datos['cliente_nro_documento'] = trim($request->post('cliente_transf_nro_documento'));
                     $datos['cliente_documento_tipo_nombre'] = 'RUC';
                     $datos['cliente_direccion'] = trim($request->post('cliente_transf_direccion'));
-                    
+
                 }
 
             }
@@ -1061,7 +1061,7 @@ class GuiaSalidaController extends Controller
                 $placa_vehiculo = str_replace(' ', '', $datos['vehiculo_placa']);
                 $placa_vehiculo_format = substr(str_replace('-', '', $placa_vehiculo), 0, 8);
                 $datos['vehiculo_placa'] = $placa_vehiculo_format;
-                
+
             }
 
             if ($id_continuar != null) {
@@ -1083,12 +1083,17 @@ class GuiaSalidaController extends Controller
             if ($guardar_avance == false) {
                 // dd($asignarSerie);
                 $datos['serie_id'] = $asignarSerie->serieAsignada->id;
-                $datos['numero'] = intval($asignarSerie->serieAsignada->numero) +1; 
+                $datos['numero'] = intval($asignarSerie->serieAsignada->numero) +1;
             }
         }
 
         //registro en store
         if ($procede == true) {
+
+            // =================================================================
+            // AÑADE ESTA LÍNEA PARA VER LOS DATOS DE LA CABECERA
+            Log::info('Datos a guardar en [guia_salidas] (local):', $datos);
+            // =================================================================
 
             try {
                 $store = GuiaSalida::create($datos);
@@ -1104,7 +1109,7 @@ class GuiaSalidaController extends Controller
 
         // auditoria store
         $obsevracion_auditoria = $msj;
-        
+
         // actualizar serie nube
         if ($procede == true) {
             $updateSerie = Serie::find($asignarSerie->serieAsignada->id);
@@ -1113,7 +1118,7 @@ class GuiaSalidaController extends Controller
 
             try {
                 $updateSerie->save();
-                
+
             } catch (Exception $e) {
                 //throw $th;
                 dd($e);
@@ -1128,8 +1133,14 @@ class GuiaSalidaController extends Controller
         if ($procede == true) {
             $detalle = json_decode($request->post('detalle'));
             $id = $store->id;
+
+            // =================================================================
+            // AÑADE ESTA LÍNEA PARA VER LOS DATOS DEL DETALLE
+            Log::info('Datos a guardar en [guia_salida_detalles] (local):', $detalle);
+            // =================================================================
+
             foreach ($detalle as $item) {
-                
+
                 if ($procede == true) {
                     $guiaDetalle = new GuiaSalidaDetalle();
                     $guiaDetalle->guia_salida_id = $store->id;
@@ -1144,7 +1155,7 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->monto_descuento = $item->monto_descuento;
                     $guiaDetalle->peso_unitario = $item->peso;
                     $guiaDetalle->peso_total = floatval($item->peso) * floatval($item->cantidad);
-                    
+
 
                     $nombreArticulo = $item->descripcion;
                     // $nombreArticuloSinComillas = str_replace('"', '', $nombreArticulo);
@@ -1165,6 +1176,7 @@ class GuiaSalidaController extends Controller
                     $costo_total = ($item->costo_articulo ?? 0) * $item->cantidad;
                     $guiaDetalle->costo_articulo = $item->costo_articulo ?? 0;
                     $guiaDetalle->costo_total = $costo_total;
+                    $guiaDetalle->es_consignado = $item->es_consignado ?? 0;
 
                     try {
                         $guiaDetalle->save();
@@ -1199,7 +1211,7 @@ class GuiaSalidaController extends Controller
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'id' => $id]);
 
     }
-    
+
     function limpiarCaracteres($cadena)
     {
         $caracteresEspeciales = ['"', "'"];
@@ -1209,7 +1221,7 @@ class GuiaSalidaController extends Controller
     public function asignarSerie($serie_busqueda)
     {
         $api_datos = Parametro::find(6)->valor;
-        
+
         $getSerieLocal = Serie::where('serie', $serie_busqueda)->first();
         $procede = true;
         $msj = "Serie asignada";
@@ -1263,7 +1275,7 @@ class GuiaSalidaController extends Controller
                     $nueva_serie->serie = $serie;
                     $nueva_serie->documento_tipo_id = $documento_tipo_id;
                     $nueva_serie->numero = $numero;
-                    
+
                     try {
                         $nueva_serie->save();
                         // dd($nueva_serie);
@@ -1279,7 +1291,7 @@ class GuiaSalidaController extends Controller
                 }
 
             }
-            
+
         }
 
         if ($procede == true) {
@@ -1291,8 +1303,10 @@ class GuiaSalidaController extends Controller
 
     }
 
+
     public function storeDataMart(Request $request)
     {
+        Log::info('Datos recibidos en storeDataMart:', $request->all());
         $panel_origen = $request->post('panel_origen');
 
         $api_datos = Parametro::find(6)->valor;
@@ -1312,6 +1326,8 @@ class GuiaSalidaController extends Controller
 
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
 
+        // ===== INICIO DE CAMBIOS =====
+        $body_detalle = []; // Inicializa el array para evitar errores si no hay detalle
         foreach ($detalle as $item) {
             $body_detalle[] = array(
                 "anioGuia" => $anio,
@@ -1325,9 +1341,11 @@ class GuiaSalidaController extends Controller
                 "precio" => $item->precio,
                 "tipoGuia" => "A",
                 "unidadMedida" => $item->cod_unidad ?? 1,
-                "descuento" => $item->monto_descuento ?? 0
+                "descuento" => $item->monto_descuento ?? 0,
+                "es_consignado" => $item->es_consignado ?? 0 // <-- LÍNEA AÑADIDA PARA EL DETALLE
             );
         }
+        // ===== FIN DE CAMBIOS =====
 
         // dd($guia);
         $body = [
@@ -1370,10 +1388,31 @@ class GuiaSalidaController extends Controller
             "valorVenta" => $guia->importe_sin_igv,
         ];
 
+        $articulosConsignados = [];
+            foreach ($detalle as $item) {
+                if ($item->es_consignado == 1) {
+                $articulosConsignados[] = $item->codarticulo;
+                }
+            }
+    
+        // Si hay artículos consignados, actualizar en DataMart
+        if (!empty($articulosConsignados)) {
+            $this->actualizarConsignados($articulosConsignados, '1');
+        }
+
+        Log::info('Datos de articulos obtenidos como sonsignados', $articulosConsignados);
+
+        // Log para ver lo que ENVÍAS a DataMart (¡Esto ya lo tenías y es correcto!)
+        Log::info('Array final enviado a DataMart:', $body);
+
+        // Tu log de "body_detalle" es redundante, ya que $body_detalle está dentro de $body.
+        // Lo puedes quitar si quieres, pero no hace daño.
+        // Log::info('Array final enviado a DataMart:', $body_detalle);
+
         // dd($body);
         try {
             $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
-            // dd($storeRemoto);
+            // ... (el resto de tu función sigue igual)
             if ($storeRemoto->exito == false) {
                 $procede = false;
                 $msj_tipo = "error";
@@ -1408,30 +1447,54 @@ class GuiaSalidaController extends Controller
                 $li_btn = "";
                 if ($guia->envio_sunat == 1) {
                     $li_btn = "
-                    <button type='button' class='btn btn-dark dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false'>
-                        <span class='visually-hidden'>Toggle Dropdown</span>
-                    </button>
-                    <ul class='dropdown-menu'>
-                        <li><a class='dropdown-item' style='cursor: pointer' id='btnReintentarFacturar' data-id='{$id}'><i class='fa fa-download'></i> <b>Continuar Sunat</b></a></li>
-                    </ul>
-                    
-                    ";
+                <button type='button' class='btn btn-dark dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false'>
+                    <span class='visually-hidden'>Toggle Dropdown</span>
+                </button>
+                <ul class='dropdown-menu'>
+                    <li><a class='dropdown-item' style='cursor: pointer' id='btnReintentarFacturar' data-id='{$id}'><i class='fa fa-download'></i> <b>Continuar Sunat</b></a></li>
+                </ul>
+
+                ";
                 }
                 $msj = "{$msj}
-                <div class='btn-group float-end'>
-                    <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>
-                    {$li_btn}
-                </div>";
+            <div class='btn-group float-end'>
+                <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>
+                {$li_btn}
+            </div>";
 
             }
         }
-        
+
 
         $this->registrarAuditoria($guia->id, 1, 'guia_salidas_datamart', json_encode($body), strip_tags($msj));
 
         return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
 
+
+    private function actualizarConsignados($codArticulos, $valorConsignado = '1')
+    {
+        $api_datos = Parametro::find(6)->valor;
+        
+        $body = [
+            'codArticulos' => $codArticulos,  // Array dinámico
+            'valorConsignado' => $valorConsignado  // '1' o '0'
+        ];
+        
+        try {
+            $response = Http::post("{$api_datos}/Articulo/ActualizarConsignado", $body)->object();
+            
+            if ($response->exito) {
+                Log::info("Actualizados {$response->articulosActualizados} artículos como consignados");
+                return true;
+            }
+            return false;
+        } catch (Exception $e) {
+            Log::error("Error actualizando consignados: " . $e->getMessage());
+            return false;
+        }
+    }
+    
     public function facturacionElectronica(Request $request)
     {
         $panel_origen = $request->post('panel_origen');
@@ -1456,18 +1519,18 @@ class GuiaSalidaController extends Controller
         foreach ($detalle as $item) {
             // $nombre_articulo_format = $item->descripcion;
             // $nombre_articulo_format = json_encode(utf8_encode($item->descripcion), JSON_UNESCAPED_UNICODE);;
-            
 
-            
+
+
             // Ejemplo de uso
             // $descripcion = "fanny pi\u00f1a en rodajas x 567gr.";
             $descripcionLimpia = $this->limpiarCaracteresEspeciales($item->descripcion);
-            
+
             // Convertir la cadena a formato JSON
             // $descripcionJson = json_encode($descripcionLimpia, JSON_UNESCAPED_UNICODE);
             // $nombre_articulo_format = json_encode($descripcionLimpia, JSON_UNESCAPED_UNICODE);
             $nombre_articulo_format =$descripcionLimpia;
-            
+
             // dd($descripcionJson);
 
             $body_detalle[] = array(
@@ -1498,9 +1561,9 @@ class GuiaSalidaController extends Controller
             "TipoDocumento" => "{$cliente_documento_tipo}",
             "NombreRazonSocial" => $this->limpiarCaracteresEspeciales($guia->cliente_razon_social)
         );
-        
+
         if ($guia->indicar_proveedor == 1) {
-            
+
             $destinatario = array(
                 'NroDocumento' => $guia->proveedor_ruc ?? '',
                 "TipoDocumento" => 6,
@@ -1556,7 +1619,7 @@ class GuiaSalidaController extends Controller
             "NroPallets" => 0,
             "ModalidadTraslado" => $guia->modalidad_traslado,
             // "FechaInicioTraslado" => "2023-06-02",
-            "FechaInicioTraslado" => $guia->fecha_emision,
+            "FechaInicioTraslado" => $guia->fecha_inicio_traslado,
             "RucTransportista" => "{$guia->transportista_ruc}",
             "RazonSocialTransportista" => $this->limpiarCaracteresEspeciales("{$guia->transportista_nombre}"),
             "NroPlacaVehiculo" => $guia->vehiculo_placa,
@@ -1578,13 +1641,13 @@ class GuiaSalidaController extends Controller
             "CodigoPuerto" => "",
             "VehiculoM1L" => 0,
             "BienesATransportar" => $body_detalle
-        ]; 
-        
+        ];
+
         // dd(json_encode($body));
         // dd($body);
-        
+
         $url_button = route('guiasalida.pdfDecode', ['guia'=> $guia->id]);
-        
+
         $procede = true;
         $msj = "Guia electronica emitida <br><code>Debe esperar a que SUNAT apruebe el envio</code>  <br><a class='btn btn-success' href='{$url_button}' target='_blank'><i class='fa fa-external-link'></i> ver</a>";
         $msj_tipo = "";
@@ -1665,7 +1728,7 @@ class GuiaSalidaController extends Controller
 
             $guia->envio_id = $store->id;
             $guia->enviado_facturador = 1;
-            
+
             try {
 
                 $guia->save();
@@ -1700,11 +1763,11 @@ class GuiaSalidaController extends Controller
                     $storePdf->pdf = $getPdf->data;
                     try {
                         $storePdf->save();
-                        
+
                     } catch (Exception $e) {
                         //throw $th;
                         // dd($e);
-                        
+
                     }
                 }
                 // dd($getPdf);
@@ -1733,10 +1796,10 @@ class GuiaSalidaController extends Controller
     function limpiarCaracteresEspeciales($texto) {
         // Normalizar el texto para tratar caracteres acentuados
         $textoNormalizado = Normalizer::normalize($texto, Normalizer::FORM_D);
-    
+
         // Reemplazar caracteres especiales
         $textoLimpio = preg_replace('/[^a-zA-Z0-9 ]/u', '', $textoNormalizado);
-    
+
         return $textoLimpio;
     }
 
@@ -1771,11 +1834,11 @@ class GuiaSalidaController extends Controller
         $total_letras = Str::upper($total_letras);
 
         $data['guia'] = (object) array(
-            'texto_moneda' => $texto_moneda, 
-            'concepto' => '-', 
+            'texto_moneda' => $texto_moneda,
+            'concepto' => '-',
             'monto' => '0.00',
-            'total_letras' => $total_letras, 
-            'nombre_cajero' => 'demo', 
+            'total_letras' => $total_letras,
+            'nombre_cajero' => 'demo',
             'total_venta_gravada' => $guia->importe_sin_igv,
             'monto_descuento' => $guia->monto_descuento,
             'total_igv' => $guia->monto_igv,
@@ -1814,13 +1877,13 @@ class GuiaSalidaController extends Controller
         // $pdfData = 'JVBERi0xLjQKJcfs...'; // Base64 encoded PDF data
 
         if ($getEnvioConPdf != null) {
-            
+
             if ($getEnvioConPdf->pdf != null) {
                 $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
                 $pdfDataDecoded = base64_decode($pdfData);
                 return response($pdfDataDecoded)->header('Content-Type', 'application/pdf');
             }
-    
+
             if ($getEnvioConPdf->pdf == null) {
                 // dd('verificamos pdf');
                 $credencial = Parametro::find(1)->valor;
@@ -1835,24 +1898,35 @@ class GuiaSalidaController extends Controller
                     'tipodocumentorespuesta' => 'PDF'
                 );
                 // dd($bodyConsulta);
-    
+
                 $procede = true;
-                $getPdf = Http::withHeaders(['Credencial' => $credencial])->post($api_facturacion_consultas, $bodyConsulta)->object();
+                try {
+
+                    $getPdf = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
+                        'Credencial' => $credencial,
+                        ])->post($api_facturacion_consultas, $bodyConsulta)->object();
+                } catch (Exception $e) {
+                    //throw $th;
+                    dd('No se pudo obtener PDF');
+                }
                 // dd($getPdf);
                 if ($getPdf->success == true) {
                     $storePdf = FacturacionEnvio::find($getEnvioConPdf->id);
                     $storePdf->pdf = $getPdf->data;
                     try {
                         $storePdf->save();
-                        
+
                     } catch (Exception $e) {
                         //throw $th;
                         dd($e);
                         $procede = false;
                     }
                 }
-    
-    
+
+
                 if ($procede == true) {
                     $getEnvioConPdf = FacturacionEnvio::where('tabla', 'guia_salidas')->where('registro_id', $guia->id)->whereNotNull('pdf')->first();
                     $pdfData = $getEnvioConPdf->pdf; // Base64 encoded PDF data
@@ -1861,9 +1935,9 @@ class GuiaSalidaController extends Controller
                 }
                 if ($procede == false) {
                     return "No se pudo obtener el PDF";
-                    
+
                 }
-    
+
             }
         }
 
@@ -1878,9 +1952,9 @@ class GuiaSalidaController extends Controller
     {
         // dd($request->post());
         $id = $request->post('id');
-        
+
         $guia = GuiaSalida::find($id);
-        
+
         $guia->guia_estado_id = 0;
 
         // dd($guia);
@@ -1971,7 +2045,7 @@ class GuiaSalidaController extends Controller
             $list[$key]->estado_nombre = GuiaEstado::find($item->guia_estado_id)->nombre;
         }
         // dd($list);
-        
+
         return view('guia.salida.tabla_otras_guias', compact('list'));
     }
 
@@ -1987,7 +2061,7 @@ class GuiaSalidaController extends Controller
         $codestacion = 1;
         $codalmacen = 1;
         $codlistaprecio = 1;
-        
+
 
         $detalle = GuiaSalidaDetalle::where('guia_salida_id', $id)->get();
         // dd($detalle);
@@ -2000,12 +2074,12 @@ class GuiaSalidaController extends Controller
             // dd($item);
             $afecto = 1;
             $valor = $item->codarticulo;
-            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
+            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo",
                 ['valor' => $valor, 'tipoconsulta' => $tipoconsulta, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio]
             )->object()->articulos;
 
             $getArticulo = $getArticulo[0];
-            
+
             $detalle[$key]->stock = $getArticulo->stock ?? 0;
 
             $precioPublico = $getArticulo->precioPublico;
@@ -2033,7 +2107,7 @@ class GuiaSalidaController extends Controller
             $detalle[$key]->precio_sin_igv = $precioSinIGV;
             $detalle[$key]->peso = $getArticulo->peso ?? 0;
 
-            // dd($getArticulo);            
+            // dd($getArticulo);
         }
 
         // dd($detalle);
@@ -2053,7 +2127,7 @@ class GuiaSalidaController extends Controller
             $stock = 0;
             $costo_articulo = $item->costo_articulo ?? 0;
             $costo_con_igv = number_format($costo_articulo * (1 + $igv), 2);
-            
+
             $importe_sin_igv = $item->cantidad * $item->precio_sin_igv;
             $span_precio_sin_igv = $item->precio_sin_igv;
             $span_precio = $item->precio_publico;
@@ -2063,7 +2137,7 @@ class GuiaSalidaController extends Controller
                 $span_precio = $item->precio_sin_igv;
                 $importe = $item->cantidad * $item->precio_sin_igv;
             }
-            
+
 
             $tabla .= "
                 <tr
@@ -2118,9 +2192,9 @@ class GuiaSalidaController extends Controller
         $msj = "Auditoria registrada";
         $msj_tipo = "success";
         $log = "";
-        
+
         $empleado_id = User::find(Auth::id())->empleado_id;
-        
+
         try {
             $auditoria = new Auditoria();
             $auditoria->registro_id = $registro_id;
@@ -2161,7 +2235,7 @@ class GuiaSalidaController extends Controller
         try {
             $api_datos = Parametro::find(6)->valor;
 
-            $response = Http::post("{$api_datos}/ValidaMesAbierto", 
+            $response = Http::post("{$api_datos}/ValidaMesAbierto",
                 ['anio' => $anio, 'mes' => $mes]
             )->object();
             // dd($response->exito);
