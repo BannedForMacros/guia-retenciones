@@ -84,10 +84,21 @@
 
                   </div>
                 </div>
-                <div class="col-md-3 mb-2">
-                  <label class="form-label">Estado</label>
-                  <input type="text" class="form-control" readonly value="GENERADA">
-                </div>
+                  <div class="col-md-3 mb-2">
+                    <label class="form-label">Estado</label>
+                    <input type="text" class="form-control" readonly value="GENERADA">
+                  </div>
+
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label text-primary" style="font-weight: bold; font-size: 0.85rem;">¿TIENE PRODUCTOS CONSIGNADOS?</label>
+                    
+                    <div class="form-check mt-1">
+                      <input type="hidden" name="es_consignado" value="0"> 
+                      <input class="form-check-input" id="es_consignado_master" name="es_consignado"
+                            type="checkbox" value="1" {{ ($guia->es_consignado ?? 0) == 1 ? 'checked' : '' }} />
+                      <label class="form-check-label" for="es_consignado_master">Productos Consignados</label>
+                    </div>
+                  </div>
               </div>
 
               <div class="row">

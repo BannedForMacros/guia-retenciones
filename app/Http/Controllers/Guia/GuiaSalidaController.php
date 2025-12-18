@@ -1304,193 +1304,232 @@ class GuiaSalidaController extends Controller
     }
 
 
-    public function storeDataMart(Request $request)
-    {
-        Log::info('Datos recibidos en storeDataMart:', $request->all());
-        $panel_origen = $request->post('panel_origen');
+public function storeDataMart(Request $request)
+{
+    // ============================================================
+    // 1. OBTENER PARÁMETROS INICIALES
+    // ============================================================
+    $api_datos = Parametro::find(6)->valor;
+    $panel_origen = $request->post('panel_origen');
+    $id = $request->post('id');
 
-        $api_datos = Parametro::find(6)->valor;
-
-        $id = $request->post('id');
-
-        $guia = GuiaSalida::find($id);
-        // dd($guia);
-
-        $procede = true;
-        $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
-        $msj_tipo = "success";
-        $log = "";
-
-        $fecha = Carbon::parse($guia->fecha_emision);
-        $anio = $fecha->year;
-
-        $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
-
-        // ===== INICIO DE CAMBIOS =====
-        $body_detalle = []; // Inicializa el array para evitar errores si no hay detalle
-        foreach ($detalle as $item) {
-            $body_detalle[] = array(
-                "anioGuia" => $anio,
-                "cantidad" => $item->cantidad,
-                "codArticulo" => $item->codarticulo,
-                "estadoProceso" => "0",
-                "importeDetalle" => $item->importe,
-                "item" => 1,
-                "numSerie" => $guia->serie,
-                "numeroGuia" => $guia->numero,
-                "precio" => $item->precio,
-                "tipoGuia" => "A",
-                "unidadMedida" => $item->cod_unidad ?? 1,
-                "descuento" => $item->monto_descuento ?? 0,
-                "es_consignado" => $item->es_consignado ?? 0 // <-- LÍNEA AÑADIDA PARA EL DETALLE
-            );
-        }
-        // ===== FIN DE CAMBIOS =====
-
-        // dd($guia);
-        $body = [
-            "anioGuiaRemision" => $anio,
-            "breveteChofer" => $guia->brevete,
-            "codAlmacen" => $guia->codalmacen,
-            "codAlmacenOrigen" => $guia->cod_almacen_origen,
-            "codAlmacenDestino" => $guia->cod_almacen_destino,
-            "codCliente" => $guia->cliente_id,
-            "codEstacion" => $guia->codestacion,
-            "codListaPrecio" => $guia->codlistaprecio,
-            "codProveedor" => $guia->proveedor_id ?? 0,
-            "codtrabajador" => $guia->vendedor_id,
-            "comentario" => $guia->comentario,
-            "descuento" => $guia->monto_descuento,
-            "detalle" => $body_detalle,
-            "direccionllegada" => $guia->direccion_llegada,
-            "direccionpartida" => $guia->direccion_partida,
-            "dnichofer" => $guia->chofer_dni,
-            "esproveedor" => $guia->indicar_proveedor,
-            "estadoProceso" => "0",
-            "fechaEmision" => $guia->fecha_emision,
-            "formapago" => $guia->forma_pago_id,
-            "igv" => $guia->monto_igv,
-            "modalidadTransporte" => "18",
-            "nombreTransportista" => $guia->transportista_nombre,
-            "nombrechofer" => $guia->transportista_nombre,
-            "numSerie" => $guia->serie,
-            "seriefactura" => $guia->pedido_serie,
-            "numeroFactura" => '',
-            "numeroGuia" => $guia->numero,
-            "placavehiculo" => $guia->vehiculo_placa,
-            "rucTransportista" => $guia->transportista_ruc,
-            "tipoGuia" => "A", //N->ingreso; A->Salida
-            "tipoOperacion" => $guia->tipo_operacion_id,
-            "tipomonda" => 1,
-            "totalVenta" => $guia->total_venta,
-            "ubigeollegada" => $guia->ubigeo_llegada,
-            "ubigeopartida" => $guia->ubigeo_partida,
-            "valorVenta" => $guia->importe_sin_igv,
-        ];
-
-        $articulosConsignados = [];
-            foreach ($detalle as $item) {
-                if ($item->es_consignado == 1) {
-                $articulosConsignados[] = $item->codarticulo;
-                }
-            }
+    $guia = GuiaSalida::find($id);
     
-        // Si hay artículos consignados, actualizar en DataMart
-        if (!empty($articulosConsignados)) {
-            $this->actualizarConsignados($articulosConsignados, '1');
+    if (!$guia) {
+        return response()->json([
+            'procede' => false, 
+            'msj' => 'Guía no encontrada', 
+            'msj_tipo' => 'error', 
+            'log' => 'ID invalido'
+        ]);
+    }
+
+    $fecha = Carbon::parse($guia->fecha_emision);
+    $anio = $fecha->year;
+
+    // Variables de control
+    $procede = true;
+    $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
+    $msj_tipo = "success";
+    $log = "";
+
+    // ============================================================
+    // 2. OBTENER DETALLE
+    // ============================================================
+    $detalle = GuiaSalidaDetalle::where('guia_salida_id', $guia->id)->get();
+    
+    $articulosConsignados = [];
+    $body_detalle = [];
+
+    // ============================================================
+    // 3. PASO 1: IDENTIFICAR ARTÍCULOS CONSIGNADOS **PRIMERO**
+    // ============================================================
+    foreach ($detalle as $item) {
+        if (($item->es_consignado ?? 0) == 1) {
+            $articulosConsignados[] = $item->codarticulo;
         }
+    }
 
-        Log::info('Datos de articulos obtenidos como sonsignados', $articulosConsignados);
+    // ============================================================
+    // 4. PASO 2: ACTUALIZAR SQL SERVER **ANTES DE ARMAR EL BODY**
+    // ============================================================
+    if (!empty($articulosConsignados)) {
+        Log::info("PASO PREVIO: Actualizando consignados en SQL Server SALIDA", $articulosConsignados);
+        
+        $actualizacionExitosa = $this->actualizarConsignadosDirecto($articulosConsignados, 1);
+        
+        if (!$actualizacionExitosa) {
+            return response()->json([
+                'procede' => false,
+                'msj' => 'Error crítico: No se pudieron actualizar los productos consignados en SQL Server',
+                'msj_tipo' => 'error',
+                'log' => 'Fallo en actualizarConsignadosDirecto() para Guía de Salida'
+            ]);
+        }
+        
+        Log::info("✓ Consignados actualizados correctamente en SQL Server (Salida)");
+    }
 
-        // Log para ver lo que ENVÍAS a DataMart (¡Esto ya lo tenías y es correcto!)
-        Log::info('Array final enviado a DataMart:', $body);
+    // ============================================================
+    // 5. PASO 3: AHORA SÍ ARMAR EL BODY_DETALLE
+    // ============================================================
+    foreach ($detalle as $item) {
+        $body_detalle[] = array(
+            "anioGuia" => $anio,
+            "cantidad" => $item->cantidad,
+            "codArticulo" => $item->codarticulo,
+            "estadoProceso" => "0",
+            "importeDetalle" => $item->importe,
+            "item" => 1,
+            "numSerie" => $guia->serie,
+            "numeroGuia" => $guia->numero,
+            "precio" => $item->precio,
+            "tipoGuia" => "A", // A = Salida
+            "unidadMedida" => $item->cod_unidad ?? 1,
+            "descuento" => $item->monto_descuento ?? 0,
+        );
+    }
 
-        // Tu log de "body_detalle" es redundante, ya que $body_detalle está dentro de $body.
-        // Lo puedes quitar si quieres, pero no hace daño.
-        // Log::info('Array final enviado a DataMart:', $body_detalle);
+    // ============================================================
+    // 6. PASO 4: ARMAR BODY COMPLETO
+    // ============================================================
+    $body = [
+        "anioGuiaRemision" => $anio,
+        "breveteChofer" => $guia->brevete,
+        "codAlmacen" => $guia->codalmacen,
+        "codAlmacenOrigen" => $guia->cod_almacen_origen,
+        "codAlmacenDestino" => $guia->cod_almacen_destino,
+        "codCliente" => $guia->cliente_id,
+        "codEstacion" => $guia->codestacion,
+        "codListaPrecio" => $guia->codlistaprecio,
+        "codProveedor" => $guia->proveedor_id ?? 0,
+        "codtrabajador" => $guia->vendedor_id,
+        "comentario" => $guia->comentario,
+        "descuento" => $guia->monto_descuento,
+        "detalle" => $body_detalle,
+        "direccionllegada" => $guia->direccion_llegada,
+        "direccionpartida" => $guia->direccion_partida,
+        "dnichofer" => $guia->chofer_dni,
+        "esproveedor" => $guia->indicar_proveedor,
+        "estadoProceso" => "0",
+        "fechaEmision" => $guia->fecha_emision,
+        "formapago" => $guia->forma_pago_id,
+        "igv" => $guia->monto_igv,
+        "modalidadTransporte" => "18",
+        "nombreTransportista" => $guia->transportista_nombre,
+        "nombrechofer" => $guia->transportista_nombre,
+        "numSerie" => $guia->serie,
+        "seriefactura" => $guia->pedido_serie,
+        "numeroFactura" => '',
+        "numeroGuia" => $guia->numero,
+        "placavehiculo" => $guia->vehiculo_placa,
+        "rucTransportista" => $guia->transportista_ruc,
+        "tipoGuia" => "A", // N->ingreso; A->Salida
+        "tipoOperacion" => $guia->tipo_operacion_id,
+        "tipomonda" => 1,
+        "totalVenta" => $guia->total_venta,
+        "ubigeollegada" => $guia->ubigeo_llegada,
+        "ubigeopartida" => $guia->ubigeo_partida,
+        "valorVenta" => $guia->importe_sin_igv,
+    ];
 
-        // dd($body);
-        try {
-            $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
-            // ... (el resto de tu función sigue igual)
-            if ($storeRemoto->exito == false) {
-                $procede = false;
-                $msj_tipo = "error";
-                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
-            }
-        } catch (Exception $e) {
-            //throw $th;
-            // dd($e);
+    Log::info('DATAMARKET SALIDA - Payload a enviar (Body completo):', $body);
+
+    // ============================================================
+    // 7. PASO 5: ENVIAR A LA API
+    // ============================================================
+    try {
+        $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
+        
+        if (isset($storeRemoto->exito) && $storeRemoto->exito == false) {
             $procede = false;
-            $msj = "No se pudo registrar remotamente";
             $msj_tipo = "error";
-            $log = "{$e}";
+            $msgErrorRemoto = $storeRemoto->msgerror ?? 'Error desconocido en remoto';
+            $msj = "No se pudo completar : {$msgErrorRemoto}";
         }
+    } catch (Exception $e) {
+        $procede = false;
+        $msj = "{$msj} <b>No se pudo registrar en DATAMART (Error de Conexión API)</b>";
+        $msj_tipo = "error";
+        $log = "Error API: " . $e->getMessage();
+        Log::error($log);
+    }
 
-        if ($procede == true) {
-            $guia_status = GuiaSalida::find($guia->id);
-            try {
-                $guia_status->enviado_datamarket = 1;
-                $guia_status->save();
-            } catch (Exception $e) {
-                //throw $th;
-                $procede = false;
-                $msj = "No se puedo registrar el envio";
-                $msj_tipo = "error";
-                $log = "{$e}";
-            }
+    // ============================================================
+    // 8. PASO 6: ACTUALIZAR ESTADO LOCAL
+    // ============================================================
+    if ($procede == true) {
+        try {
+            $guia->enviado_datamarket = 1;
+            $guia->save();
+        } catch (Exception $e) {
+            $procede = false;
+            $msj = "Se envió a DataMarket pero falló al actualizar el estado local.";
+            $msj_tipo = "error";
+            $log = "Error Local DB: " . $e->getMessage();
         }
+    }
 
-        if ($procede == false) {
-            if ($panel_origen != 'index') {
-                // $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
-                $li_btn = "";
-                if ($guia->envio_sunat == 1) {
-                    $li_btn = "
+    // ============================================================
+    // 9. CONFIGURAR BOTÓN DE REINTENTO SI FALLÓ
+    // ============================================================
+    if ($procede == false) {
+        if ($panel_origen != 'index') {
+            $li_btn = "";
+            if ($guia->envio_sunat == 1) {
+                $li_btn = "
                 <button type='button' class='btn btn-dark dropdown-toggle dropdown-toggle-split' data-bs-toggle='dropdown' aria-expanded='false'>
                     <span class='visually-hidden'>Toggle Dropdown</span>
                 </button>
                 <ul class='dropdown-menu'>
                     <li><a class='dropdown-item' style='cursor: pointer' id='btnReintentarFacturar' data-id='{$id}'><i class='fa fa-download'></i> <b>Continuar Sunat</b></a></li>
-                </ul>
-
-                ";
-                }
-                $msj = "{$msj}
+                </ul>";
+            }
+            $msj = "{$msj}
             <div class='btn-group float-end'>
                 <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}'><i class='fa-regular fa-paper-plane'></i> Reintentar</button>
                 {$li_btn}
             </div>";
-
-            }
         }
-
-
-        $this->registrarAuditoria($guia->id, 1, 'guia_salidas_datamart', json_encode($body), strip_tags($msj));
-
-        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
     }
 
+    // ============================================================
+    // 10. REGISTRAR AUDITORÍA
+    // ============================================================
+    if (method_exists($this, 'registrarAuditoria')) {
+        $this->registrarAuditoria($guia->id, 1, 'guia_salidas_datamart', json_encode($body), strip_tags($msj));
+    }
 
-    private function actualizarConsignados($codArticulos, $valorConsignado = '1')
+    return response()->json([
+        'procede' => $procede, 
+        'msj' => $msj, 
+        'msj_tipo' => $msj_tipo, 
+        'log' => $log
+    ]);
+}
+
+
+
+
+    private function actualizarConsignadosDirecto($codArticulos, $valorConsignado = 1)
     {
-        $api_datos = Parametro::find(6)->valor;
-        
-        $body = [
-            'codArticulos' => $codArticulos,  // Array dinámico
-            'valorConsignado' => $valorConsignado  // '1' o '0'
-        ];
-        
-        try {
-            $response = Http::post("{$api_datos}/Articulo/ActualizarConsignado", $body)->object();
-            
-            if ($response->exito) {
-                Log::info("Actualizados {$response->articulosActualizados} artículos como consignados");
-                return true;
-            }
+        // Si no hay artículos, no hacemos nada
+        if (empty($codArticulos)) {
             return false;
-        } catch (Exception $e) {
-            Log::error("Error actualizando consignados: " . $e->getMessage());
+        }
+
+        try {
+            // Usamos la conexión directa 'sqlsrv' configurada anteriormente
+            DB::connection('sqlsrv')
+                ->table('MaestroArticulo')
+                ->whereIn('CodArticulo', $codArticulos) // whereIn es optimo para arrays
+                ->update(['consignacion' => $valorConsignado]);
+
+            Log::info("SQLSERVER: Actualizados artículos " . json_encode($codArticulos) . " a consignación: $valorConsignado");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("SQLSERVER Error actualizando consignados: " . $e->getMessage());
             return false;
         }
     }

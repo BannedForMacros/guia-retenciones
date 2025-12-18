@@ -380,6 +380,10 @@ var callStore = (guardar_avance = false) => {
   var formElement = document.getElementById("form_store");
   var formData = new FormData(formElement);
 
+  // 1. CAPTURAR EL CHECKBOX (NUEVO)
+  const esConsignadoMaster = $('#es_consignado_master').is(':checked') ? 1 : 0; // <--- NUEVO
+  formData.append('es_consignado', esConsignadoMaster); // <--- NUEVO: Para asegurar que vaya en la cabecera también
+
   var items = $('#tbody tr').map(function(i, row) {
     return {
       'codarticulo' : $(this).data('producto_id'),
@@ -398,7 +402,7 @@ var callStore = (guardar_avance = false) => {
       'desc_unidad_medida' : $(this).data('desc_unidad_medida'),
       'sigla_umfe' : $(this).data('sigla_umfe'),
       'costo_articulo' : $(this).data('costo_articulo'),
-      
+      'es_consignado': esConsignadoMaster // <--- NUEVO: Agregado al detalle
     };
   }).get();
 
@@ -559,9 +563,6 @@ var callStore = (guardar_avance = false) => {
       icon: 'error'
     })
   }
-  
-
-
 }
 
 var modalStore = function(formData){
@@ -672,6 +673,15 @@ $(document).on('change', '.bonificacion', function(event) {
 
   calcularTotales();
 
+});
+
+// Evento para actualizar el Local Storage cuando cambie el checkbox
+$(document).on('change', '#es_consignado_master', function(event) {
+    // No es necesario preventDefault en un checkbox cambio, pero si lo deseas mantener:
+    // event.preventDefault(); 
+    
+    /* Act on the event */
+    updateLocalStorage();
 });
 
 $(document).on('change', '#base_calculo', function(event) {

@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Luecano\NumeroALetras\NumeroALetras;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
 
 class GuiaIngresoController extends Controller
 {
@@ -644,6 +646,7 @@ class GuiaIngresoController extends Controller
 
         $datos['indicar_proveedor'] = ($datos['indicar_proveedor'] ?? '' == 'on') ? true : false ;
         
+
         $procede = true;
         $msj_tipo = "success";
         $log = "";
@@ -710,6 +713,9 @@ class GuiaIngresoController extends Controller
 
         //registro en store
         if ($procede == true) {
+            // --- AGREGA ESTO AQUÍ ---
+            Log::info('STORE LOCAL - Intentando crear Cabecera GuiaIngreso:', $datos);
+            // ------------------------
             // dd($datos);
             try {
                 $store = GuiaIngreso::create($datos);
@@ -729,7 +735,7 @@ class GuiaIngresoController extends Controller
                 $updateSerie = Serie::find($asignarSerie->serieAsignada->id);
                 // dd($datos);
                 $updateSerie->numero = $datos['numero'];
-    
+
                 try {
                     $updateSerie->save();
                     
@@ -783,6 +789,12 @@ class GuiaIngresoController extends Controller
                     $guiaDetalle->costo_articulo = $item->costo_articulo ?? 0;
                     $guiaDetalle->costo_total = $costo_total;
 
+                    // <--- NUEVO: Guardar el flag consignado en el detalle
+                    $guiaDetalle->es_consignado = $item->es_consignado ?? 0; 
+
+                    // --- AGREGA ESTO JUSTO ANTES DEL SAVE() ---
+                    Log::info("STORE LOCAL - Guardando item detalle [{$item->codarticulo}]:", $guiaDetalle->toArray());
+                    // ------------------------------------------
                     try {
                         $guiaDetalle->save();
                     } catch (Exception $e) {
@@ -898,20 +910,64 @@ class GuiaIngresoController extends Controller
     {
         $api_datos = Parametro::find(6)->valor;
         $panel_origen = $request->post('panel_origen');
-
         $id = $request->post('id');
 
         $guia = GuiaIngreso::find($id);
+        
+        if (!$guia) {
+            return response()->json([
+                'procede' => false, 
+                'msj' => 'Guía no encontrada', 
+                'msj_tipo' => 'error', 
+                'log' => 'ID invalido'
+            ]);
+        }
+
         $fecha = Carbon::parse($guia->fecha_emision);
         $anio = $fecha->year;
 
         $procede = true;
-        $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMart</b>";
+        $msj = "<b><i class='fa fa-check-double'></i>Guia Nº: {$guia->serie}-{$guia->numero} registrada en DataMarket</b>";
         $msj_tipo = "success";
         $log = "";
 
         $detalle = GuiaIngresoDetalle::where('guia_ingreso_id', $guia->id)->get();
+        
+        $articulosConsignados = []; 
+        $body_detalle = []; 
 
+        // ============================================================
+        // PASO 1: IDENTIFICAR artículos consignados ANTES de armar body
+        // ============================================================
+        foreach ($detalle as $item) {
+            if (($item->es_consignado ?? 0) == 1) {
+                $articulosConsignados[] = $item->codarticulo;
+            }
+        }
+
+        // ============================================================
+        // PASO 2: ACTUALIZAR MaestroArticulo EN SQL SERVER **PRIMERO**
+        // ============================================================
+        if (!empty($articulosConsignados)) {
+            Log::info("PASO PREVIO: Actualizando consignados en SQL Server", $articulosConsignados);
+            
+            $actualizacionExitosa = $this->actualizarConsignadosDirecto($articulosConsignados, 1);
+            
+            if (!$actualizacionExitosa) {
+                return response()->json([
+                    'procede' => false,
+                    'msj' => 'Error crítico: No se pudieron actualizar los productos consignados en SQL Server',
+                    'msj_tipo' => 'error',
+                    'log' => 'Fallo en actualizarConsignadosDirecto()'
+                ]);
+            }
+            
+            Log::info("✓ Consignados actualizados correctamente en SQL Server");
+        }
+
+        // ============================================================
+        // PASO 3: AHORA SÍ armar el body_detalle
+        // ============================================================
         foreach ($detalle as $item) {
             $body_detalle[] = array(
                 "anioGuia" => $anio,
@@ -924,11 +980,13 @@ class GuiaIngresoController extends Controller
                 "numeroGuia" => $guia->numero,
                 "precio" => $item->precio,
                 "tipoGuia" => "N",
-                "unidadMedida" => $item->cod_unidad ?? 1
+                "unidadMedida" => $item->cod_unidad ?? 1,
             );
         }
 
-
+        // ============================================================
+        // PASO 4: Armar body completo
+        // ============================================================
         $body = [
             "anioGuiaRemision" => $anio,
             "breveteChofer" => null,
@@ -938,12 +996,12 @@ class GuiaIngresoController extends Controller
             "codCliente" => null,
             "codEstacion" => $guia->codestacion,
             "codListaPrecio" => null,
-            "codProveedor" => $proveedor_id ?? '',
+            "codProveedor" => $guia->proveedor_id ?? 0, 
             "codtrabajador" => $guia->vendedor_id,
             "comentario" => $guia->comentario,
             "descuento" => $guia->monto_descuento,
             "detalle" => $body_detalle,
-            "direccionllegada" =>null,
+            "direccionllegada" => null,
             "direccionpartida" => null,
             "dnichofer" => null,
             "estadoProceso" => "0",
@@ -959,7 +1017,7 @@ class GuiaIngresoController extends Controller
             "numeroGuia" => $guia->numero,
             "placavehiculo" => null,
             "rucTransportista" => null,
-            "tipoGuia" => "N", //N->ingreso; A->Salida
+            "tipoGuia" => "N",
             "tipoOperacion" => $guia->tipo_operacion_id,
             "tipomonda" => 1,
             "totalVenta" => $guia->total_venta,
@@ -968,52 +1026,59 @@ class GuiaIngresoController extends Controller
             "valorVenta" => $guia->importe_sin_igv,
         ];
 
-        // dd("{$api_datos}/InsertGuiaDMK");
-        // dd(json_encode($body));
+        Log::info('DATAMARKET - Payload a enviar (Body completo):', $body);
+
+        // ============================================================
+        // PASO 5: Enviar a la API
+        // ============================================================
         try {
-            
             $storeRemoto = Http::post("{$api_datos}/InsertGuiaDMK", $body)->object();
-            // dd($storeRemoto);
-            if ($storeRemoto->exito == false) {
+
+            if (isset($storeRemoto->exito) && $storeRemoto->exito == false) {
                 $procede = false;
-                $msj = "No se pudo completar : {$storeRemoto->msgerror}";
+                $msgErrorRemoto = $storeRemoto->msgerror ?? 'Error desconocido en remoto';
+                $msj = "No se pudo completar : {$msgErrorRemoto}";
             }
+
         } catch (Exception $e) {
-            //throw $th;
-            // dd($e);
             $procede = false;
-            $msj = "{$msj} <b>No se pudo registrar en DATAMARK";
+            $msj = "{$msj} <b>No se pudo registrar en DATAMART (Error de Conexión API)</b>";
             $msj_tipo = "error";
-            $log = "{$e}";
+            $log = "Error API: " . $e->getMessage();
+            Log::error($log);
         }
 
-
+        // ============================================================
+        // PASO 6: Actualizar estado local
+        // ============================================================
         if ($procede == true) {
-            $guia_status = GuiaIngreso::find($guia->id);
             try {
-                $guia_status->enviado_datamarket = 1;
-                $guia_status->save();
+                $guia->enviado_datamarket = 1;
+                $guia->save();
             } catch (Exception $e) {
-                //throw $th;
                 $procede = false;
-                $msj = "No se puedo registrar el envio";
+                $msj = "Se envió a DataMarket pero falló al actualizar el estado local.";
                 $msj_tipo = "error";
-                $log = "{$e}";
+                $log = "Error Local DB: " . $e->getMessage();
             }
         }
 
-        if ($procede == false) {
-            if ($panel_origen != 'index') {
-                $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
-                
-            }
+        if ($procede == false && $panel_origen != 'index') {
+            $msj = "{$msj} <br> <button class='btn btn-success btn-sm' id='btnReintentarDataMart' data-id='{$id}' ><i class='fa-regular fa-paper-plane'></i> Reintentar</button>";
         }
 
-        $this->registrarAuditoria($guia->id, 1, 'guia_ingresos_datamart', json_encode($body), strip_tags($msj));
+        if (method_exists($this, 'registrarAuditoria')) {
+            $this->registrarAuditoria($guia->id, 1, 'guia_ingresos_datamart', json_encode($body), strip_tags($msj));
+        }
 
-        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log]);
-
+        return response()->json([
+            'procede' => $procede, 
+            'msj' => $msj, 
+            'msj_tipo' => $msj_tipo, 
+            'log' => $log
+        ]);
     }
+
 
     /**
      * Display the specified resource.
@@ -1308,6 +1373,30 @@ class GuiaIngresoController extends Controller
 
         return (object) array ('procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log);
 
+    }
+
+
+    private function actualizarConsignadosDirecto($codArticulos, $valorConsignado = 1)
+    {
+        // Si no hay artículos, no hacemos nada
+        if (empty($codArticulos)) {
+            return false;
+        }
+
+        try {
+            // Usamos la conexión directa 'sqlsrv' configurada anteriormente
+            DB::connection('sqlsrv')
+                ->table('MaestroArticulo')
+                ->whereIn('CodArticulo', $codArticulos) // whereIn es optimo para arrays
+                ->update(['consignacion' => $valorConsignado]);
+
+            Log::info("SQLSERVER: Actualizados artículos " . json_encode($codArticulos) . " a consignación: $valorConsignado");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("SQLSERVER Error actualizando consignados: " . $e->getMessage());
+            return false;
+        }
     }
 
 }
