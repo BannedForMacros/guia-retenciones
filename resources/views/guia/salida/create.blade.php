@@ -626,7 +626,7 @@
                                             <td class='align-middle'>UNI</td>
                                             <td class='align-middle'><span name='span_importe'>{{ $item->importe }}</span></td>
                                             <td class='align-middle'>
-                                                <input type="number" class="form-control form-control-sm valor_descuento_tr"
+                                                <input type="number" step="0,001" class="form-control form-control-sm valor_descuento_tr"
                                                        value="{{ $item->monto_descuento > 0 ? $item->monto_descuento : $item->porcentaje_descuento }}">
                                             </td>
                                             <td class='align-middle text-center'>

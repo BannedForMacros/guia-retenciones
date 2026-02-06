@@ -1,6 +1,5 @@
 $(document).on('change', '#tipo_busqueda_articulo', function (event) {
   event.preventDefault();
-  /* Act on the event */
   callFormBusquedaArticulo();
 });
 
@@ -34,7 +33,6 @@ var formBusquedaArticulo = function (formData) {
       } else {
         setTimeout(() => {
           $('#producto_valor').focus();
-
         }, 200);
       }
     }
@@ -44,14 +42,10 @@ var formBusquedaArticulo = function (formData) {
 
 $(document).on('submit', '#form_buscar_articulo', function (event) {
   event.preventDefault();
-  /* Act on the event */
-  // console.log('hola');
   var formElement = document.getElementById("form_buscar_articulo");
   var formData = new FormData(formElement);
   var codalmacen = $('#codalmacen').val();
-  // var codlistaprecio = $('#codlistaprecio').val();
   var codlistaprecio = 1;
-  // var codestacion = $('#codlistaprecio').find(':selected').data('codestacion');
   var codestacion = 1;
   var tipo = $('#tipo_busqueda_articulo').val();
   formData.append('codalmacen', codalmacen);
@@ -74,7 +68,10 @@ var buscarArticuloBarra = function (formData) {
 
       if (response.procede == true) {
         var data = response.getArticulo
-        console.log({data});
+        console.log("--- DEBUG BUSQUEDA BARRA ---");
+        console.log("Data recibida del servidor:", data);
+        console.log("Costo Articulo desde DB:", data.costo_articulo);
+        
         $('#producto_id').val(data.codArticulo);
         $('#producto_codigo_barra').val(data.codBarra);
         $('#producto_descripcion').val(data.nombreArticulo);
@@ -85,8 +82,10 @@ var buscarArticuloBarra = function (formData) {
         $('#producto_sigla_umfe').val(data.siglaUMFE);
         $('#producto_peso').val(data.peso);
         $('#producto_costo_articulo').val(data.costo_articulo);
+        $('#producto_afecto').val(data.afecto);
+        $('#producto_tipo_igv').val(data.tipo_igv);
 
-  
+
         callAgregarItem();
   
         setTimeout(() => {
@@ -112,10 +111,13 @@ var buscarArticuloBarra = function (formData) {
 
 $(document).on('change', '#producto_select', function(event) {
   event.preventDefault();
-  /* Act on the event */
   console.log('seleccion de producto');
   var data = $("#producto_select").select2('data')[0];
-  console.log({data});
+  
+  console.log("--- DEBUG SELECT2 ---");
+  console.log("Data seleccionada:", data);
+  console.log("Costo Articulo en data:", data.costo_articulo);
+
   $('#producto_id').val(data.id);
   $('#producto_codigo_barra').val(data.codigo_barra);
   $('#producto_descripcion').val(data.descripcion);
@@ -126,46 +128,36 @@ $(document).on('change', '#producto_select', function(event) {
   $('#producto_desc_unidad_medida').val(data.desc_unidad_medida);
   $('#producto_sigla_umfe').val(data.sigla_umfe);
   $('#producto_costo_articulo').val(data.costo_articulo);
+  $('#producto_tipo_igv').val(data.tipo_igv);
 
-  
+console.log("TIPO IGV (select2):", $('#producto_tipo_igv').val(), data.tipo_igv, data);
+
   callAgregarItem();
 });
 
 var callAgregarItem = () => {
-  // var data = $("#producto_select").select2('data')[0];
-  // console.log(data);//displays hello world
   var cantidad = $('#cantidad').val();
   var producto_id = $('#producto_id').val();
-  // var codigo_barra = $('#producto_id').find(':selected').data('codigo_barra');
-  // var codigo_barra = data.codigo_barra;
   var codigo_barra = $('#producto_codigo_barra').val();
-  // console.log({codigo_barra});
-  // var cod_plu = producto_id;
   var cod_plu = $('#producto_id').val();
-  // var descripcion = data.descripcion;
   var descripcion = $('#producto_descripcion').val();
   var cod_unidad = $('#producto_cod_unidad').val();
   var desc_unidad_medida = $('#producto_desc_unidad_medida').val();
   var sigla_umfe = $('#producto_sigla_umfe').val();
-  // var precio_publico = data.precio_publico;
+  
+  // PRECIOS
   var precio_publico = $('#producto_precio_publico').val();
-  // var precio_sin_igv = data.precio_sin_igv;
   var precio_sin_igv = $('#producto_precio_sin_igv').val();
-  var peso = $('#producto_peso').val();
   var costo_articulo = $('#producto_costo_articulo').val();
-
+  var peso = $('#producto_peso').val();
 
   var base_calculo = $('#base_calculo').val();
+  var tipo_igv = $('#producto_tipo_igv').val() || 0;
   var tipo_busqueda_articulo = $('#tipo_busqueda_articulo').val();
 
-
-  // console.log({producto_id});
   var items = $('#tbody tr').map(function (i, row) {
     return {
       'producto_id': $(this).data('producto_id'),
-      // 'codigo_producto' : $(this).find('input[name=item]').val(),
-      // 'item_seleccionado' : $(this).find('input[name=item]').prop('checked'),
-      // 'acceso' : $(this).find('input[type=radio]:checked').val(),
     };
   }).get();
 
@@ -181,17 +173,32 @@ var callAgregarItem = () => {
   formData.append('precio_publico', precio_publico);
   formData.append('precio_sin_igv', precio_sin_igv);
   formData.append('peso', peso);
+  formData.append('tipo_igv', tipo_igv);
+
+  
+  // --- INICIO DEBUG LOGICA DE PRECIOS ---
+  console.log("=== DEBUG callAgregarItem ===");
+  console.log("1. Valor en input Costo (#producto_costo_articulo):", costo_articulo);
+  console.log("2. Valor en input Precio Público:", precio_publico);
+  
+  // LÓGICA: Si hay costo mayor a 0, usar costo. Si no, usar precio público.
+  var precio_visual = (costo_articulo && parseFloat(costo_articulo) > 0) ? costo_articulo : precio_publico;
+  
+  console.log("3. Precio Visual CALCULADO (A enviar):", precio_visual);
+
   formData.append('costo_articulo', costo_articulo);
+  formData.append('precio_visual', precio_visual); // <--- ESTO ES LO QUE DEBE RECIBIR PHP
+  // --- FIN DEBUG ---
+
   formData.append('cantidad', cantidad);
   formData.append('base_calculo', base_calculo);
   formData.append('tipo_busqueda_articulo', tipo_busqueda_articulo);
 
   formData.append('items', JSON.stringify(items));
+  
   if (formData.get('producto_id') != '') {
     agregarItem(formData);
-  
     limpiarFormArticulo();
-    
   }
 }
 
@@ -204,9 +211,14 @@ var agregarItem = function(formData){
     contentType: false,
     dataType: 'json',
     success: function(response){
+      
+      console.log("=== RESPUESTA SERVIDOR AGREGAR ITEM ===");
+      console.log("HTML Recibido (response.tr):", response.tr);
 
       if (response.procede == true) {
         $('#tbody').append(response.tr);
+        $('#base_calculo').trigger('change');
+
       }
 
       if (response.procede == false) {
@@ -237,28 +249,15 @@ var limpiarFormArticulo = () => {
   $('#producto_descripcion').val('');
   $('#producto_precio_publico').val('');
   $('#producto_precio_sin_igv').val('');
+  // Limpiamos también el costo para evitar residuos
+  $('#producto_costo_articulo').val('');
 }
 
 var asignarFocusCantidad = (codigo_producto) => {
-  console.log({codigo_producto});
   $('#tbody tr').map(function(i, row) {
-
     var id = $(this).data('producto_id');
-    console.log({codigo_producto, id});
-
     if (id == codigo_producto) {
-      console.log('iguales 🤗');
       $(this).find('input[name=cantidad]').focus();
     }
-
-    // return {
-    //   'codarticulo' : $(this).data('producto_id'),
-    // };
   })
-
-
-
-
-  // console.log({items});
-
 }

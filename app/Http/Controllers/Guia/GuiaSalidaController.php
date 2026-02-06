@@ -1151,8 +1151,8 @@ class GuiaSalidaController extends Controller
                     $guiaDetalle->costo_articulo = $item->costo_articulo ?? 0;
                     $costo_total = $item->costo_articulo * $item->cantidad;
                     $guiaDetalle->costo_total = number_format($costo_total, 2);
-                    $guiaDetalle->porcentaje_descuento = $item->porcentaje_descuento;
-                    $guiaDetalle->monto_descuento = $item->monto_descuento;
+                    $guiaDetalle->porcentaje_descuento = number_format((float)($item->porcentaje_descuento ?? 0), 3, '.', '');
+                    $guiaDetalle->monto_descuento      = number_format((float)($item->monto_descuento ?? 0), 3, '.', '');
                     $guiaDetalle->peso_unitario = $item->peso;
                     $guiaDetalle->peso_total = floatval($item->peso) * floatval($item->cantidad);
 
@@ -1386,7 +1386,7 @@ public function storeDataMart(Request $request)
             "precio" => $item->precio,
             "tipoGuia" => "A", // A = Salida
             "unidadMedida" => $item->cod_unidad ?? 1,
-            "descuento" => $item->monto_descuento ?? 0,
+            "descuento" => number_format((float)($item->monto_descuento ?? 0), 3, '.', ''),
         );
     }
 
@@ -1405,7 +1405,7 @@ public function storeDataMart(Request $request)
         "codProveedor" => $guia->proveedor_id ?? 0,
         "codtrabajador" => $guia->vendedor_id,
         "comentario" => $guia->comentario,
-        "descuento" => $guia->monto_descuento,
+        "descuento" => number_format((float)($guia->monto_descuento ?? 0), 3, '.', ''),
         "detalle" => $body_detalle,
         "direccionllegada" => $guia->direccion_llegada,
         "direccionpartida" => $guia->direccion_partida,

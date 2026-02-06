@@ -214,7 +214,6 @@ class GuiaIngresoController extends Controller
 
 public function agregarItem(Request $request)
     {
-        $tipo_igv = (int) ($request->post('tipo_igv') ?? 0);
         $producto_id = $request->post('producto_id');
         $codigo_barra = $request->post('codigo_barra');
         $cod_plu = $request->post('cod_plu');
@@ -242,10 +241,6 @@ public function agregarItem(Request $request)
              }
         }
         // ---------------------------------------------------------------
-        $costo_sin_igv = (float) $precio_visual;
-        $costo_sin_igv = round($costo_sin_igv, 2);
-
-        $costo_con_igv = round($costo_sin_igv * 1.18, 2);
 
         $cantidad = 1;
         $base_clalculo = $request->post('base_calculo');
@@ -300,8 +295,6 @@ public function agregarItem(Request $request)
 
             $tr = "
                 <tr
-                    data-tipo_igv='{$tipo_igv}'
-
                     data-producto_id = '{$producto_id}'
                     
                     data-precio_unitario = '{$span_precio}' 
@@ -316,8 +309,7 @@ public function agregarItem(Request $request)
                     data-desc_unidad_medida = '{$desc_unidad_medida}'
                     data-sigla_umfe = '{$sigla_umfe}'
                     data-costo_articulo = '{$costo_articulo}'
-                    data-costo_con_igv = '{$costo_con_igv}'
-                    data-costo_sin_igv = '{$costo_sin_igv}'
+
                 >
                     <td class='align-middle'>{$codigo_barra}</td>
                     <td class='align-middle'>{$producto_id}</td>
@@ -411,7 +403,7 @@ public function agregarItem(Request $request)
         $items = array();
         foreach ($listArticulos as $item) {
             $stock = $item->stock ?? 0;
-            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '', 'costo_articulo' => $item->costoArticulo, 'tipo_igv' => $item->tipoIgv ?? 0, );
+            $items[] = (object) array('id' => $item->codArticulo, 'text' => "[{$item->codBarra}] {$item->nombreArticulo}", 'codigo_barra' => $item->codBarra, 'descripcion' => $item->nombreArticulo, 'precio_publico' => $item->precioPublico, 'precio_sin_igv' => $item->precioSinIGV, 'peso' => $item->peso ?? 0, 'cod_unidad' => $item->codUnidad, 'desc_unidad_medida' => $item->descUnidadMedida ?? '', 'sigla_umfe' => $item->siglaUMFE ?? '', 'costo_articulo' => $item->costoArticulo );
         }
 
         return response()->json(['items' => $items]);
@@ -978,7 +970,7 @@ public function agregarItem(Request $request)
         $body_detalle = []; 
 
         // ============================================================
-        // PASO 1: IDENTIFICAR artículos consignados
+        // PASO 1: IDENTIFICAR artículos consignados ANTES de armar body
         // ============================================================
         foreach ($detalle as $item) {
             if (($item->es_consignado ?? 0) == 1) {
@@ -987,7 +979,7 @@ public function agregarItem(Request $request)
         }
 
         // ============================================================
-        // PASO 2: ACTUALIZAR MaestroArticulo EN SQL SERVER
+        // PASO 2: ACTUALIZAR MaestroArticulo EN SQL SERVER **PRIMERO**
         // ============================================================
         if (!empty($articulosConsignados)) {
             Log::info("PASO PREVIO: Actualizando consignados en SQL Server", $articulosConsignados);
@@ -1007,39 +999,19 @@ public function agregarItem(Request $request)
         }
 
         // ============================================================
-        // PASO 3: ARMAR BODY DETALLE (CON CORRECCIÓN DE IGV Y 4 DECIMALES)
+        // PASO 3: AHORA SÍ armar el body_detalle
         // ============================================================
-        // Tu base de datos SQL Server soporta 5 decimales en Precio y 7 en Importe.
-        // Usaremos 4 decimales para máxima precisión matemática.
         foreach ($detalle as $item) {
-            
-            // Convertimos a float para asegurar que sea número
-            $precioBase = floatval($item->precio);
-            $importeBase = floatval($item->importe);
-
-            // LÓGICA MATEMÁTICA:
-            // 1. Multiplicamos por 1.18 para agregar el IGV (DataMarket lo espera así).
-            // 2. Redondeamos a 4 decimales para evitar pérdida de centavos en la división inversa.
-            // Ejemplo: 30.47 * 1.18 = 35.9546
-            $precioConIgv = round($precioBase * 1.18, 4);
-            $importeConIgv = round($importeBase * 1.18, 4);
-
             $body_detalle[] = array(
                 "anioGuia" => $anio,
                 "cantidad" => $item->cantidad,
                 "codArticulo" => $item->codarticulo,
                 "estadoProceso" => "0",
-                
-                // Enviamos "35.9546"
-                "importeDetalle" => number_format($importeConIgv, 4, '.', ''),
-                
-                "item" => 1, 
+                "importeDetalle" => $item->importe,
+                "item" => 1,
                 "numSerie" => $guia->serie,
                 "numeroGuia" => $guia->numero,
-                
-                // Enviamos "35.9546"
-                "precio" => number_format($precioConIgv, 4, '.', ''),
-                
+                "precio" => $item->precio,
                 "tipoGuia" => "N",
                 "unidadMedida" => $item->cod_unidad ?? 1,
             );
@@ -1061,9 +1033,7 @@ public function agregarItem(Request $request)
             "codtrabajador" => $guia->vendedor_id,
             "comentario" => $guia->comentario,
             "descuento" => $guia->monto_descuento,
-            
-            "detalle" => $body_detalle, // <--- Aquí va el array corregido
-            
+            "detalle" => $body_detalle,
             "direccionllegada" => null,
             "direccionpartida" => null,
             "dnichofer" => null,
@@ -1082,7 +1052,7 @@ public function agregarItem(Request $request)
             "rucTransportista" => null,
             "tipoGuia" => "N",
             "tipoOperacion" => $guia->tipo_operacion_id,
-            "tipomonda" => $guia->divisa_id, 
+            "tipomonda" => 1,
             "totalVenta" => $guia->total_venta,
             "ubigeollegada" => null,
             "ubigeopartida" => null,

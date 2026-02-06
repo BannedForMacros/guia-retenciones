@@ -121,17 +121,37 @@
                         </label>
                       </div>
                     </div>
-                    <div class="col-md-8">
-                      {{-- <label class="form-label">Serie-Nro</label> --}}
-                      <div class="row">
-                        <div class="col-md-4">
-                          <input type="text" class="form-control" name="pedido_serie" id="pedido_serie" placeholder="Serie" value="{{ $guia->pedido_serie ?? '' }}">
-                        </div>
-                        <div class="col-md-8">
-                          <input type="text" class="form-control" name="pedido_numero" id="pedido_numero" placeholder="Numero" value="{{ $guia->pedido_numero ?? '' }}">
-                        </div>
+                      <div class="col-md-8">
+                          {{-- <label class="form-label">Serie-Nro</label> --}}
+                          <div class="row">
+                              <div class="col-md-5">
+                                  <input 
+                                      type="text" 
+                                      class="form-control" 
+                                      name="pedido_serie" 
+                                      id="pedido_serie" 
+                                      placeholder="Serie" 
+                                      value="{{ $guia->pedido_serie ?? '' }}"
+                                      /* CAMBIO 2: Este código impide escribir letras, solo deja números 0-9 */
+                                      oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                      maxlength="4"
+                                  >
+                              </div>
+                              
+                              <div class="col-md-7">
+                                  <input 
+                                      type="text" 
+                                      class="form-control" 
+                                      name="pedido_numero" 
+                                      id="pedido_numero" 
+                                      placeholder="Numero" 
+                                      value="{{ $guia->pedido_numero ?? '' }}"
+                                      /* También protegemos el número por si acaso */
+                                      oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                  >
+                              </div>
+                          </div>
                       </div>
-                    </div>
 
                   </div>
                 </div>
@@ -176,6 +196,7 @@
                   <label class="form-label">Divisa</label>
                   <select class="form-select" name="divisa_id" id="divisa_id">
                     <option value="1">Soles</option>
+                    <option value="2">Dolares</option>
                   </select>
                 </div>
                 <div class="col-md-6 mb-2">
@@ -277,6 +298,8 @@
               <input type="hidden" id="producto_desc_unidad_medida" name="producto_desc_unidad_medida">
               <input type="hidden" id="producto_sigla_umfe" name="producto_sigla_umfe">
               <input type="hidden" id="producto_costo_articulo" name="producto_costo_articulo">
+              <input type="hidden" id="producto_tipo_igv" name="producto_tipo_igv">
+
 
 
             </div>
@@ -301,13 +324,17 @@
                     @foreach (($detalle ?? []) as $item)
                       <tr 
                         data-producto_id='{{ $item->codarticulo }}'
-                        data-precio_unitario='{{ $item->precio_publico }}'
                         data-precio_publico='{{ $item->precio_publico }}'
                         data-precio_sin_igv='{{ $item->precio_sin_igv }}' 
                         data-descripcion='{{ $item->descripcion }}'
                         data-codigo='{{ $item->codarticulo }}'
                         data-codigo_barra='{{ $item->codigo_barra }}'
                         data-peso='{{ $item->peso }}'
+                        data-costo_con_igv='{{ $item->precio }}'
+                        data-costo_sin_igv='{{ round($item->precio / 1.18, 2) }}'
+                        data-tipo_igv='{{ $item->tipo_igv ?? 1 }}'
+
+
                       >
                         <td class='align-middle'>{{ $item->codigo_barra }}</td>
                         <td class='align-middle'>{{ $item->codarticulo }}</td>

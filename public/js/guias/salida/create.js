@@ -276,36 +276,67 @@ $(document).on('click', '.delete_item', function(event) {
 // --- FUNCIÓN CENTRAL DE CÁLCULO DE LA FILA ---
 // ***** AGREGA ESTA NUEVA VERSIÓN DE LA FUNCIÓN *****
 
+const round3 = (n) => Math.round((Number(n) + Number.EPSILON) * 1000) / 1000;
+
 function recalcularFila(fila) {
-    const cantidad = parseFloat(fila.find('.input_cantidad_tr').val()) || 0;
-    const precioUnitario = parseFloat(fila.find('span[name="span_precio"]').text()) || 0;
-    const valorDescuento = parseFloat(fila.find('.valor_descuento_tr').val()) || 0;
+  const cantidad = parseFloat(fila.find('.input_cantidad_tr').val()) || 0;
+  const precioUnitario = parseFloat(fila.find('span[name="span_precio"]').text()) || 0;
 
-    // CAMBIO CLAVE: Lee el tipo de descuento desde el control maestro en la cabecera
-    const tipoDescuento = $('input[name="master_discount_type"]:checked').val();
+  let valor = parseFloat(fila.find('.valor_descuento_tr').val());
+  valor = isNaN(valor) ? 0 : valor;
 
-    let montoDescuentoCalculado = 0;
-    let porcentajeDescuentoCalculado = 0;
-    const subtotal = cantidad * precioUnitario;
+  const tipoDescuento = $('input[name="master_discount_type"]:checked').val();
+  const subtotal = cantidad * precioUnitario;
 
-    if (tipoDescuento === 'porcentaje') {
-        porcentajeDescuentoCalculado = valorDescuento;
-        montoDescuentoCalculado = subtotal * (valorDescuento / 100);
-    } else { // tipoDescuento es 'monto'
-        montoDescuentoCalculado = valorDescuento;
-        if (subtotal > 0) {
-            porcentajeDescuentoCalculado = (valorDescuento / subtotal) * 100;
-        }
-    }
+  let montoDesc = 0;
+  let porcDesc = 0;
 
-    const importeFinal = subtotal - montoDescuentoCalculado;
+  if (subtotal <= 0) {
+    montoDesc = 0;
+    porcDesc = 0;
+  } else if (tipoDescuento === 'porcentaje') {
+    // 1) normaliza % a 3
+    porcDesc = round3(valor);
 
-    fila.find('span[name="span_importe"]').text(importeFinal.toFixed(2));
-    fila.attr('data-monto-descuento', montoDescuentoCalculado.toFixed(4));
-    fila.attr('data-porcentaje-descuento', porcentajeDescuentoCalculado.toFixed(4));
+    // 2) calcula monto desde el % normalizado
+    montoDesc = round3(subtotal * (porcDesc / 100));
+  } else {
+    // 1) normaliza monto a 3
+    montoDesc = round3(valor);
 
-    calcularTotales();
+    // 2) calcula % desde monto normalizado y normaliza % a 3
+    porcDesc = round3((montoDesc / subtotal) * 100);
+
+    // 3) RE-CALCULA monto desde el % normalizado (para que ambos queden coherentes)
+    montoDesc = round3(subtotal * (porcDesc / 100));
+  }
+
+  // Seguridad: no permitir descuento > subtotal
+  if (montoDesc > subtotal) {
+    montoDesc = round3(subtotal);
+    porcDesc = round3((montoDesc / subtotal) * 100);
+  }
+  if (montoDesc < 0) montoDesc = 0;
+  if (porcDesc < 0) porcDesc = 0;
+
+  // ✅ guardar EXACTO a 3 decimales (coherente)
+  fila.attr('data-monto-descuento', montoDesc.toFixed(3));
+  fila.attr('data-porcentaje-descuento', porcDesc.toFixed(3));
+
+  // ✅ mostrar el input con 3 decimales según el tipo elegido
+  if (tipoDescuento === 'porcentaje') {
+    fila.find('.valor_descuento_tr').val(porcDesc.toFixed(3));
+  } else {
+    fila.find('.valor_descuento_tr').val(montoDesc.toFixed(3));
+  }
+
+  // Importe final (acá tú decides si 2 o 3)
+  const importeFinal = subtotal - montoDesc;
+  fila.find('span[name="span_importe"]').text(importeFinal.toFixed(2)); // o .toFixed(3) si quieres
+
+  calcularTotales();
 }
+
 
 // --- DISPARADORES DE EVENTOS ---
 // Esto hace que la función se ejecute cuando cambies la cantidad, el valor del dcto o el tipo de dcto.

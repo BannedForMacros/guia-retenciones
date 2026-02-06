@@ -74,6 +74,10 @@ var buscarArticuloBarra = function (formData) {
     success: function (response) {
       if (response.procede == true) {
         var data = response.getArticulo
+        // --- AGREGA ESTO PARA VER LA VERDAD ---
+        console.log("Ruta usada:", this.url);
+        console.log("El servidor mandó en precioSinIGV:", data.precioSinIGV);
+        console.log("El servidor mandó en costo_articulo:", data.costo_articulo);
         console.log({data});
         $('#producto_id').val(data.codArticulo);
         $('#producto_codigo_barra').val(data.codBarra);
