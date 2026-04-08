@@ -251,9 +251,10 @@
                                     <div class="row mt-4">
                                         <div class="col-md-6">
                                             <label class="form-label">Divisa</label>
-                                            <select class="form-select" name="divisa_id" id="divisa_id">
-                                                <option value="1" data-nombre="Soles">Soles</option>
-                                            </select>
+                                                <select class="form-select" name="divisa_id" id="divisa_id">
+                                                    <option value="1" data-nombre="Soles">Soles</option>
+                                                    <option value="2" data-nombre="Dólares">Dólares</option>
+                                                </select>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">F Pago</label>
