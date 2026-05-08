@@ -417,50 +417,74 @@ public function agregarItem(Request $request)
         return response()->json(['items' => $items]);
     }
 
-    public function buscarArticuloBarra(Request $request)
-    {
-        $api_datos = Parametro::find(6)->valor;
+public function buscarArticuloBarra(Request $request)
+{
+    $api_datos = Parametro::find(6)->valor;
 
-        $valor = trim($request->get('producto_valor'));
-        $tipoconsulta = $request->post('tipo');
-        $codestacion = $request->get('codestacion');
-        $codalmacen = $request->get('codalmacen');
-        $codlistaprecio = $request->get('codlistaprecio');
+    $valor = trim($request->get('producto_valor'));
+    $tipoconsulta = $request->post('tipo');
+    $codestacion = $request->get('codestacion');
+    $codalmacen = $request->get('codalmacen');
+    $codlistaprecio = $request->get('codlistaprecio');
 
-        $procede = true;
-        $msj = "Articulo encontrado";
-        $msj_tipo = "success";
-        $log = "";
+    $procede = true;
+    $msj = "Articulo encontrado";
+    $msj_tipo = "success";
+    $log = "";
+    $getArticulo = null;
 
-        try {
-            $getArticulo = Http::post("{$api_datos}/ObtenerArticulo", 
-            ['valor' => $valor, 'tipoconsulta' => 1, 'codestacion' => $codestacion, 'codalmacen' => $codalmacen, 'codlistaprecio' => $codlistaprecio])->object()->articulos;
-            
-        } catch (Exception $e) {
-            $procede = false;
-            $msj = "Ocurrio un problema al buscar";
-            $msj_tipo = "error";
-            $log = "{$e}";
-        }
+    try {
+        $responseArticulos = Http::post("{$api_datos}/ObtenerArticulo", [
+            'valor' => $valor, 
+            'tipoconsulta' => 1, 
+            'codestacion' => $codestacion, 
+            'codalmacen' => $codalmacen, 
+            'codlistaprecio' => $codlistaprecio
+        ])->object()->articulos;
         
-        if ($procede == true) {
-            // dd(count($getArticulo));
-            if (count($getArticulo) == 0) {
-                $procede = false;
-                $msj = "Arcitulo no encontrado";
-                $msj_tipo = "error";
-                
-            }else{
-                $getArticulo = $getArticulo[0];
-            }
-            
-        }
-        // $getArticulo = $listArticulos;
-        // dd($getArticulo);
-
-        // return response()->json(['getArticulo' => $getArticulo, '']);
-        return response()->json(['procede' => $procede, 'msj' => $msj, 'msj_tipo' => $msj_tipo, 'log' => $log, 'getArticulo' => $getArticulo]);
+    } catch (Exception $e) {
+        $procede = false;
+        $msj = "Ocurrió un problema al buscar";
+        $msj_tipo = "error";
+        $log = "{$e}";
+        $responseArticulos = [];
     }
+    
+    if ($procede == true) {
+        if (count($responseArticulos) == 0) {
+            $procede = false;
+            $msj = "Artículo no encontrado";
+            $msj_tipo = "error";
+        } else {
+            // Obtener el primer artículo del array
+            $articuloRaw = $responseArticulos[0];
+            
+            // 🔥 MAPEAR EL OBJETO CON LOS MISMOS NOMBRES QUE USA listarArticulos()
+            $getArticulo = (object) [
+                'codArticulo'       => $articuloRaw->codArticulo,
+                'codBarra'          => $articuloRaw->codBarra,
+                'nombreArticulo'    => $articuloRaw->nombreArticulo,
+                'precioPublico'     => $articuloRaw->precioPublico,
+                'precioSinIGV'      => $articuloRaw->precioSinIGV,
+                'peso'              => $articuloRaw->peso ?? 0,
+                'codUnidad'         => $articuloRaw->codUnidad,
+                'descUnidadMedida'  => $articuloRaw->descUnidadMedida ?? '',
+                'siglaUMFE'         => $articuloRaw->siglaUMFE ?? '',
+                'costo_articulo'    => $articuloRaw->costoArticulo,  // ✅ Conversión de camelCase a snake_case
+                'tipo_igv'          => $articuloRaw->tipoIgv ?? 0,   // ✅ Conversión de camelCase a snake_case
+                'afecto'            => $articuloRaw->afecto ?? 1,    // Por si lo necesitas
+            ];
+        }
+    }
+
+    return response()->json([
+        'procede'      => $procede, 
+        'msj'          => $msj, 
+        'msj_tipo'     => $msj_tipo, 
+        'log'          => $log, 
+        'getArticulo'  => $getArticulo
+    ]);
+}
 
     /**
      * Store a newly created resource in storage.
@@ -947,7 +971,7 @@ public function agregarItem(Request $request)
 
     }
     
-    public function storeDataMart(Request $request)
+public function storeDataMart(Request $request)
     {
         $api_datos = Parametro::find(6)->valor;
         $panel_origen = $request->post('panel_origen');
@@ -1109,6 +1133,25 @@ public function agregarItem(Request $request)
             $msj_tipo = "error";
             $log = "Error API: " . $e->getMessage();
             Log::error($log);
+        }
+
+        // ============================================================
+        // PASO 5.5: Sincronizar esconsignado en DetalleGuiaRemision
+        // Laravel manda — no dependemos del SP InsertarGuiasOdooDmk,
+        // que a veces deja esconsignado en NULL por timing (el SP solo
+        // inserta una vez por guía y no vuelve a tocar el detalle).
+        // ============================================================
+        if ($procede == true) {
+            $resDetalle = $this->sincronizarConsignadoEnDetalle(
+                $anio,
+                $guia->serie,
+                $guia->numero,
+                'N', // N = Ingreso
+                $detalle
+            );
+            if (!$resDetalle['ok']) {
+                Log::warning("DataMart Ingreso {$guia->serie}-{$guia->numero}: esconsignado no se sincronizó. " . json_encode($resDetalle));
+            }
         }
 
         // ============================================================
@@ -1459,6 +1502,75 @@ public function agregarItem(Request $request)
         } catch (\Exception $e) {
             Log::error("SQLSERVER Error actualizando consignados: " . $e->getMessage());
             return false;
+        }
+    }
+
+
+    /**
+     * Sincroniza el flag esconsignado en DetalleGuiaRemision (SQL Server)
+     * según el flag es_consignado de cada ítem en MySQL.
+     *
+     * Se llama DESPUÉS del POST a /InsertGuiaDMK, así Laravel queda como fuente
+     * de verdad y no depende de que el SP propague consignacion -> esconsignado
+     * (cosa que falla por timing, porque el SP solo inserta una vez por guía).
+     */
+    private function sincronizarConsignadoEnDetalle($anio, $serie, $numero, $tipoGuia, $detalle)
+    {
+        try {
+            $codConsignados = [];
+            $codNoConsignados = [];
+
+            foreach ($detalle as $item) {
+                $cod = trim((string)$item->codarticulo);
+                if ($cod === '') {
+                    continue;
+                }
+                if (($item->es_consignado ?? 0) == 1) {
+                    $codConsignados[] = $cod;
+                } else {
+                    $codNoConsignados[] = $cod;
+                }
+            }
+
+            $codConsignados = array_values(array_unique($codConsignados));
+            $codNoConsignados = array_values(array_unique($codNoConsignados));
+
+            $afectados1 = 0;
+            $afectados0 = 0;
+
+            if (!empty($codConsignados)) {
+                $afectados1 = DB::connection('sqlsrv')
+                    ->table('db_travel.dbo.DetalleGuiaRemision')
+                    ->where('AnioGuiaRemision', $anio)
+                    ->where('NumSerie', $serie)
+                    ->where('NumeroGuia', $numero)
+                    ->where('TipoGuia', $tipoGuia)
+                    ->whereIn('CodArticulo', $codConsignados)
+                    ->update(['esconsignado' => 1]);
+            }
+
+            if (!empty($codNoConsignados)) {
+                $afectados0 = DB::connection('sqlsrv')
+                    ->table('db_travel.dbo.DetalleGuiaRemision')
+                    ->where('AnioGuiaRemision', $anio)
+                    ->where('NumSerie', $serie)
+                    ->where('NumeroGuia', $numero)
+                    ->where('TipoGuia', $tipoGuia)
+                    ->whereIn('CodArticulo', $codNoConsignados)
+                    ->update(['esconsignado' => 0]);
+            }
+
+            Log::info("DetalleGuiaRemision esconsignado sincronizado: guia={$serie}-{$numero} tipo={$tipoGuia} anio={$anio}, consignados_afectados={$afectados1}, no_consignados_afectados={$afectados0}");
+
+            return [
+                'ok' => true,
+                'consignados' => $afectados1,
+                'no_consignados' => $afectados0,
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Error sincronizando esconsignado en DetalleGuiaRemision: " . $e->getMessage());
+            return ['ok' => false, 'msj' => $e->getMessage()];
         }
     }
 

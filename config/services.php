@@ -30,4 +30,26 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    | Datamarket (FastAPI -> SQL Server). Replicacion best-effort de retenciones.
+    */
+    'datamarket' => [
+        'enabled'         => env('DATAMARKET_ENABLED', true),
+        'base_url'        => env('DATAMARKET_BASE_URL', 'http://127.0.0.1:8000'),
+        'timeout'         => (int) env('DATAMARKET_TIMEOUT', 5),
+        'connect_timeout' => (int) env('DATAMARKET_CONNECT_TIMEOUT', 2),
+        'token'           => env('DATAMARKET_TOKEN', null),
+    ],
+
+    /*
+    | DB Peru e-dbfact: servicio remoto que firma el XML, envia a SUNAT y
+    | devuelve CodigoHash / CodigoQr / pdf417. Header `credencial` (literal).
+    */
+    'dbperu' => [
+        'enabled'    => env('DBPERU_ENABLED', true),
+        'base_url'   => env('DBPERU_BASE_URL', 'http://e-dbfact.dbperu.com:8180'),
+        'credencial' => env('DBPERU_CREDENCIAL', ''),
+        'timeout'    => (int) env('DBPERU_TIMEOUT', 60),
+    ],
+
 ];

@@ -318,14 +318,16 @@
                     <th class="text-center">Importe</th>
                     <th class="text-center" style="width: 4rem">Descto</th>
                     <th class="text-center">Bonificacion</th>
+                    <th class="text-center">Lotes</th>
                     <th class="text-center">Accion</th>
                   </thead>
                   <tbody id="tbody">
                     @foreach (($detalle ?? []) as $item)
-                      <tr 
+                      <tr
+                        class="item-row"
                         data-producto_id='{{ $item->codarticulo }}'
                         data-precio_publico='{{ $item->precio_publico }}'
-                        data-precio_sin_igv='{{ $item->precio_sin_igv }}' 
+                        data-precio_sin_igv='{{ $item->precio_sin_igv }}'
                         data-descripcion='{{ $item->descripcion }}'
                         data-codigo='{{ $item->codarticulo }}'
                         data-codigo_barra='{{ $item->codigo_barra }}'
@@ -333,8 +335,7 @@
                         data-costo_con_igv='{{ $item->precio }}'
                         data-costo_sin_igv='{{ round($item->precio / 1.18, 2) }}'
                         data-tipo_igv='{{ $item->tipo_igv ?? 1 }}'
-
-
+                        data-lotes='[]'
                       >
                         <td class='align-middle'>{{ $item->codigo_barra }}</td>
                         <td class='align-middle'>{{ $item->codarticulo }}</td>
@@ -354,6 +355,11 @@
                         </td>
                         <td class='align-middle' style='text-align:center'>
                           <input class='bonificacion'  {{ (($item->bonificacion ?? '') == 1) ? 'checked' : '' ; }} type='checkbox' name='bonificacion'>
+                        </td>
+                        <td class='align-middle text-center'>
+                          <button type='button' class='btn btn-info btn-sm btn-gestionar-lotes'>
+                            <i class='fa fa-cubes'></i> Lotes <span class='badge bg-secondary lotes-count'>0</span>
+                          </button>
                         </td>
                         <td class='align-middle text-center'>
                           <button class='btn btn-danger btn-sm delete_item'><i class='fa fa-times-circle'></i></button>
@@ -458,6 +464,58 @@
     </div>
 
     <div id="modales"></div>
+
+    <!-- ===== MODAL GESTION DE LOTES ===== -->
+    <div class="modal fade" id="modalLotes" tabindex="-1" aria-labelledby="modalLotesLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title" id="modalLotesLabel"><i class="fa fa-cubes"></i> Gestión de Lotes</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <strong id="lotes_producto_nombre" class="fs-6">Producto</strong><br>
+              <span class="text-muted">Cantidad total del producto:&nbsp;<strong id="lotes_cantidad_total" class="text-dark">0</strong>&nbsp;unidades</span>
+            </div>
+
+            <div id="lotes_alert" class="alert alert-warning py-2 d-none" role="alert">
+              <i class="fa fa-exclamation-triangle"></i>&nbsp;<span id="lotes_alert_msg"></span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div id="lotes_summary_modal"><span class="text-muted"><i class="fa fa-info-circle"></i> Sin lotes asignados</span></div>
+              <button type="button" class="btn btn-success btn-sm" id="btn_add_lote_modal">
+                <i class="fa fa-plus"></i> Agregar Lote
+              </button>
+            </div>
+
+            <table class="table table-sm table-bordered mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th style="width:30%">Nro. Lote</th>
+                  <th style="width:35%">Fecha Vencimiento</th>
+                  <th style="width:20%">Cantidad</th>
+                  <th style="width:15%" class="text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_lotes_modal"></tbody>
+            </table>
+            <div class="mt-2 text-muted" style="font-size:0.8rem">
+              <i class="fa fa-info-circle"></i> La suma de cantidades de todos los lotes debe ser igual a la cantidad total del producto.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar sin guardar</button>
+            <button type="button" class="btn btn-primary" id="btn_guardar_lotes">
+              <i class="fa fa-save"></i> Guardar Lotes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ===== FIN MODAL LOTES ===== -->
+
   </div>
 
   @push('js-scripts')

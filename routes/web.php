@@ -4,6 +4,7 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\Guia\GuiaIngresoController;
 use App\Http\Controllers\Guia\GuiaSalidaController;
 use App\Http\Controllers\GuiaRemisionController;
+use App\Http\Controllers\Retencion\RetencionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -98,6 +99,24 @@ Route::controller(GuiaIngresoController::class)->group(function (){
     Route::post('guiaingreso/cargarOtraGuia', 'cargarOtraGuia')->name('guiaingreso.cargarOtraGuia');
 
     Route::resource('guiaingreso', GuiaIngresoController::class)->parameter('guiaingreso', 'guia')->except('update');
+});
+
+Route::controller(RetencionController::class)->group(function () {
+
+    Route::get ('retenciones',                     'index')->name('retenciones.index');
+    Route::post('retenciones/listar',              'listar')->name('retenciones.listar');
+    Route::get ('retenciones/create',              'create')->name('retenciones.create');
+    Route::post('retenciones/store',               'store')->name('retenciones.store');
+    Route::post('retenciones/show',                'show')->name('retenciones.show');
+    Route::post('retenciones/anular',              'anular')->name('retenciones.anular');
+    Route::post('retenciones/siguienteNumero',     'siguienteNumero')->name('retenciones.siguienteNumero');
+    Route::get ('retenciones/pdf/{serienumero}',   'pdf')->name('retenciones.pdf');
+    Route::get ('retenciones/facturasProveedor',   'facturasProveedor')->name('retenciones.facturasProveedor');
+    Route::get ('retenciones/listarProveedores',   'listarProveedores')->name('retenciones.listarProveedores');
+
+    // Series (modal en el form)
+    Route::get ('retenciones/series',               'listarSeries')->name('retenciones.listarSeries');
+    Route::post('retenciones/series',               'crearSerie')->name('retenciones.crearSerie');
 });
 
 Route::controller(EmpleadoController::class)->group(function () {

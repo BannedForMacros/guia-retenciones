@@ -82,10 +82,9 @@ var updateLocalStorage = () => {
   formData.append('total_venta', total_venta);
 
   // console.log({storageGuiaIngreso});
-  var items = $('#tbody tr').map(function (i, row) {
+  var items = $('#tbody tr.item-row').map(function (i, row) {
     return {
       'codarticulo': $(this).data('producto_id'),
-      // 'codigo_producto' : $(this).find('input[name=item]').val(),
       'precio': $(this).find('span[name=span_precio]').text(),
       'cantidad': $(this).find('input[name=cantidad]').val(),
       'importe': $(this).find('span[name=span_importe]').text(),
@@ -101,6 +100,7 @@ var updateLocalStorage = () => {
       'cod_unidad' : $(this).data('cod_unidad'),
       'desc_unidad_medida' : $(this).data('desc_unidad_medida'),
       'sigla_umfe' : $(this).data('sigla_umfe'),
+      'lotes' : $(this).data('lotes') || [],
     };
   }).get();
 
@@ -175,21 +175,29 @@ var cargarStorage = () => {
 
   $.map(detalle, function (element, index) {
     console.log(element);
-    var importe = round((element.cantidad * element.precio_publico),2);
+    var importe     = round((element.cantidad * element.precio_publico), 2);
+    var lotes       = element.lotes || [];
+    var lotesJson   = JSON.stringify(lotes).replace(/'/g, '&#39;');
+    var numLotes    = lotes.length;
+    var badgeClass  = numLotes > 0 ? 'bg-success' : 'bg-secondary';
+    var btnClass    = numLotes > 0 ? 'btn-success' : 'btn-info';
+
     $('#tbody').prepend(`
-      <tr 
-        data-producto_id="${element.codigo}" 
-        data-precio_unitario="${element.precio_publico}" 
-        data-precio_publico="${element.precio_publico}" 
-        data-precio_sin_igv="${element.precio_sin_igv}" 
-        data-descripcion="${element.descripcion}" 
-        data-codigo="${element.codarticulo}" 
-        data-codigo_barra="${element.codigo_barra}" 
+      <tr
+        class="item-row"
+        data-producto_id="${element.codigo}"
+        data-precio_unitario="${element.precio_publico}"
+        data-precio_publico="${element.precio_publico}"
+        data-precio_sin_igv="${element.precio_sin_igv}"
+        data-descripcion="${element.descripcion}"
+        data-codigo="${element.codarticulo}"
+        data-codigo_barra="${element.codigo_barra}"
         data-peso="${element.peso}"
         data-costo_articulo="${element.costo_articulo}"
         data-cod_unidad="${element.cod_unidad}"
         data-desc_unidad_medida="${element.desc_unidad_medida}"
         data-sigla_umfe="${element.sigla_umfe}"
+        data-lotes='${lotesJson}'
       >
         <td class="align-middle">${element.codigo_barra}</td>
         <td class="align-middle">${element.codigo}</td>
@@ -200,13 +208,19 @@ var cargarStorage = () => {
         <td class="align-middle">${element.desc_unidad_medida}</td>
         <td class="align-middle"><span name="span_importe">${importe}</span></td>
         <td class="align-middle">
-          <input class="form-control form-control-sm input_porcentaje_descuento_tr" name="porcentaje_descuento" value="${element.porcentaje_descuento}"> <input type="hidden" name="monto_descuento" value="${element.monto_descuento}">
+          <input class="form-control form-control-sm input_porcentaje_descuento_tr" name="porcentaje_descuento" value="${element.porcentaje_descuento}">
+          <input type="hidden" name="monto_descuento" value="${element.monto_descuento}">
         </td>
         <td class="align-middle" style="text-align:center">
-            <input class="bonificacion" type="checkbox" name="bonificacion">
+          <input class="bonificacion" type="checkbox" name="bonificacion">
         </td>
         <td class="align-middle text-center">
-            <button class="btn btn-danger btn-sm delete_item"><i class="fa fa-times-circle"></i></button>
+          <button type="button" class="btn ${btnClass} btn-sm btn-gestionar-lotes">
+            <i class="fa fa-cubes"></i> Lotes <span class="badge ${badgeClass} lotes-count">${numLotes}</span>
+          </button>
+        </td>
+        <td class="align-middle text-center">
+          <button class="btn btn-danger btn-sm delete_item"><i class="fa fa-times-circle"></i></button>
         </td>
       </tr>
     `);

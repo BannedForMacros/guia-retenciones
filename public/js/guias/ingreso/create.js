@@ -239,7 +239,7 @@ var calcularTotales = () => {
 
   var base_calculo = $('#base_calculo').val(); // 1 sin igv, 2 con igv (solo visual)
 
-  var items = $('#tbody tr').map(function(i, row) {
+  var items = $('#tbody tr.item-row').map(function(i, row) {
     var bonificacion = $(this).find('input[name=bonificacion]').prop('checked');
     if (bonificacion == false) {
       return {
@@ -336,7 +336,7 @@ var callStore = (guardar_avance = false) => {
   const esConsignadoMaster = $('#es_consignado_master').is(':checked') ? 1 : 0; // <--- NUEVO
   formData.append('es_consignado', esConsignadoMaster); // <--- NUEVO: Para asegurar que vaya en la cabecera también
 
-  var items = $('#tbody tr').map(function(i, row) {
+  var items = $('#tbody tr.item-row').map(function(i, row) {
       var cantidad = parseFloat($(this).find('input[name=cantidad]').val() || 0);
       var costo_sin_igv = parseFloat($(this).data('costo_sin_igv') || 0);
       var tipo_igv = parseInt($(this).data('tipo_igv') || 0);
@@ -364,8 +364,9 @@ var callStore = (guardar_avance = false) => {
 
         costo_articulo : $(this).data('costo_articulo'),
 
-        tipo_igv: tipo_igv, // ✅ opcional, por si luego lo guardas
-        es_consignado: esConsignadoMaster
+        tipo_igv: tipo_igv,
+        es_consignado: esConsignadoMaster,
+        lotes: $(this).data('lotes') || [],
       };
     }).get();
 
@@ -478,9 +479,7 @@ var callStore = (guardar_avance = false) => {
 
   }
 
-  // validar negativos
-  // console.log({items});
-
+  // validar negativos y ceros
   $.map(items, function (element, index) {
     if (procede_store == true) {
       if (parseFloat(element.cantidad) < 0) {
@@ -491,6 +490,25 @@ var callStore = (guardar_avance = false) => {
       if (parseFloat(element.cantidad) == 0) {
         procede_store = false;
         msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion} <br>tiene un cero = ${element.cantidad}</b>`;
+      }
+    }
+  });
+
+  // Validar lotes: si un item tiene lotes, la suma debe ser igual a la cantidad
+  $.map(items, function (element, index) {
+    if (procede_store == true) {
+      var lotes = element.lotes || [];
+      if (lotes.length > 0) {
+        var total_lotes = lotes.reduce(function(sum, l) {
+          return sum + (parseFloat(l.cantidad) || 0);
+        }, 0);
+        if (total_lotes !== parseFloat(element.cantidad)) {
+          procede_store = false;
+          msj_store = `<b>El item [${element.codarticulo}] ${element.descripcion}<br>
+            tiene lotes asignados con cantidad total <span class="text-danger">${total_lotes}</span>,<br>
+            pero la cantidad del producto es <span class="text-danger">${element.cantidad}</span>.<br>
+            Corrija los lotes antes de guardar.</b>`;
+        }
       }
     }
   });
@@ -652,7 +670,7 @@ $(document).on('change', '#base_calculo', function (event) {
 
   var base_calculo = $(this).val(); // 2 con IGV, 1 sin IGV
 
-  $('#tbody tr').each(function () {
+  $('#tbody tr.item-row').each(function () {
 
     var cantidad = parseFloat($(this).find('input[name=cantidad]').val() || 0);
 
@@ -815,4 +833,227 @@ $(document).on('click', '.radio_relacion_doc', function(event) {
   /* Act on the event */
   updateLocalStorage();
 
+});
+
+// ============================================================
+// ===          GESTIÓN DE LOTES POR PRODUCTO               ===
+// ============================================================
+
+var _currentLotesRow = null; // referencia al <tr class="item-row"> activo
+
+// Abrir modal de lotes al hacer click en el botón de cada fila
+$(document).on('click', '.btn-gestionar-lotes', function(e) {
+  e.preventDefault();
+  _currentLotesRow = $(this).closest('tr.item-row');
+
+  var descripcion = _currentLotesRow.data('descripcion') || '';
+  var cantidad_total = parseFloat(_currentLotesRow.find('input[name=cantidad]').val() || 0);
+  var lotes = _currentLotesRow.data('lotes') || [];
+
+  // Poblar cabecera del modal
+  $('#lotes_producto_nombre').text(descripcion);
+  $('#lotes_cantidad_total').text(cantidad_total);
+
+  // Poblar filas de lotes existentes
+  var $tbody = $('#tbody_lotes_modal');
+  $tbody.empty();
+  $.each(lotes, function(i, lote) {
+    $tbody.append(_crearFilaLote(lote.nro_lote, lote.fecha_vencimiento, lote.cantidad));
+  });
+
+  $('#lotes_alert').addClass('d-none');
+  _updateLotesSummaryModal();
+  $('#modalLotes').modal('show');
+});
+
+// Generar HTML de una fila de lote
+var _crearFilaLote = function(nro_lote, fecha_vencimiento, cantidad) {
+  return `
+    <tr class="lote-row">
+      <td>
+        <input type="text" class="form-control form-control-sm input-nro-lote"
+               placeholder="Ej: LOT-2025-001" value="${nro_lote || ''}">
+      </td>
+      <td>
+        <input type="date" class="form-control form-control-sm input-fecha-venc"
+               value="${fecha_vencimiento || ''}">
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm input-cant-lote"
+               min="0" step="1" placeholder="0" value="${cantidad || ''}">
+      </td>
+      <td class="text-center align-middle">
+        <button type="button" class="btn btn-danger btn-sm btn-remove-lote-modal">
+          <i class="fa fa-times"></i>
+        </button>
+      </td>
+    </tr>
+  `;
+};
+
+// Agregar fila de lote en el modal
+$(document).on('click', '#btn_add_lote_modal', function(e) {
+  e.preventDefault();
+  $('#tbody_lotes_modal').append(_crearFilaLote('', '', ''));
+  _updateLotesSummaryModal();
+});
+
+// Eliminar fila de lote en el modal
+$(document).on('click', '.btn-remove-lote-modal', function(e) {
+  e.preventDefault();
+  $(this).closest('tr.lote-row').remove();
+  _updateLotesSummaryModal();
+});
+
+// Actualizar resumen cuando cambia cualquier campo de lote en el modal
+$(document).on('keyup change', '#modalLotes .input-cant-lote, #modalLotes .input-nro-lote, #modalLotes .input-fecha-venc', function() {
+  _updateLotesSummaryModal();
+});
+
+// Actualizar el panel de resumen del modal
+var _updateLotesSummaryModal = function() {
+  if (!_currentLotesRow) return;
+
+  var cantidad_total = parseFloat($('#lotes_cantidad_total').text() || 0);
+  var total_lotes    = 0;
+  var numLotes       = $('#tbody_lotes_modal .lote-row').length;
+
+  $('#tbody_lotes_modal .input-cant-lote').each(function() {
+    total_lotes += parseFloat($(this).val() || 0);
+  });
+
+  var $summary = $('#lotes_summary_modal');
+  var $alert   = $('#lotes_alert');
+
+  if (numLotes === 0) {
+    $summary.html('<span class="text-muted"><i class="fa fa-info-circle"></i> Sin lotes asignados</span>');
+    $alert.addClass('d-none');
+    return;
+  }
+
+  if (total_lotes === cantidad_total) {
+    $summary.html(
+      `<span class="text-success fw-bold">
+         <i class="fa fa-check-circle"></i> ${total_lotes} de ${cantidad_total} unidades asignadas
+       </span>`
+    );
+    $alert.addClass('d-none');
+  } else {
+    var diff = cantidad_total - total_lotes;
+    var msg  = diff > 0
+      ? `Faltan <b>${diff}</b> unidades por asignar`
+      : `Se excede en <b>${Math.abs(diff)}</b> unidades`;
+    $summary.html(
+      `<span class="text-danger">
+         <i class="fa fa-exclamation-triangle"></i> ${total_lotes} de ${cantidad_total} unidades asignadas
+       </span>`
+    );
+    $('#lotes_alert_msg').html(msg);
+    $alert.removeClass('d-none');
+  }
+};
+
+// Guardar lotes del modal en el data-lotes del row
+$(document).on('click', '#btn_guardar_lotes', function(e) {
+  e.preventDefault();
+  _saveLotesFromModal();
+});
+
+var _saveLotesFromModal = function() {
+  if (!_currentLotesRow) return;
+
+  var cantidad_total = parseFloat(_currentLotesRow.find('input[name=cantidad]').val() || 0);
+  var lotes          = [];
+  var tiene_error    = false;
+  var total_lotes    = 0;
+  var numLotes       = $('#tbody_lotes_modal .lote-row').length;
+
+  // Validar campos obligatorios y recopilar datos
+  $('#tbody_lotes_modal .lote-row').each(function() {
+    var nro_lote         = $(this).find('.input-nro-lote').val().trim();
+    var fecha_vencimiento = $(this).find('.input-fecha-venc').val();
+    var cantidad         = parseFloat($(this).find('.input-cant-lote').val() || 0);
+
+    if (nro_lote === '') {
+      tiene_error = true;
+      $(this).find('.input-nro-lote').addClass('is-invalid');
+    } else {
+      $(this).find('.input-nro-lote').removeClass('is-invalid');
+    }
+
+    if (fecha_vencimiento === '') {
+      tiene_error = true;
+      $(this).find('.input-fecha-venc').addClass('is-invalid');
+    } else {
+      $(this).find('.input-fecha-venc').removeClass('is-invalid');
+    }
+
+    total_lotes += cantidad;
+    lotes.push({ nro_lote: nro_lote, fecha_vencimiento: fecha_vencimiento, cantidad: cantidad });
+  });
+
+  if (tiene_error) {
+    Swal.fire({
+      html: '<b>Complete el Nro. de Lote y la Fecha de Vencimiento en todas las filas.</b>',
+      icon: 'warning'
+    });
+    return;
+  }
+
+  // Validar que la suma de lotes sea igual a la cantidad del producto
+  if (numLotes > 0 && total_lotes !== cantidad_total) {
+    Swal.fire({
+      html: `<b>La suma de cantidades de lotes (<span class="text-danger">${total_lotes}</span>)
+             debe ser igual a la cantidad del producto (<span class="text-primary">${cantidad_total}</span>).</b>`,
+      icon: 'warning'
+    });
+    return;
+  }
+
+  // Guardar en el data attribute del row
+  _currentLotesRow.data('lotes', lotes);
+  _currentLotesRow.attr('data-lotes', JSON.stringify(lotes));
+
+  // Actualizar badge del botón
+  var $badge = _currentLotesRow.find('.lotes-count');
+  $badge.text(numLotes);
+  if (numLotes > 0) {
+    $badge.removeClass('bg-secondary bg-warning').addClass('bg-success');
+    _currentLotesRow.find('.btn-gestionar-lotes').removeClass('btn-info').addClass('btn-success');
+  } else {
+    $badge.removeClass('bg-success bg-warning').addClass('bg-secondary');
+    _currentLotesRow.find('.btn-gestionar-lotes').removeClass('btn-success').addClass('btn-info');
+  }
+
+  $('#modalLotes').modal('hide');
+  updateLocalStorage();
+};
+
+// Cuando cambia la cantidad del producto, avisar si hay lotes desincronizados
+$(document).on('keyup', '.input_cantidad_tr', function() {
+  var $tr = $(this).closest('tr.item-row');
+  if (!$tr.length) return;
+
+  var lotes = $tr.data('lotes') || [];
+  if (lotes.length === 0) return;
+
+  var cantidad_nueva = parseFloat($(this).val() || 0);
+  var total_lotes    = lotes.reduce(function(sum, l) {
+    return sum + (parseFloat(l.cantidad) || 0);
+  }, 0);
+
+  var $badge = $tr.find('.lotes-count');
+  if (total_lotes !== cantidad_nueva) {
+    $badge.removeClass('bg-success').addClass('bg-warning');
+    $tr.find('.btn-gestionar-lotes').removeClass('btn-success').addClass('btn-warning');
+  } else {
+    $badge.removeClass('bg-warning').addClass('bg-success');
+    $tr.find('.btn-gestionar-lotes').removeClass('btn-warning').addClass('btn-success');
+  }
+
+  // Si el modal está abierto para esta fila, actualizar también ahí
+  if (_currentLotesRow && $tr.is(_currentLotesRow)) {
+    $('#lotes_cantidad_total').text(cantidad_nueva);
+    _updateLotesSummaryModal();
+  }
 });

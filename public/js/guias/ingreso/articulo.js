@@ -217,8 +217,28 @@ var agregarItem = function(formData){
 
       if (response.procede == true) {
         $('#tbody').append(response.tr);
-        $('#base_calculo').trigger('change');
 
+        // Inicializar columna y datos de lotes en la nueva fila
+        var $newRow = $('#tbody tr.item-row:last');
+        if (!$newRow.length) {
+          // Si aún no tiene la clase (vino del servidor sin ella), tomar el último tr
+          $newRow = $('#tbody tr:last');
+        }
+        $newRow.addClass('item-row');
+        if (!$newRow.attr('data-lotes')) {
+          $newRow.attr('data-lotes', '[]');
+        }
+        // Insertar la celda Lotes antes de la última celda (Accion)
+        var $lastTd = $newRow.find('td:last');
+        $lastTd.before(
+          `<td class='align-middle text-center'>
+             <button type='button' class='btn btn-info btn-sm btn-gestionar-lotes'>
+               <i class='fa fa-cubes'></i> Lotes <span class='badge bg-secondary lotes-count'>0</span>
+             </button>
+           </td>`
+        );
+
+        $('#base_calculo').trigger('change');
       }
 
       if (response.procede == false) {

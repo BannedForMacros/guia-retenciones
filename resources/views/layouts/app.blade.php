@@ -64,6 +64,8 @@
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="{{ route('guiaingreso.index') }}">Guia de Ingreso</a>
                 <a class="dropdown-item" href="{{ route('guiasalida.index') }}">Guia de Salida</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{{ route('retenciones.index') }}">Retenciones</a>
               </div>
             </li>
             {{-- @dd(Auth::user()) --}}
