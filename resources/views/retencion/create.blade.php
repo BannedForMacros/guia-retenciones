@@ -3,7 +3,7 @@
 <style>
   body { background-color: #f5f7fa !important; }
 
-  /* ── Layout ─────────────────────────────────────────────────────── */
+  /* ── Layout general ────────────────────────────────────────────── */
   .ret-create-wrap { max-width: 1500px; margin: 0 auto; padding: 14px 18px; }
   .card-soft { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
   .section-title {
@@ -12,57 +12,92 @@
     border-left: 3px solid #2563eb; padding-left: .5rem; margin-bottom: 0;
   }
 
-  /* ── Header del documento (serie-número compacto) ───────────────── */
-  .doc-tag {
-    display: inline-flex; align-items: center; gap: .35rem;
-    background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
-    border-radius: 6px; padding: .25rem .55rem;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
-    font-weight: 700; font-size: .85rem;
+  /* ── Header sutil ─────────────────────────────────────────────── */
+  .page-title {
+    font-size: .95rem; font-weight: 600; color: #1f2937; margin: 0;
+    letter-spacing: -.01em;
   }
-  .doc-tag .label { font-size: .65rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-family: inherit; }
-  .doc-tag.is-empty { background: #fff7ed; color: #b45309; border-color: #fed7aa; }
-  .meta-pill {
-    display: inline-flex; align-items: center; gap: .35rem;
-    background: #f9fafb; color: #4b5563; border: 1px solid #e5e7eb;
-    border-radius: 999px; padding: .15rem .55rem; font-size: .7rem;
+  .page-subtitle {
+    font-size: .72rem; color: #6b7280; margin-top: 1px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
   }
 
-  /* ── Proveedor: chip seleccionado ───────────────────────────────── */
+  /* ── Datos del comprobante: serie-número como texto plano ─────── */
+  .serie-display {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-weight: 700; color: #1f2937; font-size: 1rem;
+    padding: .35rem 0; line-height: 1.2;
+  }
+  .serie-display.is-empty { color: #b45309; font-style: italic; font-weight: 500; font-size: .85rem; }
+
+  /* ── Proveedor: chip (vertical, encaja en media columna) ─────── */
   .prov-chip {
     display: flex; align-items: flex-start; gap: .65rem;
-    background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;
-    padding: .55rem .7rem;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: .65rem .75rem;
   }
   .prov-chip .avatar {
-    width: 32px; height: 32px; flex-shrink: 0;
+    width: 34px; height: 34px; flex-shrink: 0;
     background: #0284c7; color: #fff; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: .8rem;
+    font-weight: 700; font-size: .82rem;
   }
   .prov-chip .body { min-width: 0; flex: 1; }
-  .prov-chip .name { font-weight: 700; color: #0f172a; font-size: .88rem; line-height: 1.2; }
-  .prov-chip .ruc  { font-family: ui-monospace, monospace; font-size: .72rem; color: #075985; margin-top: 1px; }
-  .prov-chip .addr { font-size: .72rem; color: #64748b; margin-top: 2px; }
+  .prov-chip .name { font-weight: 700; color: #0f172a; font-size: .9rem; line-height: 1.2; }
+  .prov-chip .ruc  { font-family: ui-monospace, monospace; font-size: .72rem; color: #475569; margin-top: 2px; }
+  .prov-chip .addr { font-size: .75rem; color: #334155; margin-top: 4px; line-height: 1.3; }
   .prov-chip .clear-btn {
     flex-shrink: 0; background: transparent; border: 0; color: #64748b;
-    width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+    width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
   }
   .prov-chip .clear-btn:hover { background: #fee2e2; color: #b91c1c; }
 
-  /* ── Tabla detalles ─────────────────────────────────────────────── */
+  /* ── Tabla detalles: redondeo en header + datos como texto ───── */
+  .tabla-wrap {
+    border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+  }
+  table.tabla-detalles { margin: 0; font-size: .82rem; }
+  table.tabla-detalles thead th {
+    background: #f9fafb; color: #374151; font-weight: 700;
+    font-size: .67rem; text-transform: uppercase; letter-spacing: .05em;
+    border-bottom: 1px solid #e5e7eb; border-top: 0;
+    padding: .55rem .55rem; white-space: nowrap;
+  }
+  table.tabla-detalles thead th:first-child { border-top-left-radius: 8px; }
+  table.tabla-detalles thead th:last-child  { border-top-right-radius: 8px; }
+  table.tabla-detalles tbody td {
+    padding: .45rem .55rem; vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6; border-top: 0; color: #0f172a;
+  }
+  table.tabla-detalles tbody tr:last-child td { border-bottom: 1px solid #e5e7eb; }
+  table.tabla-detalles tfoot td {
+    padding: .55rem .55rem; vertical-align: middle;
+    background: #f9fafb; font-weight: 700; font-size: .82rem;
+    border-top: 1px solid #e5e7eb; border-bottom: 0; color: #0f172a;
+    font-variant-numeric: tabular-nums;
+  }
+  table.tabla-detalles tfoot td.tot-lbl { color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: .68rem; }
+  table.tabla-detalles tfoot td.tot-ret { color: #16a34a; font-weight: 700; }
+  table.tabla-detalles tfoot td:first-child { border-bottom-left-radius: 8px; }
+  table.tabla-detalles tfoot td:last-child  { border-bottom-right-radius: 8px; }
+
+  /* Datos del datamarket: como texto plano (no input) */
+  table.tabla-detalles .text-cell  { color: #0f172a; }
+  table.tabla-detalles .mono-cell  { font-family: ui-monospace, monospace; font-weight: 600; color: #1f2937; }
+  table.tabla-detalles .num-cell   { text-align: right; font-variant-numeric: tabular-nums; }
+  table.tabla-detalles .moneda-tag {
+    display: inline-block; font-size: .65rem; font-weight: 700;
+    color: #4b5563; background: #f3f4f6; border: 1px solid #e5e7eb;
+    padding: .1rem .45rem; border-radius: 4px;
+  }
+
+  /* Solo los inputs editables (F. Pago / Importe Pago / T. Cambio USD) */
   table.tabla-detalles input.form-control,
-  table.tabla-detalles select.form-select { font-size: 12px; }
-  table.tabla-detalles .in-factor-cambio:disabled { background: #f3f4f6; color: #9ca3af; }
+  table.tabla-detalles select.form-select { font-size: .82rem; height: 30px; padding: .2rem .45rem; }
+  table.tabla-detalles .in-factor-cambio { width: 100%; }
 
-  /* ── Totales ────────────────────────────────────────────────────── */
-  .totales .lbl { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
-  .totales .val { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .totales .val.big { font-size: 18px; color: #16a34a; }
-  .totales .totales-hint { font-size: 10px; color: #9ca3af; font-weight: 500; letter-spacing: .04em; }
-
-  /* ── Select2 inline (para los buscadores compactos en headers) ──── */
+  /* ── Select2 inline (compacto) ────────────────────────────────── */
   .inline-search { width: 280px; }
   .inline-search .select2-container { width: 100% !important; }
   .inline-search .select2-selection--single {
@@ -74,7 +109,7 @@
   }
   .inline-search .select2-selection__arrow { height: 30px !important; }
 
-  /* ── Selector de facturas: cómo se ve cada opción del dropdown ──── */
+  /* ── Selector de facturas: render del dropdown ────────────────── */
   .factura-result { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; padding: 2px 0; }
   .factura-result .left { min-width: 0; flex: 1; }
   .factura-result .top  { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
@@ -100,105 +135,88 @@
 @section('content')
   <div class="ret-create-wrap">
 
-    {{-- ────────── Encabezado ────────── --}}
-    <div class="d-flex justify-content-between align-items-end mb-3 gap-2 flex-wrap">
+    {{-- ────────── Encabezado sutil ────────── --}}
+    <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
       <div>
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb mb-1 small">
-            <li class="breadcrumb-item"><a href="{{ route('retenciones.index') }}">Retenciones</a></li>
-            <li class="breadcrumb-item active">Nueva</li>
-          </ol>
-        </nav>
-        <h5 class="mb-1"><i class="fa fa-plus-circle"></i> Nueva Retención</h5>
-        <div class="d-flex gap-2 flex-wrap align-items-center">
-          <span class="meta-pill"><i class="fa fa-building"></i> {{ $razonSocial }} · {{ $rucempresa }}</span>
-          <span class="meta-pill"><i class="fa fa-percent"></i> Régimen General · 3 %</span>
+        <div class="page-subtitle">
+          <a href="{{ route('retenciones.index') }}" class="text-decoration-none text-muted">Retenciones</a>
+          <span> / Nueva</span>
         </div>
+        <h1 class="page-title">Nueva Retención</h1>
       </div>
       <div class="d-flex gap-2">
         <a href="{{ route('retenciones.index') }}" class="btn btn-sm btn-outline-secondary">
-          <i class="fa fa-times"></i> Cancelar
+          Cancelar
         </a>
         <button type="button" id="btn_registrar" class="btn btn-sm btn-success">
-          <i class="fa fa-save"></i> Registrar Retención
+          Registrar
         </button>
       </div>
     </div>
 
     <form id="form_retencion" autocomplete="off">
       @csrf
-      {{-- Hidden: la serie/número se determinan en backend, no se editan en el form --}}
+      {{-- Hidden: serie/número resueltos en backend; proveedor del chip --}}
       <input type="hidden" id="serie"  name="serie"  value="{{ $serieDefault ?? '' }}">
       <input type="hidden" id="numero" name="numero" value="{{ $numeroSugerido ?? '' }}">
       <input type="hidden" id="proveedor_ruc"        name="numdocproveedor"      value="">
       <input type="hidden" id="proveedor_razon"      name="razonsocialproveedor" value="">
       <input type="hidden" id="proveedor_direccion"  name="direccionproveedor"   value="">
 
-      <div class="row g-3">
-        {{-- ────── Card 1: Datos del Comprobante (compacto) ────── --}}
+      {{-- ────────── Row: Datos del Comprobante (izq) + Proveedor (der) ────────── --}}
+      <div class="row g-3 mb-3">
+        {{-- Datos del Comprobante --}}
         <div class="col-md-6">
           <div class="card-soft p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="section-title">Datos del Comprobante</div>
-              <span class="doc-tag {{ empty($serieDefault) ? 'is-empty' : '' }}" id="lbl_serie_numero">
-                <span class="label">Serie · N°</span>
-                @if (!empty($serieDefault))
-                  {{ $serieDefault }}-{{ $numeroSugerido }}
-                @else
-                  Sin serie configurada
-                @endif
-              </span>
-            </div>
-
+            <div class="section-title mb-2">Datos del Comprobante</div>
             <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label small mb-1 text-muted text-uppercase" style="font-size:.65rem; letter-spacing:.04em;">Comprobante</label>
+                <div class="serie-display {{ empty($serieDefault) ? 'is-empty' : '' }}">
+                  @if (!empty($serieDefault))
+                    {{ $serieDefault }}-{{ $numeroSugerido }}
+                  @else
+                    Sin serie configurada
+                  @endif
+                </div>
+              </div>
               <div class="col-md-6">
-                <label class="form-label small mb-1"><i class="fa fa-calendar"></i> Fecha Emisión *</label>
+                <label class="form-label small mb-1">Fecha Emisión *</label>
                 <input type="date" id="fecha_emision" name="fecha_emision"
                        class="form-control form-control-sm"
                        value="{{ $fechaHoy }}" max="{{ $fechaHoy }}">
               </div>
               <div class="col-md-6">
-                <label class="form-label small mb-1"><i class="fa fa-pen"></i> Observación</label>
+                <label class="form-label small mb-1">Observación</label>
                 <input type="text" name="observacion"
                        class="form-control form-control-sm"
                        maxlength="250" placeholder="Opcional">
               </div>
             </div>
-
-            @if (empty($serieDefault))
-              <div class="alert alert-warning small mt-2 mb-0 py-2">
-                <i class="fa fa-triangle-exclamation"></i>
-                No hay series configuradas. Configúralas desde el listado
-                (<a href="{{ route('retenciones.index') }}">Retenciones → Series</a>).
-              </div>
-            @endif
           </div>
         </div>
 
-        {{-- ────── Card 2: Proveedor ────── --}}
+        {{-- Proveedor --}}
         <div class="col-md-6">
           <div class="card-soft p-3 h-100">
             <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
               <div class="section-title">Proveedor</div>
-              {{-- Buscador a la derecha del título — compacto --}}
               <div class="inline-search" id="proveedor_search_wrap">
                 <select id="proveedor_select"></select>
               </div>
             </div>
 
-            {{-- Estado vacío --}}
             <div id="proveedor_empty" class="text-center text-muted small py-3">
               <i class="fa fa-magnifying-glass d-block mb-1" style="font-size:1.1rem; opacity:.5;"></i>
               Busca un proveedor por RUC o razón social
             </div>
 
-            {{-- Chip cuando ya hay proveedor seleccionado --}}
             <div id="proveedor_chip" class="prov-chip d-none">
               <div class="avatar" id="prov_avatar">·</div>
               <div class="body">
                 <div class="name" id="prov_name"></div>
                 <div class="ruc">RUC <span id="prov_ruc"></span></div>
-                <div class="addr" id="prov_addr"></div>
+                <div class="addr" id="prov_addr">—</div>
               </div>
               <button type="button" class="clear-btn" id="btn_limpiar_proveedor" title="Quitar proveedor">
                 <i class="fa fa-xmark"></i>
@@ -208,68 +226,48 @@
         </div>
       </div>
 
-      {{-- ────── Card 3: Documentos a Retener ────── --}}
-      <div class="card-soft p-3 mt-3">
+      {{-- ────────── Card: Documentos a Retener ────────── --}}
+      <div class="card-soft p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
           <div class="section-title">Documentos a Retener</div>
-          {{-- Buscador inline a la derecha --}}
-          <div class="d-flex gap-2 align-items-center">
-            <div class="inline-search" id="factura_search_wrap" style="width:340px;">
-              <select id="factura_select" disabled></select>
-            </div>
-            <button type="button" id="btn_agregar_linea" class="btn btn-sm btn-outline-secondary"
-                    title="Agregar una línea en blanco (manual)">
-              <i class="fa fa-plus"></i>
-            </button>
+          <div class="inline-search" id="factura_search_wrap" style="width:340px;">
+            <select id="factura_select" disabled></select>
           </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered align-middle tabla-detalles">
-            <thead class="table-light">
-              <tr class="text-center small">
+        <div class="tabla-wrap">
+          <table class="table table-sm align-middle tabla-detalles mb-0">
+            <thead>
+              <tr class="text-center">
                 <th style="width:40px;">#</th>
-                <th style="width:110px;">Tipo Doc *</th>
-                <th style="width:150px;">Serie-Número *</th>
-                <th style="width:130px;">F. Doc.</th>
+                <th style="width:160px;">Serie-Número</th>
+                <th style="width:110px;">F. Doc.</th>
                 <th style="width:120px;">Importe Doc.</th>
-                <th style="width:75px;">Mon.</th>
+                <th style="width:70px;">Mon.</th>
                 <th style="width:90px;" title="Factor de tipo de cambio. Solo aplica para USD.">T. Cambio</th>
-                <th style="width:130px;">F. Pago *</th>
-                <th style="width:130px;">Importe Pago *</th>
+                <th style="width:135px;">F. Pago *</th>
+                <th style="width:135px;">Importe Pago *</th>
                 <th style="width:120px;">Retenido (PEN)</th>
                 <th style="width:120px;">Neto (PEN)</th>
-                <th style="width:50px;"></th>
+                <th style="width:42px;"></th>
               </tr>
             </thead>
             <tbody id="detalles_body"></tbody>
+            <tfoot id="totales_foot" class="d-none">
+              <tr>
+                <td colspan="7" class="text-end tot-lbl">TOTALES (PEN)</td>
+                <td class="text-end" id="tot_pagado">S/ 0.00</td>
+                <td class="text-end tot-ret" id="tot_retenido">S/ 0.00</td>
+                <td class="text-end" id="tot_neto">S/ 0.00</td>
+                <td></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
         <div id="vacio_msg" class="text-center text-muted py-3 small">
           <i class="fa fa-inbox"></i> No has agregado documentos.
           Selecciona un proveedor y luego elige una factura del buscador.
-        </div>
-      </div>
-
-      {{-- ────── Card 4: Totales ────── --}}
-      <div class="card-soft p-3 mt-3 totales">
-        <div class="d-flex justify-content-between align-items-end mb-2">
-          <span class="totales-hint">TOTALES EN PEN (USD se convierte usando el factor por línea)</span>
-        </div>
-        <div class="row text-end">
-          <div class="col-md-4">
-            <div class="lbl">Total Pagado</div>
-            <div class="val" id="tot_pagado">S/ 0.00</div>
-          </div>
-          <div class="col-md-4">
-            <div class="lbl">Total Retenido</div>
-            <div class="val big" id="tot_retenido">S/ 0.00</div>
-          </div>
-          <div class="col-md-4">
-            <div class="lbl">Neto al Proveedor</div>
-            <div class="val" id="tot_neto">S/ 0.00</div>
-          </div>
         </div>
       </div>
 
