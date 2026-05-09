@@ -53,13 +53,21 @@
   }
   .section-title.with-step { display: inline-flex; align-items: center; }
 
-  /* ── Datos del comprobante: serie-número como texto plano ─────── */
-  .serie-display {
-    font-family: ui-monospace, Menlo, Consolas, monospace;
-    font-weight: 700; color: #1f2937; font-size: 1rem;
-    padding: .35rem 0; line-height: 1.2;
+  /* ── Comprobante: TEXTO puro (no input, no caja).
+       Usa la misma font-family que el label para que ambos compartan
+       el mismo bearing del primer carácter → alineación perfecta en X. */
+  .serie-text {
+    /* Mismo alto que .form-control-sm para baseline uniforme con los inputs vecinos */
+    height: calc(1.5em + .5rem + 2px);
+    display: flex; align-items: center;
+    padding: 0;                     /* mismo X de inicio que el label arriba */
+    font-family: inherit;           /* NO monospace → sin bearing extraño */
+    font-weight: 700; color: #1f2937;
+    font-size: .95rem; letter-spacing: .01em;
   }
-  .serie-display.is-empty { color: #b45309; font-style: italic; font-weight: 500; font-size: .85rem; }
+  .serie-text.is-empty {
+    color: #b45309; font-style: italic; font-weight: 500; font-size: .85rem;
+  }
 
   /* ── Proveedor: chip (vertical, encaja en media columna) ─────── */
   .prov-chip {
@@ -167,7 +175,7 @@
   <div class="ret-create-wrap">
 
     {{-- ────────── Encabezado ────────── --}}
-    <div class="d-flex justify-content-between align-items-end mb-4 gap-3 flex-wrap">
+    <div class="d-flex justify-content-between align-items-end mb-3 gap-3 flex-wrap">
       <div>
         <div class="page-subtitle">
           <a href="{{ route('retenciones.index') }}">Retenciones</a>
@@ -200,24 +208,26 @@
         <div class="col-md-6">
           <div class="card-soft p-3 h-100">
             <div class="section-title mb-2">Datos del Comprobante</div>
+            {{-- Tres columnas en la misma fila → labels y valores alineados al
+                 mismo baseline. --}}
             <div class="row g-2">
-              <div class="col-12">
-                <label class="form-label small mb-1 text-muted text-uppercase" style="font-size:.65rem; letter-spacing:.04em;">Comprobante</label>
-                <div class="serie-display {{ empty($serieDefault) ? 'is-empty' : '' }}">
+              <div class="col-md-4">
+                <label class="form-label small mb-1">Comprobante</label>
+                <div class="serie-text {{ empty($serieDefault) ? 'is-empty' : '' }}">
                   @if (!empty($serieDefault))
                     {{ $serieDefault }}-{{ $numeroSugerido }}
                   @else
-                    Sin serie configurada
+                    Sin serie
                   @endif
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <label class="form-label small mb-1">Fecha Emisión *</label>
                 <input type="date" id="fecha_emision" name="fecha_emision"
                        class="form-control form-control-sm"
                        value="{{ $fechaHoy }}" max="{{ $fechaHoy }}">
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <label class="form-label small mb-1">Observación</label>
                 <input type="text" name="observacion"
                        class="form-control form-control-sm"
