@@ -31,6 +31,21 @@
     white-space: nowrap;
   }
   .ret-head .btn-new:hover { background: #000; color: #fff; }
+  .ret-head .btn-cfg {
+    background: #fff; color: #111827; border: 1px solid #d1d5db;
+    padding: .5rem .85rem; border-radius: 6px; font-size: .82rem; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    white-space: nowrap;
+  }
+  .ret-head .btn-cfg:hover { background: #f3f4f6; }
+  .ret-head .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  /* Modal config series */
+  #modalSeries .serie-tag {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-weight: 700; color: #1f2937; background: #eff6ff;
+    border: 1px solid #dbeafe; padding: 2px 8px; border-radius: 4px;
+  }
+  #modalSeries .ultimo-cero { color: #9ca3af; font-style: italic; }
   @media (max-width: 575px) {
     .ret-head { flex-direction: column; align-items: stretch; }
     .ret-head .btn-new { width: 100%; }
@@ -225,9 +240,15 @@
         </div>
       </div>
     </div>
-    <a href="{{ route('retenciones.create') }}" class="btn-new">
-      <i class="fa fa-plus"></i> Nueva Retencion
-    </a>
+    <div class="actions">
+      <button type="button" class="btn-cfg" data-bs-toggle="modal" data-bs-target="#modalSeries"
+              title="Configurar series (MaestroDocumentoSerie)">
+        <i class="fa fa-cog"></i> Series
+      </button>
+      <a href="{{ route('retenciones.create') }}" class="btn-new">
+        <i class="fa fa-plus"></i> Nueva Retencion
+      </a>
+    </div>
   </div>
 
   {{-- ────────── KPIs ────────── --}}
@@ -323,8 +344,75 @@
 
 </div>
 
-{{-- Modal --}}
+{{-- Modal detalle --}}
 @include('retencion.modal-detalle')
+
+{{-- ────────── Modal: Configuración de Series ────────── --}}
+<div class="modal fade" id="modalSeries" tabindex="-1" aria-labelledby="modalSeriesLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="modalSeriesLabel">
+          <i class="fa fa-cog"></i> Series para Retención
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-7">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:.06em;">Series Existentes</div>
+              <button type="button" id="btn_refresh_series" class="btn btn-sm btn-outline-secondary"
+                      title="Refrescar"><i class="fa fa-sync"></i></button>
+            </div>
+            <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr class="small text-uppercase">
+                    <th style="width:90px;">Serie</th>
+                    <th class="text-end">Num.</th>
+                    <th class="text-end">Ult. Valor</th>
+                    <th class="text-end">Ult. Market</th>
+                  </tr>
+                </thead>
+                <tbody id="series_body">
+                  <tr><td colspan="4" class="text-center text-muted small py-3">Cargando…</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="series_error" class="alert alert-danger small d-none mt-2 mb-0"></div>
+          </div>
+
+          <div class="col-md-5">
+            <div class="small fw-bold text-uppercase text-muted mb-2" style="letter-spacing:.06em;">Crear Nueva Serie</div>
+            <form id="form_crear_serie" autocomplete="off">
+              @csrf
+              <div class="mb-2">
+                <label class="form-label small mb-1">Número de serie *</label>
+                <input type="number" id="num_serie" name="num_serie" class="form-control form-control-sm"
+                       min="1" max="9999" placeholder="ej. 1, 11, 200">
+                <div class="form-text small">
+                  Solo el número (1–9999). El prefijo es <strong>R</strong> (de MaestroDocumento).
+                  Quedará como <code id="preview_serie">R???</code>.
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small mb-1">Ctr. Resp. (opcional)</label>
+                <input type="text" id="ctr_resp" name="ctr_resp" class="form-control form-control-sm" maxlength="10">
+              </div>
+              <button type="submit" id="btn_crear_serie" class="btn btn-sm btn-primary w-100">
+                <i class="fa fa-plus"></i> Crear serie
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 @push('js-scripts')
   <script src="{{ asset('js/retenciones/index.js?v=') }}{{ rand() }}"></script>

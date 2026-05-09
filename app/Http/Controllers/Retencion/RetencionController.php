@@ -117,41 +117,42 @@ class RetencionController extends Controller
     {
         $rucempresa  = $this->getRucEmpresa();
         $razonSocial = $this->getRazonSocialEmpresa();
-        $tasa        = $this->getTasaRetencion();
         $serieParam  = $this->getSerieRetencion(); // ej. "R001" del Parametro 12
 
-        // ── Series disponibles desde el FastAPI (SQL Server) ──
+        // Series disponibles desde el FastAPI (SQL Server). El form ya no
+        // permite elegir serie — solo mostramos la resuelta. Para cambiar de
+        // serie el usuario va al modal "Series" del listado.
         $svc    = app(DatamarketRetencionService::class);
         $resSer = $svc->listarSeries(self::TIPO_DOC_RETENCION);
         $series = $resSer['ok'] ? $resSer['items'] : [];
 
-        // Elegimos la serie default: la del Parametro 12 si existe en la lista,
-        // si no la primera disponible, si no el valor del Parametro tal cual.
-        $serieDefault = $serieParam;
-        $numSerieDefault = (int) preg_replace('/\D/', '', $serieParam);
+        // Pickeamos la serie por defecto: la del Parametro 12 si existe en la
+        // lista, si no la primera disponible. Si no hay ninguna, el form va a
+        // mostrar un aviso para configurar.
+        $serieDefault    = null;
+        $numSerieDefault = 0;
         $match = collect($series)->firstWhere('serie_formateada', $serieParam);
         if ($match) {
+            $serieDefault    = $match['serie_formateada'];
             $numSerieDefault = (int) $match['num_serie'];
         } elseif (!empty($series)) {
             $serieDefault    = $series[0]['serie_formateada'];
             $numSerieDefault = (int) $series[0]['num_serie'];
         }
 
-        // Siguiente numero para la serie default (FastAPI -> SQL Server)
-        $numeroSugerido = '00000001';
+        // Siguiente número (zero-padded a 8) — solo si hay serie.
+        $numeroSugerido = null;
         if ($numSerieDefault > 0) {
             $sig = $svc->siguienteNumeroSerie(self::TIPO_DOC_RETENCION, $numSerieDefault);
             if ($sig['ok']) $numeroSugerido = $sig['siguiente_numero'];
         }
 
         return view('retencion.create', [
-            'rucempresa'      => $rucempresa,
-            'razonSocial'     => $razonSocial,
-            'tasa'            => $tasa,
-            'serieDefault'    => $serieDefault,
-            'numeroSugerido'  => $numeroSugerido,
-            'fechaHoy'        => date('Y-m-d'),
-            'series'          => $series,                 // lista para el dropdown
+            'rucempresa'     => $rucempresa,
+            'razonSocial'    => $razonSocial,
+            'serieDefault'   => $serieDefault,
+            'numeroSugerido' => $numeroSugerido,
+            'fechaHoy'       => date('Y-m-d'),
         ]);
     }
 
@@ -251,7 +252,11 @@ class RetencionController extends Controller
             'fecha_emision'            => 'required|date',
             'numdocproveedor'          => 'required|string|size:11',
             'razonsocialproveedor'     => 'required|string|max:150',
-            'tasa'                     => 'required|numeric|min:0|max:99',
+            // tasa y régimen ya no se editan en el form (siempre 3 % / "01"),
+            // pero los aceptamos opcionales por compatibilidad si algún caller
+            // viejo los envía.
+            'tasa'                     => 'nullable|numeric|min:0|max:99',
+            'regimenretencion'         => 'nullable|string|max:2',
             'detalles'                 => 'required|array|min:1',
             'detalles.*.tipo_doc_rel'  => 'required|string|in:01,03,07,08,12,14,99',
             'detalles.*.serie_num_rel' => 'required|string|max:15',
@@ -274,8 +279,11 @@ class RetencionController extends Controller
         $numero      = str_pad(preg_replace('/\D/', '', $request->input('numero')), 8, '0', STR_PAD_LEFT);
         $serienumero = "{$serie}-{$numero}";
 
-        $tasa        = number_format((float) $request->input('tasa'), 2, '.', '');
-        $tasaDec     = ((float) $tasa) / 100;
+        // Tasa fija 3 % (régimen general SUNAT). Si llega del request, se respeta.
+        $tasaInput   = $request->input('tasa');
+        $tasaFloat   = ($tasaInput !== null && $tasaInput !== '') ? (float) $tasaInput : 3.00;
+        $tasa        = number_format($tasaFloat, 2, '.', '');
+        $tasaDec     = $tasaFloat / 100;
 
         // ── Calculos en PEN (cabecera siempre en PEN aunque las lineas sean USD) ──
         $detallesIn       = $request->input('detalles');

@@ -226,3 +226,92 @@ $(document).on('click', '.anular_retencion', function () {
     });
   });
 });
+
+/* ─── Modal: Configuración de Series ──────────────────────────────── */
+
+(function () {
+  function _escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function _pad3(n) { n = String(n); while (n.length < 3) n = '0' + n; return n; }
+
+  function cargarSeriesModal() {
+    var $tbody = $('#series_body');
+    var $err = $('#series_error').addClass('d-none').text('');
+    $tbody.html('<tr><td colspan="4" class="text-center text-muted small py-3">Cargando…</td></tr>');
+    $.ajax({ url: route('retenciones.listarSeries'), type: 'GET', dataType: 'json' })
+      .done(function (resp) {
+        if (!resp.procede) {
+          $tbody.empty();
+          $err.removeClass('d-none').text(resp.error || 'Error consultando series');
+          return;
+        }
+        if (!resp.items.length) {
+          $tbody.html('<tr><td colspan="4" class="text-center text-muted small py-3">Aún no hay series. Crea la primera ↗</td></tr>');
+          return;
+        }
+        var html = '';
+        resp.items.forEach(function (s) {
+          var um  = (s.ultimo_valor === 0)        ? '<span class="ultimo-cero">0</span>' : _escapeHtml(s.ultimo_valor);
+          var umk = (s.ultimo_valor_market === 0) ? '<span class="ultimo-cero">0</span>' : _escapeHtml(s.ultimo_valor_market);
+          html +=
+            '<tr>' +
+              '<td><span class="serie-tag">' + _escapeHtml(s.serie_formateada) + '</span></td>' +
+              '<td class="text-end">' + _escapeHtml(s.num_serie) + '</td>' +
+              '<td class="text-end">' + um + '</td>' +
+              '<td class="text-end">' + umk + '</td>' +
+            '</tr>';
+        });
+        $tbody.html(html);
+      })
+      .fail(function (xhr) {
+        $tbody.empty();
+        $err.removeClass('d-none').text((xhr.responseJSON && xhr.responseJSON.error) || ('HTTP ' + xhr.status));
+      });
+  }
+
+  $('#num_serie').on('input', function () {
+    var n = parseInt($(this).val() || 0, 10);
+    $('#preview_serie').text((n && n >= 1) ? ('R' + _pad3(n)) : 'R???');
+  });
+
+  $('#btn_refresh_series').on('click', cargarSeriesModal);
+  $('#modalSeries').on('shown.bs.modal', cargarSeriesModal);
+
+  $('#form_crear_serie').on('submit', function (e) {
+    e.preventDefault();
+    var num = parseInt($('#num_serie').val() || 0, 10);
+    if (!num || num < 1 || num > 9999) {
+      Swal.fire({ html: 'Ingresa un número de serie entre 1 y 9999.', icon: 'warning' });
+      return;
+    }
+    var fd = new FormData();
+    fd.append('_token', _token);
+    fd.append('num_serie', num);
+    var ctr = $('#ctr_resp').val();
+    if (ctr) fd.append('ctr_resp', ctr);
+
+    $('#btn_crear_serie').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando…');
+
+    $.ajax({
+      url: route('retenciones.crearSerie'), type: 'POST', data: fd,
+      processData: false, contentType: false, dataType: 'json',
+    })
+    .done(function (resp) {
+      Swal.fire({ html: resp.msj, icon: resp.msj_tipo || 'success', timer: 1500, showConfirmButton: false });
+      $('#num_serie').val('');
+      $('#ctr_resp').val('');
+      $('#preview_serie').text('R???');
+      cargarSeriesModal();
+    })
+    .fail(function (xhr) {
+      var resp = xhr.responseJSON || { msj: 'No se pudo crear la serie.', msj_tipo: 'error' };
+      Swal.fire({ html: resp.msj, icon: resp.msj_tipo || 'error' });
+    })
+    .always(function () {
+      $('#btn_crear_serie').prop('disabled', false).html('<i class="fa fa-plus"></i> Crear serie');
+    });
+  });
+})();
