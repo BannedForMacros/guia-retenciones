@@ -98,7 +98,10 @@ function limpiarProveedor() {
 function destruirSelectorFacturas() {
   var $sel = $('#factura_select');
   if ($sel.data('select2')) $sel.select2('destroy');
-  $sel.empty().prop('disabled', true);
+  // Restauramos el placeholder visible para que no quede el select "fantasma".
+  $sel.empty()
+      .append('<option value="">Primero selecciona un proveedor…</option>')
+      .prop('disabled', true);
 }
 
 function inicializarSelectorFacturas(rucProveedor) {
@@ -328,6 +331,7 @@ $(document).on('click', '#btn_registrar', function () {
       fd.append(p + '[factor_cambio]', factor);
     });
 
+    var BTN_RESTORE = '<i class="fa fa-check"></i> Registrar Retención';
     $('#btn_registrar').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Registrando…');
 
     $.ajax({
@@ -336,13 +340,13 @@ $(document).on('click', '#btn_registrar', function () {
       success: function (resp) {
         Swal.fire({ html: resp.msj, icon: resp.msj_tipo }).then(function () {
           if (resp.procede) window.location.href = route('retenciones.index');
-          else $('#btn_registrar').prop('disabled', false).text('Registrar');
+          else $('#btn_registrar').prop('disabled', false).html(BTN_RESTORE);
         });
       },
       error: function (xhr) {
         var resp = xhr.responseJSON || { msj: 'Error al registrar', msj_tipo: 'error' };
         Swal.fire({ html: resp.msj, icon: resp.msj_tipo || 'error' });
-        $('#btn_registrar').prop('disabled', false).text('Registrar');
+        $('#btn_registrar').prop('disabled', false).html(BTN_RESTORE);
       },
     });
   });

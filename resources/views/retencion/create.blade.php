@@ -12,15 +12,46 @@
     border-left: 3px solid #2563eb; padding-left: .5rem; margin-bottom: 0;
   }
 
-  /* ── Header sutil ─────────────────────────────────────────────── */
+  /* ── Header ────────────────────────────────────────────────────── */
   .page-title {
-    font-size: .95rem; font-weight: 600; color: #1f2937; margin: 0;
-    letter-spacing: -.01em;
+    font-size: 1.45rem; font-weight: 700; color: #0f172a; margin: 0;
+    letter-spacing: -.02em; line-height: 1.15;
   }
   .page-subtitle {
-    font-size: .72rem; color: #6b7280; margin-top: 1px;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: .78rem; color: #64748b; margin-bottom: 4px;
   }
+  .page-subtitle a { color: #475569; text-decoration: none; }
+  .page-subtitle a:hover { color: #0f172a; text-decoration: underline; }
+
+  /* ── Botones flat ─────────────────────────────────────────────── */
+  .btn-flat-primary,
+  .btn-flat-success,
+  .btn-ghost {
+    border: 0; border-radius: 6px;
+    padding: .55rem 1.1rem; font-size: .85rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: none; line-height: 1.2; transition: background .15s, color .15s;
+  }
+  .btn-flat-success {
+    background: #16a34a; color: #fff;
+  }
+  .btn-flat-success:hover { background: #15803d; color: #fff; }
+  .btn-flat-success:disabled { background: #cbd5e1; color: #fff; cursor: not-allowed; }
+  .btn-flat-success:disabled:hover { background: #cbd5e1; }
+  .btn-ghost {
+    background: transparent; color: #64748b; font-weight: 500;
+  }
+  .btn-ghost:hover { background: #f1f5f9; color: #0f172a; }
+
+  /* ── Step badge en títulos de sección (guía visual de orden) ──── */
+  .step-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #2563eb; color: #fff;
+    font-size: .68rem; font-weight: 700;
+    margin-right: 6px; flex-shrink: 0;
+  }
+  .section-title.with-step { display: inline-flex; align-items: center; }
 
   /* ── Datos del comprobante: serie-número como texto plano ─────── */
   .serie-display {
@@ -135,21 +166,21 @@
 @section('content')
   <div class="ret-create-wrap">
 
-    {{-- ────────── Encabezado sutil ────────── --}}
-    <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+    {{-- ────────── Encabezado ────────── --}}
+    <div class="d-flex justify-content-between align-items-end mb-4 gap-3 flex-wrap">
       <div>
         <div class="page-subtitle">
-          <a href="{{ route('retenciones.index') }}" class="text-decoration-none text-muted">Retenciones</a>
-          <span> / Nueva</span>
+          <a href="{{ route('retenciones.index') }}">Retenciones</a>
+          <span class="text-muted"> / Nueva</span>
         </div>
         <h1 class="page-title">Nueva Retención</h1>
       </div>
-      <div class="d-flex gap-2">
-        <a href="{{ route('retenciones.index') }}" class="btn btn-sm btn-outline-secondary">
+      <div class="d-flex gap-1 align-items-center">
+        <a href="{{ route('retenciones.index') }}" class="btn-ghost">
           Cancelar
         </a>
-        <button type="button" id="btn_registrar" class="btn btn-sm btn-success">
-          Registrar
+        <button type="button" id="btn_registrar" class="btn-flat-success">
+          <i class="fa fa-check"></i> Registrar Retención
         </button>
       </div>
     </div>
@@ -196,13 +227,15 @@
           </div>
         </div>
 
-        {{-- Proveedor --}}
+        {{-- Proveedor (Paso 1) --}}
         <div class="col-md-6">
           <div class="card-soft p-3 h-100">
             <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
-              <div class="section-title">Proveedor</div>
+              <div class="section-title with-step"><span class="step-badge">1</span>Proveedor</div>
               <div class="inline-search" id="proveedor_search_wrap">
-                <select id="proveedor_select"></select>
+                <select id="proveedor_select" class="form-select form-select-sm">
+                  <option value=""></option>
+                </select>
               </div>
             </div>
 
@@ -226,12 +259,14 @@
         </div>
       </div>
 
-      {{-- ────────── Card: Documentos a Retener ────────── --}}
+      {{-- ────────── Card: Documentos a Retener (Paso 2) ────────── --}}
       <div class="card-soft p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
-          <div class="section-title">Documentos a Retener</div>
+          <div class="section-title with-step"><span class="step-badge">2</span>Documentos a Retener</div>
           <div class="inline-search" id="factura_search_wrap" style="width:340px;">
-            <select id="factura_select" disabled></select>
+            <select id="factura_select" class="form-select form-select-sm" disabled>
+              <option value="">Primero selecciona un proveedor…</option>
+            </select>
           </div>
         </div>
 
