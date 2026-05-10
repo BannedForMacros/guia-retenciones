@@ -75,13 +75,34 @@ class RetencionController extends Controller
         if ($rucProv) {
             $q->where('numdocproveedor', $rucProv);
         }
+        // Filtro Estado SUNAT — valores semánticos (modernos):
+        //   'A'    → Aceptada      (estadosunat = 'A' o legacy '05')
+        //   'F'    → Rechazada     (estadoproceso = 'F' o legacy estadosunat = '09')
+        //   'P'    → Pendiente     (estadosunat null/'' y no anulada)
+        //   'ANUL' → Anulada       (estadodocumento = '11')
+        //   'null' → Sin estado SUNAT (alias de pendiente, compat con dropdown viejo)
         if ($estadoSunat !== null && $estadoSunat !== '' && $estadoSunat !== 'all') {
-            if ($estadoSunat === 'null') {
-                $q->where(function ($s) {
-                    $s->whereNull('estadosunat')->orWhere('estadosunat', '');
-                });
-            } else {
-                $q->where('estadosunat', $estadoSunat);
+            switch ($estadoSunat) {
+                case 'A':
+                    $q->where(function ($s) { $s->where('estadosunat', 'A')->orWhere('estadosunat', '05'); });
+                    break;
+                case 'F':
+                    $q->where(function ($s) { $s->where('estadoproceso', 'F')->orWhere('estadosunat', '09'); });
+                    break;
+                case 'P':
+                case 'null':
+                    $q->where(function ($s) {
+                        $s->whereNull('estadosunat')->orWhere('estadosunat', '')->orWhere('estadosunat', '00');
+                    })
+                      ->where(function ($s) { $s->where('estadoproceso', '!=', 'F')->orWhereNull('estadoproceso'); })
+                      ->where(function ($s) { $s->where('estadodocumento', '!=', '11')->orWhereNull('estadodocumento'); });
+                    break;
+                case 'ANUL':
+                    $q->where('estadodocumento', '11');
+                    break;
+                default:
+                    // Compat: si llega un valor legacy directo (05/09/00), filtramos como antes
+                    $q->where('estadosunat', $estadoSunat);
             }
         }
         if ($busqueda) {
@@ -96,13 +117,35 @@ class RetencionController extends Controller
                   ->orderBy('serienumero',  'desc')
                   ->get();
 
-        // KPIs via SP
-        $totales = DB::select('CALL SP_RETENCION_TOTALES_DASHBOARD(?, ?, ?)', [
-            $rucempresa,
-            $fechaInicio ?: '',
-            $fechaFin    ?: '',
-        ]);
-        $totales = $totales[0] ?? null;
+        // KPIs inline (no SP) — soporta valores modernos ('A','F','P') Y legacy ('05','09','00').
+        // El SP SP_RETENCION_TOTALES_DASHBOARD original solo cuenta los legacy y por eso aceptadas
+        // siempre salía en 0 con la data nueva.
+        $totales = DB::selectOne(
+            "SELECT
+                COUNT(*)                                           AS total_retenciones,
+                COUNT(DISTINCT numdocproveedor)                    AS proveedores_distintos,
+                COALESCE(SUM(CAST(importetotalretenido AS DECIMAL(18,2))), 0) AS total_retenido,
+                SUM(CASE WHEN estadosunat IN ('A','05')
+                          AND (estadodocumento IS NULL OR estadodocumento <> '11')
+                         THEN 1 ELSE 0 END)                        AS aceptadas,
+                SUM(CASE WHEN (estadoproceso = 'F' OR estadosunat = '09')
+                          AND (estadodocumento IS NULL OR estadodocumento <> '11')
+                         THEN 1 ELSE 0 END)                        AS rechazadas,
+                SUM(CASE WHEN (estadosunat IS NULL OR estadosunat IN ('','00'))
+                          AND (estadoproceso IS NULL OR estadoproceso <> 'F')
+                          AND (estadodocumento IS NULL OR estadodocumento <> '11')
+                         THEN 1 ELSE 0 END)                        AS pendientes,
+                SUM(CASE WHEN estadodocumento = '11' THEN 1 ELSE 0 END) AS anuladas
+             FROM retenciones
+             WHERE rucempresa = ?
+               AND (? = '' OR fechaemision >= ?)
+               AND (? = '' OR fechaemision <= ?)",
+            [
+                $rucempresa,
+                $fechaInicio ?: '', $fechaInicio ?: '',
+                $fechaFin    ?: '', $fechaFin    ?: '',
+            ]
+        );
 
         return view('retencion.tabla', [
             'list'    => $list,
@@ -264,6 +307,7 @@ class RetencionController extends Controller
             'detalles.*.importe_doc'   => 'nullable|numeric',
             'detalles.*.moneda_doc'    => 'nullable|string|max:3',
             'detalles.*.fecha_pago'    => 'required|date',
+            'detalles.*.numero_pago'   => 'nullable|integer|min:1|max:999',
             'detalles.*.importe_pago'  => 'required|numeric|min:0.01',
             'detalles.*.moneda_pago'   => 'nullable|string|in:PEN,USD',
             // factor_cambio obligatorio si la linea esta en USD; default 1.0 para PEN.
@@ -307,7 +351,9 @@ class RetencionController extends Controller
                 'fecha_doc_rel'        => $d['fecha_doc_rel'] ?? null,
                 'importe_doc'          => isset($d['importe_doc']) ? (float) $d['importe_doc'] : $importeOriginal,
                 'fecha_pago'           => $d['fecha_pago'],
-                'numero_pago'          => $idx + 1,
+                'numero_pago'          => (isset($d['numero_pago']) && $d['numero_pago'] !== '' && $d['numero_pago'] !== null)
+                                            ? (int) $d['numero_pago']
+                                            : ($idx + 1),
                 'importe_pago'         => $importeOriginal,
                 'moneda'               => $monedaPago,
                 'factor_cambio'        => $factor,

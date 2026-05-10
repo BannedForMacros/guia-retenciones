@@ -351,10 +351,10 @@
             <label class="form-label"><i class="fa fa-flag"></i> Estado SUNAT</label>
             <select class="form-select" name="estado_sunat">
               <option value="all">Todos</option>
-              <option value="00">Pendiente</option>
-              <option value="05">Aceptada</option>
-              <option value="09">Rechazada</option>
-              <option value="null">Sin estado</option>
+              <option value="A">Aceptada</option>
+              <option value="F">Rechazada</option>
+              <option value="P">Pendiente</option>
+              <option value="ANUL">Anulada</option>
             </select>
           </div>
           <div class="col-12 col-md-3 d-flex gap-1 justify-content-md-end">
@@ -451,6 +451,7 @@
 </div>
 
 @push('js-scripts')
+  <script src="{{ asset('js/retenciones/utils.js?v=') }}{{ rand() }}"></script>
   <script src="{{ asset('js/retenciones/index.js?v=') }}{{ rand() }}"></script>
 @endpush
 @endsection

@@ -16,7 +16,7 @@ var TIPOS_DOC_REL = [
 
 var contadorLineas = 0;
 
-/* ── Helpers ─────────────────────────────────────────────────────────── */
+/* ── Helpers locales (los formateos/parseos vienen de RetUtils) ──────── */
 function _escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
@@ -26,9 +26,9 @@ function _initial(name) {
   var s = String(name || '').trim();
   return s ? s.charAt(0).toUpperCase() : '·';
 }
-function _fmt2(n) {
-  return Number(n || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+/* Wrappers cortos sobre RetUtils — mantienen el JS legible. */
+var _fmt2     = function (n) { return RetUtils.fmtNum(n, 2); };
+var _parseNum = function (raw) { return RetUtils.parseNum(raw); };
 
 /* ── Init ────────────────────────────────────────────────────────────── */
 $(document).ready(function () {
@@ -187,14 +187,17 @@ function agregarLineaConFactura(f) {
 
   // Toda la data del datamarket se guarda en data-* del <tr>; el form lo
   // usa al hacer submit. Las celdas son TEXTO (no editable).
-  // Para USD: pre-cargamos un T.C. referencial (3.7500) para que el cálculo
-  // arranque inmediatamente; el usuario puede ajustarlo por línea.
+  // Para USD: TC referencial (RetUtils.TC_DEFAULT) con 2 decimales — editable.
+  var tcDefault = RetUtils.TC_DEFAULT.toFixed(RetUtils.TC_DECIMALS); // "3.75"
   var tCambioCell = esUsd
-    ? '<input type="number" class="form-control text-end in-factor-cambio" step="0.0001" min="0.0001" value="3.7500" title="Tipo de cambio PEN por USD (editable)">'
-    : '<span class="text-muted">1.0000</span>';
+    ? '<input type="number" class="form-control text-end in-factor-cambio" step="0.01" min="0.01" value="' + tcDefault + '" title="Tipo de cambio PEN por USD (editable, máx. 2 decimales)">'
+    : '<span class="text-muted">1.00</span>';
+
+  var trClass = esUsd ? 'is-usd' : '';
+  var monedaClass = esUsd ? 'is-usd' : 'is-pen';
 
   var tr =
-    '<tr data-idx="' + idx + '"' +
+    '<tr class="' + trClass + '" data-idx="' + idx + '"' +
         ' data-tipo-doc="'  + _escapeHtml(f.tipo_doc) + '"' +
         ' data-serie-num="' + _escapeHtml(f.serie_numero) + '"' +
         ' data-fecha-doc="' + _escapeHtml(f.fecha_emision) + '"' +
@@ -204,11 +207,12 @@ function agregarLineaConFactura(f) {
     '  <td class="mono-cell">' + _escapeHtml(f.serie_numero) + '</td>' +
     '  <td class="text-cell">' + _escapeHtml(f.fecha_emision) + '</td>' +
     '  <td class="num-cell text-cell">' + _fmt2(importeDoc) + '</td>' +
-    '  <td class="text-center"><span class="moneda-tag">' + moneda + '</span></td>' +
+    '  <td class="text-center"><span class="moneda-tag ' + monedaClass + '">' + moneda + '</span></td>' +
     '  <td class="text-center">' + tCambioCell + '</td>' +
     '  <td><input type="date" class="form-control in-fecha-pago" value="' + hoy + '"></td>' +
+    '  <td><input type="number" class="form-control text-center in-numero-pago" min="1" max="999" step="1" value="1" title="Número / cuota de pago"></td>' +
     '  <td><input type="number" class="form-control text-end in-importe-pago" step="0.01" min="0" value="' + importeDoc.toFixed(2) + '"></td>' +
-    '  <td class="num-cell out-retenido text-success fw-bold">S/ 0.00</td>' +
+    '  <td class="num-cell out-retenido fw-bold">S/ 0.00</td>' +
     '  <td class="num-cell out-neto">S/ 0.00</td>' +
     '  <td class="text-center">' +
     '    <button type="button" class="btn btn-sm btn-link text-danger btn-eliminar-linea" title="Quitar"><i class="fa fa-xmark"></i></button>' +
@@ -232,25 +236,24 @@ $(document).on('click', '.btn-eliminar-linea', function () {
   recalcularTodo();
 });
 
+/* Recálculo automático cuando cambia importe pago o factor de cambio */
 $(document).on('input change', '.in-importe-pago, .in-factor-cambio', recalcularTodo);
+
+/* Limita el TC a 2 decimales mientras el usuario tipea (sin esperar al blur) */
+$(document).on('input', '.in-factor-cambio', function () {
+  RetUtils.clampDecimalsOnInput(this, RetUtils.TC_DECIMALS);
+});
+
+/* Limita el importe pago a 2 decimales (consistencia con TC) */
+$(document).on('input', '.in-importe-pago', function () {
+  RetUtils.clampDecimalsOnInput(this, RetUtils.DECIMALS);
+});
 
 /* Si cambia el importe del documento (solo aplica a futuro/manual; las API
    son read-only) — dejamos el handler por si se reusa más adelante. */
 
 /* ─── Recálculo ──────────────────────────────────────────────────────── */
-
-/* Helper: lee un número desde un input/atributo de forma robusta.
-   Maneja: valores vacíos, comas como decimales (locale es-PE en algunos
-   browsers), strings con espacios, null/undefined. */
-function _parseNum(raw) {
-  if (raw === null || raw === undefined) return 0;
-  var s = String(raw).trim();
-  if (s === '') return 0;
-  // Soporta "1.234,56" → "1234.56" si el browser/locale puso coma decimal
-  if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) s = s.replace(',', '.');
-  var n = parseFloat(s);
-  return isFinite(n) ? n : 0;
-}
+/* (parseo y formateo vienen de RetUtils — utils.js) */
 
 function recalcularTodo() {
   var totPagPEN = 0, totRetPEN = 0, totNetoPEN = 0;
@@ -300,10 +303,10 @@ $(document).on('click', '#btn_registrar', function () {
   var detallesValidos = true, razonInvalida = '';
   $('#detalles_body tr').each(function () {
     var $tr = $(this);
-    var pag = parseFloat($tr.find('.in-importe-pago').val() || 0);
-    var moneda = $tr.data('moneda') || 'PEN';
+    var pag = RetUtils.parseNum($tr.find('.in-importe-pago').val());
+    var moneda = ($tr.attr('data-moneda') || 'PEN').toUpperCase();
     var factor = (moneda === 'USD')
-      ? parseFloat($tr.find('.in-factor-cambio').val() || 0)
+      ? RetUtils.parseNum($tr.find('.in-factor-cambio').val())
       : 1.0;
     if (pag <= 0) {
       detallesValidos = false;
@@ -349,6 +352,7 @@ $(document).on('click', '#btn_registrar', function () {
       fd.append(p + '[importe_doc]',   $tr.data('importe-doc') || 0);
       fd.append(p + '[moneda_doc]',    moneda);
       fd.append(p + '[fecha_pago]',    $tr.find('.in-fecha-pago').val());
+      fd.append(p + '[numero_pago]',   $tr.find('.in-numero-pago').val() || (i + 1));
       fd.append(p + '[importe_pago]',  $tr.find('.in-importe-pago').val());
       fd.append(p + '[moneda_pago]',   moneda);
       fd.append(p + '[factor_cambio]', factor);

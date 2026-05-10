@@ -161,10 +161,50 @@
   table.tabla-detalles .num-cell   { text-align: right; font-variant-numeric: tabular-nums; }
   /* Filas: el "Retenido" por línea también en teal para consistencia */
   table.tabla-detalles .out-retenido { color: var(--db-teal); font-weight: 700; }
+
+  /* Tag de moneda — PEN azul, USD ámbar para destacar que requiere TC */
   table.tabla-detalles .moneda-tag {
-    display: inline-block; font-size: .65rem; font-weight: 700;
-    color: var(--db-blue); background: #E6F3FB; border: 1px solid #BFDDF1;
-    padding: .1rem .45rem; border-radius: 4px;
+    display: inline-block; font-size: .68rem; font-weight: 800;
+    padding: .12rem .5rem; border-radius: 4px;
+    border: 1px solid;
+  }
+  table.tabla-detalles .moneda-tag.is-pen {
+    color: var(--db-blue); background: #E6F3FB; border-color: #BFDDF1;
+  }
+  table.tabla-detalles .moneda-tag.is-usd {
+    color: #92400e; background: #fef3c7; border-color: #fcd34d;
+  }
+
+  /* Filas en USD: tinte sutil + borde izquierdo ámbar para identificarlas
+     a primera vista (requieren tipo de cambio editable). */
+  table.tabla-detalles tr.is-usd > td {
+    background: #FFFBEB;
+  }
+  table.tabla-detalles tr.is-usd > td:first-child {
+    box-shadow: inset 3px 0 0 #f59e0b;
+  }
+  table.tabla-detalles tr.is-usd .in-factor-cambio {
+    border-color: #f59e0b;
+    background: #FFFBEB;
+    font-weight: 700;
+    color: #92400e;
+  }
+  table.tabla-detalles tr.is-usd .in-factor-cambio:focus {
+    border-color: #d97706;
+    box-shadow: 0 0 0 .15rem rgba(245, 158, 11, .15);
+  }
+  /* Pequeño indicador "PEN" debajo del retenido en filas USD */
+  table.tabla-detalles tr.is-usd .out-retenido,
+  table.tabla-detalles tr.is-usd .out-neto {
+    position: relative;
+  }
+  table.tabla-detalles tr.is-usd .out-retenido::after,
+  table.tabla-detalles tr.is-usd .out-neto::after {
+    content: "≈ PEN";
+    display: block;
+    font-size: .58rem; font-weight: 600;
+    color: #94a3b8; letter-spacing: .04em;
+    text-transform: uppercase; margin-top: 1px;
   }
 
   /* Solo los inputs editables (F. Pago / Importe Pago / T. Cambio USD) */
@@ -332,22 +372,23 @@
             <thead>
               <tr class="text-center">
                 <th style="width:40px;">#</th>
-                <th style="width:160px;">Serie-Número</th>
-                <th style="width:110px;">F. Doc.</th>
-                <th style="width:120px;">Importe Doc.</th>
-                <th style="width:70px;">Mon.</th>
+                <th style="width:155px;">Serie-Número</th>
+                <th style="width:105px;">F. Doc.</th>
+                <th style="width:115px;">Importe Doc.</th>
+                <th style="width:65px;">Mon.</th>
                 <th style="width:90px;" title="Factor de tipo de cambio. Solo aplica para USD.">T. Cambio</th>
-                <th style="width:135px;">F. Pago *</th>
-                <th style="width:135px;">Importe Pago *</th>
-                <th style="width:120px;">Retenido (PEN)</th>
-                <th style="width:120px;">Neto (PEN)</th>
+                <th style="width:130px;">F. Pago *</th>
+                <th style="width:75px;" title="Número de pago / cuota">N° Pago</th>
+                <th style="width:130px;">Importe Pago *</th>
+                <th style="width:115px;">Retenido (PEN)</th>
+                <th style="width:115px;">Neto (PEN)</th>
                 <th style="width:42px;"></th>
               </tr>
             </thead>
             <tbody id="detalles_body"></tbody>
             <tfoot id="totales_foot" class="d-none">
               <tr>
-                <td colspan="7" class="text-end tot-lbl">TOTALES (PEN)</td>
+                <td colspan="8" class="text-end tot-lbl">TOTALES (PEN)</td>
                 <td class="text-end" id="tot_pagado">S/ 0.00</td>
                 <td class="text-end tot-ret" id="tot_retenido">S/ 0.00</td>
                 <td class="text-end" id="tot_neto">S/ 0.00</td>
@@ -367,6 +408,7 @@
   </div>
 
   @push('js-scripts')
+    <script src="{{ asset('js/retenciones/utils.js?v=') }}{{ rand() }}"></script>
     <script src="{{ asset('js/retenciones/create.js?v=') }}{{ rand() }}"></script>
   @endpush
 @endsection
