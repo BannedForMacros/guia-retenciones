@@ -1,28 +1,38 @@
 {{-- Modal: ver detalle de una retencion --}}
 <style>
-  /* Solo afecta a este modal */
-  #modalDetalleRetencion .modal-content { border: 1px solid #d1d5db; border-radius: 6px; }
+  /* Hereda las CSS variables --db-* del index/create. Si el modal se usara
+     standalone, hay un fallback abajo. */
+  #modalDetalleRetencion {
+    --md-text:   var(--db-text,   #1A3A5C);
+    --md-blue:   var(--db-blue,   #0E6CB5);
+    --md-teal:   var(--db-teal,   #2ECBA1);
+    --md-bg:     var(--db-bg,     #F5F5F5);
+    --md-border: var(--db-border, #e5e7eb);
+    --md-muted:  var(--db-muted,  #6b7280);
+  }
+
+  #modalDetalleRetencion .modal-content { border: 1px solid var(--md-border); border-radius: 6px; }
   #modalDetalleRetencion .modal-header {
-    background: #fff; border-bottom: 1px solid #d1d5db;
+    background: #fff; border-bottom: 1px solid var(--md-border);
     padding: .75rem 1rem;
   }
   #modalDetalleRetencion .modal-header h5 {
-    margin: 0; font-size: .95rem; font-weight: 700; color: #111827;
+    margin: 0; font-size: .95rem; font-weight: 700; color: var(--md-text);
   }
   #modalDetalleRetencion .modal-header .serie {
-    display: inline-block; background: #eff6ff; color: #1d4ed8;
-    border: 1px solid #bfdbfe;
+    display: inline-block; background: #E6F3FB; color: var(--md-blue);
+    border: 1px solid #BFDDF1;
     font-family: ui-monospace, monospace; font-weight: 700; font-size: .8rem;
     padding: .1rem .45rem; border-radius: 4px; margin-left: 6px;
   }
   #modalDetalleRetencion .modal-body { padding: 1rem; }
 
   #modalDetalleRetencion .md-section {
-    font-size: .65rem; font-weight: 700; color: #6b7280;
+    font-size: .65rem; font-weight: 700; color: var(--md-muted);
     text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
   }
   #modalDetalleRetencion .md-card {
-    background: #fff; border: 1px solid #d1d5db; border-radius: 6px;
+    background: #fff; border: 1px solid var(--md-border); border-radius: 6px;
     padding: .65rem .75rem; height: 100%;
   }
   #modalDetalleRetencion .md-row {
@@ -30,59 +40,62 @@
     padding: 3px 0; font-size: .82rem; border-bottom: 1px dashed #f3f4f6;
   }
   #modalDetalleRetencion .md-row:last-child { border-bottom: 0; }
-  #modalDetalleRetencion .md-row .k { color: #6b7280; font-weight: 600; }
-  #modalDetalleRetencion .md-row .v { color: #111827; text-align: right; }
+  #modalDetalleRetencion .md-row .k { color: var(--md-muted); font-weight: 600; }
+  #modalDetalleRetencion .md-row .v { color: var(--md-text); text-align: right; }
   #modalDetalleRetencion .md-row .v.mono { font-family: ui-monospace, monospace; }
-  #modalDetalleRetencion .md-row .v.big-ok { color: #16a34a; font-weight: 700; }
+  /* highlight financiero — total retenido en teal */
+  #modalDetalleRetencion .md-row .v.big-ok { color: var(--md-teal); font-weight: 700; }
 
   #modalDetalleRetencion .md-table-wrap {
-    border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden;
+    border: 1px solid var(--md-border); border-radius: 6px; overflow: hidden;
   }
   #modalDetalleRetencion .md-table { font-size: .8rem; margin: 0; }
   #modalDetalleRetencion .md-table thead th {
-    background: #f9fafb; color: #374151; font-weight: 700;
+    background: var(--md-bg); color: var(--md-text); font-weight: 700;
     font-size: .65rem; text-transform: uppercase; letter-spacing: .04em;
-    border-bottom: 1px solid #d1d5db; padding: .45rem .6rem;
+    border-bottom: 1px solid var(--md-border); padding: .45rem .6rem;
   }
+  #modalDetalleRetencion .md-table thead th:first-child { border-top-left-radius: 6px; }
+  #modalDetalleRetencion .md-table thead th:last-child  { border-top-right-radius: 6px; }
   #modalDetalleRetencion .md-table tbody td {
     padding: .45rem .6rem; vertical-align: middle;
     border-bottom: 1px solid #f3f4f6;
   }
   #modalDetalleRetencion .md-table tbody tr:last-child td { border-bottom: 0; }
-  #modalDetalleRetencion .md-table .ret-monto { color: #16a34a; font-weight: 700; }
+  #modalDetalleRetencion .md-table .ret-monto { color: var(--md-teal); font-weight: 700; }
 
   #modalDetalleRetencion .md-obs {
-    background: #fff; border: 1px solid #d1d5db; color: #374151;
+    background: #fff; border: 1px solid var(--md-border); color: #374151;
     padding: .5rem .65rem; border-radius: 6px; font-size: .8rem;
   }
 
   #modalDetalleRetencion .modal-footer {
-    background: #fff; border-top: 1px solid #d1d5db; padding: .55rem .85rem;
+    background: #fff; border-top: 1px solid var(--md-border); padding: .55rem .85rem;
   }
 
-  /* chips simples */
+  /* chips simples — aceptado en teal (palette), resto semántico */
   #modalDetalleRetencion .md-chip {
     display: inline-block; padding: .12rem .5rem; border-radius: 4px;
     font-size: .68rem; font-weight: 700; border: 1px solid;
   }
-  #modalDetalleRetencion .md-chip.c-acep { background: #fff; color: #15803d; border-color: #15803d; }
+  #modalDetalleRetencion .md-chip.c-acep { background: #fff; color: var(--md-teal); border-color: #A8E8D5; }
   #modalDetalleRetencion .md-chip.c-rech { background: #fff; color: #b91c1c; border-color: #b91c1c; }
   #modalDetalleRetencion .md-chip.c-pend { background: #fff; color: #b45309; border-color: #b45309; }
   #modalDetalleRetencion .md-chip.c-anul { background: #fff; color: #b45309; border-color: #b45309; }
-  #modalDetalleRetencion .md-chip.c-act  { background: #fff; color: #4b5563; border-color: #d1d5db; }
+  #modalDetalleRetencion .md-chip.c-act  { background: #fff; color: #4b5563; border-color: var(--md-border); }
 
   /* Bloque SUNAT */
   #modalDetalleRetencion .md-sunat {
-    background: #f9fafb; border: 1px solid #d1d5db; border-radius: 6px;
+    background: var(--md-bg); border: 1px solid var(--md-border); border-radius: 6px;
     padding: .65rem .75rem;
   }
   #modalDetalleRetencion .md-sunat .lbl-mini {
-    font-size: .6rem; color: #6b7280; text-transform: uppercase;
+    font-size: .6rem; color: var(--md-muted); text-transform: uppercase;
     letter-spacing: .04em; font-weight: 700; margin-bottom: 2px;
   }
   #modalDetalleRetencion .md-sunat .val-mono {
     font-family: ui-monospace, monospace; font-size: .78rem;
-    word-break: break-all; color: #111827; line-height: 1.35;
+    word-break: break-all; color: var(--md-text); line-height: 1.35;
   }
   #modalDetalleRetencion .md-sunat .val-err {
     color: #b91c1c; font-size: .78rem;

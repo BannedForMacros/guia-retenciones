@@ -1,30 +1,58 @@
 @extends('layouts.app')
 
 <style>
-  body { background-color: #f5f7fa !important; }
+  /* ─── Paleta Data Business ─────────────────────────────────────── */
+  :root {
+    --db-navy:    #0D2E6E;  /* navy oscuro — acciones primarias, hover fuerte */
+    --db-blue:    #0E6CB5;  /* azul medio — títulos, badges, borde sección */
+    --db-cyan:    #00AEEF;  /* cyan/cielo — avatares, íconos accent */
+    --db-teal:    #2ECBA1;  /* teal/verde acento — highlight financiero */
+    --db-teal-d:  #22b890;  /* teal hover */
+    --db-text:    #1A3A5C;  /* azul oscuro — títulos en fondo blanco */
+    --db-bg:      #F5F5F5;  /* gris claro — fondo de secciones */
+    --db-muted:   #6b7280;
+    --db-border:  #e5e7eb;
+  }
+
+  body { background-color: var(--db-bg) !important; }
 
   /* ── Layout general ────────────────────────────────────────────── */
   .ret-create-wrap { max-width: 1500px; margin: 0 auto; padding: 14px 18px; }
-  .card-soft { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+
+  /* Cards con accent superior brand (3px) — identidad visible sin saturar */
+  .card-soft {
+    background: #fff;
+    border: 1px solid var(--db-border);
+    border-radius: 8px;
+    border-top: 3px solid var(--db-blue);
+    box-shadow: 0 1px 2px rgba(13, 46, 110, .04);
+  }
+
+  /* Section titles: texto en azul brand, más presencia */
   .section-title {
-    font-size: 11px; font-weight: 700; color: #1f2937;
+    font-size: 11.5px; font-weight: 800; color: var(--db-blue);
     text-transform: uppercase; letter-spacing: .08em;
-    border-left: 3px solid #2563eb; padding-left: .5rem; margin-bottom: 0;
+    border-left: 3px solid var(--db-cyan); padding-left: .55rem; margin-bottom: 0;
   }
 
   /* ── Header ────────────────────────────────────────────────────── */
   .page-title {
-    font-size: 1.45rem; font-weight: 700; color: #0f172a; margin: 0;
+    font-size: 1.55rem; font-weight: 800; color: var(--db-text); margin: 0;
     letter-spacing: -.02em; line-height: 1.15;
+    /* Subrayado brand sólido — un solo color */
+    padding-bottom: 6px;
+    background-image: linear-gradient(var(--db-blue), var(--db-blue));
+    background-size: 48px 3px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
   }
   .page-subtitle {
-    font-size: .78rem; color: #64748b; margin-bottom: 4px;
+    font-size: .78rem; color: var(--db-muted); margin-bottom: 4px;
   }
-  .page-subtitle a { color: #475569; text-decoration: none; }
-  .page-subtitle a:hover { color: #0f172a; text-decoration: underline; }
+  .page-subtitle a { color: var(--db-blue); text-decoration: none; font-weight: 600; }
+  .page-subtitle a:hover { color: var(--db-navy); text-decoration: underline; }
 
   /* ── Botones flat ─────────────────────────────────────────────── */
-  .btn-flat-primary,
   .btn-flat-success,
   .btn-ghost {
     border: 0; border-radius: 6px;
@@ -32,61 +60,63 @@
     display: inline-flex; align-items: center; gap: 7px;
     box-shadow: none; line-height: 1.2; transition: background .15s, color .15s;
   }
+  /* Acción primaria: navy con texto blanco (alto contraste, AAA).
+     El teal queda reservado para highlights financieros. */
   .btn-flat-success {
-    background: #16a34a; color: #fff;
+    background: var(--db-navy); color: #fff;
   }
-  .btn-flat-success:hover { background: #15803d; color: #fff; }
+  .btn-flat-success:hover { background: var(--db-blue); color: #fff; }
   .btn-flat-success:disabled { background: #cbd5e1; color: #fff; cursor: not-allowed; }
   .btn-flat-success:disabled:hover { background: #cbd5e1; }
   .btn-ghost {
-    background: transparent; color: #64748b; font-weight: 500;
+    background: transparent; color: var(--db-muted); font-weight: 500;
   }
-  .btn-ghost:hover { background: #f1f5f9; color: #0f172a; }
+  .btn-ghost:hover { background: #ECEFF3; color: var(--db-text); }
 
   /* ── Step badge en títulos de sección (guía visual de orden) ──── */
   .step-badge {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: #2563eb; color: #fff;
-    font-size: .68rem; font-weight: 700;
-    margin-right: 6px; flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--db-blue);
+    color: #fff;
+    font-size: .7rem; font-weight: 800;
+    margin-right: 8px; flex-shrink: 0;
   }
   .section-title.with-step { display: inline-flex; align-items: center; }
 
-  /* ── Comprobante: TEXTO puro (no input, no caja).
-       Usa la misma font-family que el label para que ambos compartan
-       el mismo bearing del primer carácter → alineación perfecta en X. */
+  /* ── Comprobante: TEXTO puro en azul brand (visible) ──────────── */
   .serie-text {
-    /* Mismo alto que .form-control-sm para baseline uniforme con los inputs vecinos */
     height: calc(1.5em + .5rem + 2px);
     display: flex; align-items: center;
-    padding: 0;                     /* mismo X de inicio que el label arriba */
-    font-family: inherit;           /* NO monospace → sin bearing extraño */
-    font-weight: 700; color: #1f2937;
-    font-size: .95rem; letter-spacing: .01em;
+    padding: 0;
+    font-family: inherit;
+    font-weight: 800; color: var(--db-blue);
+    font-size: 1rem; letter-spacing: .01em;
   }
   .serie-text.is-empty {
     color: #b45309; font-style: italic; font-weight: 500; font-size: .85rem;
   }
 
-  /* ── Proveedor: chip (vertical, encaja en media columna) ─────── */
+  /* ── Proveedor: chip con tinte cyan ─────────────────────────── */
   .prov-chip {
-    display: flex; align-items: flex-start; gap: .65rem;
-    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
-    padding: .65rem .75rem;
+    display: flex; align-items: flex-start; gap: .75rem;
+    background: #E6F3FB;
+    border: 1px solid #BFDDF1; border-radius: 8px;
+    padding: .7rem .85rem;
   }
   .prov-chip .avatar {
-    width: 34px; height: 34px; flex-shrink: 0;
-    background: #0284c7; color: #fff; border-radius: 50%;
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: var(--db-cyan);
+    color: #fff; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: .82rem;
+    font-weight: 700; font-size: .85rem;
   }
   .prov-chip .body { min-width: 0; flex: 1; }
-  .prov-chip .name { font-weight: 700; color: #0f172a; font-size: .9rem; line-height: 1.2; }
-  .prov-chip .ruc  { font-family: ui-monospace, monospace; font-size: .72rem; color: #475569; margin-top: 2px; }
-  .prov-chip .addr { font-size: .75rem; color: #334155; margin-top: 4px; line-height: 1.3; }
+  .prov-chip .name { font-weight: 700; color: var(--db-text); font-size: .92rem; line-height: 1.2; }
+  .prov-chip .ruc  { font-family: ui-monospace, monospace; font-size: .73rem; color: var(--db-blue); margin-top: 2px; font-weight: 700; }
+  .prov-chip .addr { font-size: .75rem; color: #475569; margin-top: 4px; line-height: 1.3; }
   .prov-chip .clear-btn {
-    flex-shrink: 0; background: transparent; border: 0; color: #64748b;
+    flex-shrink: 0; background: transparent; border: 0; color: var(--db-muted);
     width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
   }
@@ -94,40 +124,46 @@
 
   /* ── Tabla detalles: redondeo en header + datos como texto ───── */
   .tabla-wrap {
-    border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--db-border); border-radius: 8px; overflow: hidden;
   }
   table.tabla-detalles { margin: 0; font-size: .82rem; }
   table.tabla-detalles thead th {
-    background: #f9fafb; color: #374151; font-weight: 700;
-    font-size: .67rem; text-transform: uppercase; letter-spacing: .05em;
-    border-bottom: 1px solid #e5e7eb; border-top: 0;
-    padding: .55rem .55rem; white-space: nowrap;
+    /* Header sólido en navy brand con texto blanco */
+    background: var(--db-navy);
+    color: #fff; font-weight: 700;
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 0; border-top: 0;
+    padding: .6rem .55rem; white-space: nowrap;
   }
   table.tabla-detalles thead th:first-child { border-top-left-radius: 8px; }
   table.tabla-detalles thead th:last-child  { border-top-right-radius: 8px; }
   table.tabla-detalles tbody td {
     padding: .45rem .55rem; vertical-align: middle;
-    border-bottom: 1px solid #f3f4f6; border-top: 0; color: #0f172a;
+    border-bottom: 1px solid #f3f4f6; border-top: 0; color: var(--db-text);
   }
-  table.tabla-detalles tbody tr:last-child td { border-bottom: 1px solid #e5e7eb; }
+  table.tabla-detalles tbody tr:hover td { background: #FAFCFE; }
+  table.tabla-detalles tbody tr:last-child td { border-bottom: 1px solid var(--db-border); }
   table.tabla-detalles tfoot td {
-    padding: .55rem .55rem; vertical-align: middle;
-    background: #f9fafb; font-weight: 700; font-size: .82rem;
-    border-top: 1px solid #e5e7eb; border-bottom: 0; color: #0f172a;
+    padding: .6rem .55rem; vertical-align: middle;
+    background: #F0FAFE; font-weight: 700; font-size: .82rem;
+    border-top: 2px solid var(--db-cyan); border-bottom: 0; color: var(--db-text);
     font-variant-numeric: tabular-nums;
   }
-  table.tabla-detalles tfoot td.tot-lbl { color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: .68rem; }
-  table.tabla-detalles tfoot td.tot-ret { color: #16a34a; font-weight: 700; }
+  table.tabla-detalles tfoot td.tot-lbl { color: var(--db-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: .68rem; }
+  /* Highlight financiero: total retenido en teal (palette accent) */
+  table.tabla-detalles tfoot td.tot-ret { color: var(--db-teal); font-weight: 700; }
   table.tabla-detalles tfoot td:first-child { border-bottom-left-radius: 8px; }
   table.tabla-detalles tfoot td:last-child  { border-bottom-right-radius: 8px; }
 
   /* Datos del datamarket: como texto plano (no input) */
-  table.tabla-detalles .text-cell  { color: #0f172a; }
-  table.tabla-detalles .mono-cell  { font-family: ui-monospace, monospace; font-weight: 600; color: #1f2937; }
+  table.tabla-detalles .text-cell  { color: var(--db-text); }
+  table.tabla-detalles .mono-cell  { font-family: ui-monospace, monospace; font-weight: 600; color: var(--db-text); }
   table.tabla-detalles .num-cell   { text-align: right; font-variant-numeric: tabular-nums; }
+  /* Filas: el "Retenido" por línea también en teal para consistencia */
+  table.tabla-detalles .out-retenido { color: var(--db-teal); font-weight: 700; }
   table.tabla-detalles .moneda-tag {
     display: inline-block; font-size: .65rem; font-weight: 700;
-    color: #4b5563; background: #f3f4f6; border: 1px solid #e5e7eb;
+    color: var(--db-blue); background: #E6F3FB; border: 1px solid #BFDDF1;
     padding: .1rem .45rem; border-radius: 4px;
   }
 
@@ -141,12 +177,23 @@
   .inline-search .select2-container { width: 100% !important; }
   .inline-search .select2-selection--single {
     height: 32px !important; min-height: 32px !important;
-    border: 1px solid #d1d5db !important; border-radius: 6px !important;
+    border: 1px solid var(--db-border) !important; border-radius: 6px !important;
+  }
+  .inline-search .select2-selection--single:focus,
+  .inline-search .select2-container--focus .select2-selection--single {
+    border-color: var(--db-blue) !important;
+    box-shadow: 0 0 0 .15rem rgba(14, 108, 181, .12) !important;
   }
   .inline-search .select2-selection__rendered {
-    line-height: 30px !important; font-size: .8rem; color: #6b7280;
+    line-height: 30px !important; font-size: .8rem; color: var(--db-muted);
   }
   .inline-search .select2-selection__arrow { height: 30px !important; }
+
+  /* Inputs editables: focus en azul DB para consistencia */
+  .form-control:focus, .form-select:focus {
+    border-color: var(--db-blue) !important;
+    box-shadow: 0 0 0 .15rem rgba(14, 108, 181, .12) !important;
+  }
 
   /* ── Selector de facturas: render del dropdown ────────────────── */
   .factura-result { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; padding: 2px 0; }
@@ -154,13 +201,13 @@
   .factura-result .top  { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
   .factura-result .tipo-tag {
     font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-    background: #2563eb; color: #fff; padding: 1px 6px; border-radius: 3px;
+    background: var(--db-blue); color: #fff; padding: 1px 6px; border-radius: 3px;
   }
   .factura-result .serie {
-    font-family: ui-monospace, monospace; font-weight: 700; color: #111827; font-size: 12px;
+    font-family: ui-monospace, monospace; font-weight: 700; color: var(--db-text); font-size: 12px;
   }
-  .factura-result .meta { font-size: 10px; color: #6b7280; margin-top: 1px; }
-  .factura-result .importe { font-weight: 700; color: #111827; font-size: 12px; white-space: nowrap; }
+  .factura-result .meta { font-size: 10px; color: var(--db-muted); margin-top: 1px; }
+  .factura-result .importe { font-weight: 700; color: var(--db-text); font-size: 12px; white-space: nowrap; }
   .factura-result.is-retenida .serie { text-decoration: line-through; color: #9ca3af; }
   .factura-result.is-retenida .importe { color: #9ca3af; }
   .factura-result .badge-retenida {
@@ -168,7 +215,7 @@
     color: #92400e; background: #fef3c7; border: 1px solid #fde68a;
     padding: 1px 6px; border-radius: 3px;
   }
-  .select2-results__option[aria-disabled="true"] { background: #f9fafb; cursor: not-allowed; }
+  .select2-results__option[aria-disabled="true"] { background: var(--db-bg); cursor: not-allowed; }
 </style>
 
 @section('content')

@@ -44,7 +44,7 @@
         $estDocAnul = ($r->estadodocumento === '11');
       @endphp
       <tr>
-        <td><span class="serie-pill">{{ $r->serienumero }}</span></td>
+        <td class="serie-cell">{{ $r->serienumero }}</td>
         <td class="text-nowrap">{{ $r->fechaemision }}</td>
         <td>
           <div class="prov-name text-truncate" style="max-width: 280px;" title="{{ $r->razonsocialproveedor }}">
