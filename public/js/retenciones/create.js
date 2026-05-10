@@ -187,8 +187,10 @@ function agregarLineaConFactura(f) {
 
   // Toda la data del datamarket se guarda en data-* del <tr>; el form lo
   // usa al hacer submit. Las celdas son TEXTO (no editable).
+  // Para USD: pre-cargamos un T.C. referencial (3.7500) para que el cálculo
+  // arranque inmediatamente; el usuario puede ajustarlo por línea.
   var tCambioCell = esUsd
-    ? '<input type="number" class="form-control text-end in-factor-cambio" step="0.0001" min="0.0001" placeholder="3.7500">'
+    ? '<input type="number" class="form-control text-end in-factor-cambio" step="0.0001" min="0.0001" value="3.7500" title="Tipo de cambio PEN por USD (editable)">'
     : '<span class="text-muted">1.0000</span>';
 
   var tr =
@@ -237,15 +239,36 @@ $(document).on('input change', '.in-importe-pago, .in-factor-cambio', recalcular
 
 /* ─── Recálculo ──────────────────────────────────────────────────────── */
 
+/* Helper: lee un número desde un input/atributo de forma robusta.
+   Maneja: valores vacíos, comas como decimales (locale es-PE en algunos
+   browsers), strings con espacios, null/undefined. */
+function _parseNum(raw) {
+  if (raw === null || raw === undefined) return 0;
+  var s = String(raw).trim();
+  if (s === '') return 0;
+  // Soporta "1.234,56" → "1234.56" si el browser/locale puso coma decimal
+  if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) s = s.replace(',', '.');
+  var n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+
 function recalcularTodo() {
   var totPagPEN = 0, totRetPEN = 0, totNetoPEN = 0;
+
   $('#detalles_body tr').each(function () {
     var $tr = $(this);
-    var moneda = $tr.data('moneda') || 'PEN';
+    // attr() es más confiable que data() — data() cachea y a veces queda stale
+    var moneda = ($tr.attr('data-moneda') || 'PEN').toUpperCase();
     var factor = (moneda === 'USD')
-      ? parseFloat($tr.find('.in-factor-cambio').val() || 0)
+      ? _parseNum($tr.find('.in-factor-cambio').val())
       : 1.0;
-    var pagoOri = parseFloat($tr.find('.in-importe-pago').val() || 0);
+    if (!factor) factor = (moneda === 'USD') ? 0 : 1.0;
+
+    var pagoOri = _parseNum($tr.find('.in-importe-pago').val());
+    // Fallback: si el input quedó vacío pero el data-importe-doc tiene valor,
+    // usamos el importe del documento (caso de carga inicial)
+    if (!pagoOri) pagoOri = _parseNum($tr.attr('data-importe-doc'));
+
     var pagoPEN = +(pagoOri * factor).toFixed(2);
     var retPEN  = +(pagoPEN * TASA_DEC).toFixed(2);
     var netoPEN = +(pagoPEN - retPEN).toFixed(2);
