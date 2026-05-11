@@ -88,6 +88,7 @@ $(document).on('change', '.fecha', function () {
 
 $(document).on('click', '.ver_retencion', function () {
   var serienumero = $(this).data('serienumero');
+  console.log('[ver_retencion] click', serienumero);
 
   var fd = new FormData();
   fd.append('_token', _token);
@@ -101,11 +102,25 @@ $(document).on('click', '.ver_retencion', function () {
     contentType: false,
     dataType: 'json',
     success: function (resp) {
+      console.log('[ver_retencion] OK', resp);
       if (!resp.procede) {
         Swal.fire({ html: resp.msj || 'Error', icon: 'error' });
         return;
       }
-      pintarModalDetalle(resp.cabecera, resp.detalles);
+      try {
+        pintarModalDetalle(resp.cabecera, resp.detalles);
+      } catch (err) {
+        console.error('[ver_retencion] error pintando modal:', err);
+        Swal.fire({ html: 'Error al pintar el modal: ' + err.message, icon: 'error' });
+      }
+    },
+    error: function (xhr) {
+      console.error('[ver_retencion] AJAX FAIL', xhr.status, xhr.responseText);
+      var msg = 'Error HTTP ' + xhr.status;
+      if (xhr.responseJSON && xhr.responseJSON.msj)     msg = xhr.responseJSON.msj;
+      else if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+      else if (xhr.responseText)                          msg += '<br><small>' + (xhr.responseText.substring(0, 300)) + '</small>';
+      Swal.fire({ html: msg, icon: 'error' });
     },
   });
 });
@@ -116,8 +131,16 @@ var pintarModalDetalle = function (cab, detalles) {
     return sym + ' ' + Number(v || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  var labelSunat = { '00': 'Pendiente', '05': 'Aceptada', '09': 'Rechazada' };
-  var classSunat = { '00': 'c-pend',    '05': 'c-acep',    '09': 'c-rech' };
+  // Soporta codigos modernos ('A','F','P') y legacy ('05','09','00').
+  var mapSunat = {
+    'A':  { label: 'Aceptada',  cls: 'c-acep' },
+    '05': { label: 'Aceptada',  cls: 'c-acep' },
+    'F':  { label: 'Rechazada', cls: 'c-rech' },
+    '09': { label: 'Rechazada', cls: 'c-rech' },
+    'P':  { label: 'Pendiente', cls: 'c-pend' },
+    '00': { label: 'Pendiente', cls: 'c-pend' },
+    '':   { label: 'Pendiente', cls: 'c-pend' },
+  };
 
   $('#md_serienumero').text(cab.serienumero);
   $('#md_numdocproveedor').text(cab.numdocproveedor);
@@ -128,45 +151,52 @@ var pintarModalDetalle = function (cab, detalles) {
   $('#md_total_pagado').text(fmt(cab.importetotalpagado, cab.monedaimportetotalpagado));
   $('#md_total_retenido').text(fmt(cab.importetotalretenido, cab.monedaimportetotalretenido));
 
-  var sLabel = labelSunat[cab.estadosunat] || cab.estadosunat || 'Sin estado';
-  var sClass = classSunat[cab.estadosunat] || 'c-act';
-  $('#md_chip_estado_sunat').html('<span class="md-chip ' + sClass + '">SUNAT: ' + sLabel + '</span>');
+  // Estado SUNAT (chip con label y color por estado, no la letra cruda).
+  var key   = (cab.estadosunat || '').toString();
+  var meta  = mapSunat[key] || { label: key || 'Sin estado', cls: 'c-pend' };
+  var icoSn = meta.cls === 'c-acep' ? '<i class="fa fa-circle-check"></i> '
+             : meta.cls === 'c-rech' ? '<i class="fa fa-circle-xmark"></i> '
+             :                         '<i class="fa fa-clock"></i> ';
+  $('#md_chip_estado_sunat').html('<span class="md-chip ' + meta.cls + '">' + icoSn + 'SUNAT ' + meta.label + '</span>');
 
   var docAnul = cab.estadodocumento === '11';
   $('#md_chip_estado_doc').html(
-    '<span class="md-chip ' + (docAnul ? 'c-anul' : 'c-act') + '">' + (docAnul ? 'ANULADA' : 'ACTIVA') + '</span>'
+    '<span class="md-chip ' + (docAnul ? 'c-anul' : 'c-act') + '">' +
+      (docAnul ? '<i class="fa fa-ban"></i> Anulada'
+               : '<i class="fa fa-circle-check"></i> Activa') +
+    '</span>'
   );
 
-  if (cab.observacion) {
-    $('#md_observacion').text(cab.observacion);
+  // Observacion: si la retencion esta anulada, el SP_RETENCION_ANULAR concatena
+  // "ANULADA: <motivo>" — eso ya se muestra en el bloque "Anulacion en SUNAT",
+  // asi que lo stripeamos aca para evitar duplicado.
+  var obs = cab.observacion || '';
+  if (docAnul && obs) {
+    obs = obs.replace(/\s*ANULADA\s*:\s*.*$/i, '').trim();
+  }
+  if (obs) {
+    $('#md_observacion').text(obs);
     $('#md_observacion_wrap').show();
   } else {
     $('#md_observacion_wrap').hide();
   }
 
-  // Bloque SUNAT: solo si hay hash, qr o mensaje_error
-  var hash = cab.codigohash || '';
-  var qr   = cab.codigoqr || '';
-  var err  = cab.mensaje_error || '';
-  if (hash || qr || err) {
-    if (hash) { $('#md_sunat_hash').text(hash); $('#md_sunat_hash_wrap').show(); } else { $('#md_sunat_hash_wrap').hide(); }
-    if (qr)   { $('#md_sunat_qr').text(qr);     $('#md_sunat_qr_wrap').show();   } else { $('#md_sunat_qr_wrap').hide(); }
-    if (err)  { $('#md_sunat_err').text(err);   $('#md_sunat_err_wrap').show();  } else { $('#md_sunat_err_wrap').hide(); }
-    $('#md_sunat_wrap').show();
+  // Motivo de rechazo: solo si SUNAT devolvio un mensaje_error.
+  // Hash/QR son tecnicos, no se muestran al usuario.
+  var err = cab.mensaje_error || '';
+  if (err) {
+    $('#md_sunat_err').text(err);
+    $('#md_sunat_err_wrap').show();
   } else {
-    $('#md_sunat_wrap').hide();
+    $('#md_sunat_err_wrap').hide();
   }
 
   // Bloque Anulacion SUNAT: solo si hay ticket de baja (estadodocumento = '11')
-  var ticketBaja  = cab.nro_ticket_baja     || '';
-  var idDocBaja   = cab.iddocumento_baja    || '';
-  var archivoBaja = cab.nombre_archivo_baja || '';
-  var fechaBaja   = cab.fecha_envio_baja    || '';
-  var motivoBaja  = cab.motivo_baja         || '';
-  if (ticketBaja || idDocBaja) {
-    $('#md_baja_ticket').text(ticketBaja || '—');
-    $('#md_baja_iddoc').text(idDocBaja || '—');
-    $('#md_baja_archivo').text(archivoBaja || '—');
+  var ticketBaja = cab.nro_ticket_baja || '';
+  var fechaBaja  = cab.fecha_envio_baja || '';
+  var motivoBaja = cab.motivo_baja || '';
+  if (ticketBaja) {
+    $('#md_baja_ticket').text(ticketBaja);
     $('#md_baja_fecha').text(fechaBaja || '—');
     $('#md_baja_motivo').text(motivoBaja || '—');
     $('#md_baja_wrap').show();
@@ -195,9 +225,8 @@ var pintarModalDetalle = function (cab, detalles) {
 
   $('#md_btn_pdf').attr('href', '/retenciones/pdf/' + encodeURIComponent(cab.serienumero));
 
-  var modalEl = document.getElementById('modalDetalleRetencion');
-  var modal   = bootstrap.Modal.getOrCreateInstance(modalEl);
-  modal.show();
+  // Patron jQuery (mismo que el resto del proyecto) — funciona con BS5 + jQuery plugin.
+  $('#modalDetalleRetencion').modal('show');
 };
 
 /* ── Anular (Comunicacion de Baja a SUNAT) ──────────────────────────── */

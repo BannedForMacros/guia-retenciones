@@ -73,33 +73,52 @@
     background: #fff; border-top: 1px solid var(--md-border); padding: .55rem .85rem;
   }
 
-  /* chips simples — aceptado en teal (palette), resto semántico */
+  /* chips de estado — inline-flex con icono + texto */
   #modalDetalleRetencion .md-chip {
-    display: inline-block; padding: .12rem .5rem; border-radius: 4px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: .15rem .55rem; border-radius: 999px;
     font-size: .68rem; font-weight: 700; border: 1px solid;
+    letter-spacing: .02em;
   }
-  #modalDetalleRetencion .md-chip.c-acep { background: #fff; color: var(--md-teal); border-color: #A8E8D5; }
-  #modalDetalleRetencion .md-chip.c-rech { background: #fff; color: #b91c1c; border-color: #b91c1c; }
-  #modalDetalleRetencion .md-chip.c-pend { background: #fff; color: #b45309; border-color: #b45309; }
-  #modalDetalleRetencion .md-chip.c-anul { background: #fff; color: #b45309; border-color: #b45309; }
-  #modalDetalleRetencion .md-chip.c-act  { background: #fff; color: #4b5563; border-color: var(--md-border); }
+  #modalDetalleRetencion .md-chip i { font-size: .6rem; }
+  #modalDetalleRetencion .md-chip.c-acep { background: #ECFDF5; color: var(--md-teal); border-color: #A8E8D5; }
+  #modalDetalleRetencion .md-chip.c-rech { background: #FEF2F2; color: #b91c1c; border-color: #FCA5A5; }
+  #modalDetalleRetencion .md-chip.c-pend { background: #FFFBEB; color: #b45309; border-color: #FCD34D; }
+  #modalDetalleRetencion .md-chip.c-anul { background: #FEF2F2; color: #b91c1c; border-color: #FCA5A5; }
+  #modalDetalleRetencion .md-chip.c-act  { background: #fff;     color: #4b5563; border-color: var(--md-border); }
 
-  /* Bloque SUNAT */
+  /* Bloque mensaje de error SUNAT (solo aparece si hay rechazo) */
   #modalDetalleRetencion .md-sunat {
-    background: var(--md-bg); border: 1px solid var(--md-border); border-radius: 6px;
+    background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 6px;
     padding: .65rem .75rem;
   }
-  #modalDetalleRetencion .md-sunat .lbl-mini {
-    font-size: .6rem; color: var(--md-muted); text-transform: uppercase;
-    letter-spacing: .04em; font-weight: 700; margin-bottom: 2px;
-  }
-  #modalDetalleRetencion .md-sunat .val-mono {
-    font-family: ui-monospace, monospace; font-size: .78rem;
-    word-break: break-all; color: var(--md-text); line-height: 1.35;
-  }
   #modalDetalleRetencion .md-sunat .val-err {
-    color: #b91c1c; font-size: .78rem;
+    color: #991b1b; font-size: .8rem; line-height: 1.4;
   }
+
+  /* Bloque "Anulacion en SUNAT" (solo si la retencion fue anulada) */
+  #modalDetalleRetencion .md-baja {
+    background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 6px;
+    padding: .75rem .85rem;
+  }
+  #modalDetalleRetencion .md-baja .lbl-mini {
+    font-size: .6rem; color: #92400E; text-transform: uppercase;
+    letter-spacing: .05em; font-weight: 700; margin-bottom: 2px;
+  }
+  #modalDetalleRetencion .md-baja .val {
+    font-size: .8rem; color: var(--md-text); line-height: 1.35; word-break: break-word;
+  }
+  #modalDetalleRetencion .md-baja .val.mono {
+    font-family: ui-monospace, monospace;
+  }
+  #modalDetalleRetencion .md-baja .val.ticket {
+    font-family: ui-monospace, monospace; font-size: .95rem;
+    color: #92400E; font-weight: 700; letter-spacing: .02em;
+  }
+  #modalDetalleRetencion .md-baja .col-md-6,
+  #modalDetalleRetencion .md-baja .col-md-12 { margin-bottom: 6px; }
+  #modalDetalleRetencion .md-baja .col-md-6:last-child,
+  #modalDetalleRetencion .md-baja .col-md-12:last-child { margin-bottom: 0; }
 </style>
 
 <div class="modal fade" id="modalDetalleRetencion" tabindex="-1" aria-hidden="true">
@@ -143,51 +162,31 @@
           <div class="md-obs" id="md_observacion"></div>
         </div>
 
-        {{-- Datos del envio a SUNAT (solo si hay codigohash o mensaje_error) --}}
-        <div id="md_sunat_wrap" class="mb-3" style="display:none;">
-          <div class="md-section">Envio a SUNAT</div>
+        {{-- Solo mostramos el motivo si SUNAT rechazo. Hash/QR son tecnicos
+             y al usuario final no le aportan. --}}
+        <div id="md_sunat_err_wrap" class="mb-3" style="display:none;">
+          <div class="md-section">Motivo de rechazo SUNAT</div>
           <div class="md-sunat">
-            <div class="row g-2">
-              <div class="col-md-6" id="md_sunat_hash_wrap" style="display:none;">
-                <div class="lbl-mini">CodigoHash</div>
-                <div class="val-mono" id="md_sunat_hash"></div>
-              </div>
-              <div class="col-md-6" id="md_sunat_qr_wrap" style="display:none;">
-                <div class="lbl-mini">CodigoQR</div>
-                <div class="val-mono" id="md_sunat_qr"></div>
-              </div>
-              <div class="col-md-12" id="md_sunat_err_wrap" style="display:none;">
-                <div class="lbl-mini">Mensaje de error</div>
-                <div class="val-err" id="md_sunat_err"></div>
-              </div>
-            </div>
+            <div class="val-err" id="md_sunat_err"></div>
           </div>
         </div>
 
         {{-- Anulacion SUNAT (Resumen de Reversion). Solo si hay nro_ticket_baja --}}
         <div id="md_baja_wrap" class="mb-3" style="display:none;">
           <div class="md-section">Anulacion en SUNAT</div>
-          <div class="md-sunat">
+          <div class="md-baja">
             <div class="row g-2">
               <div class="col-md-6">
                 <div class="lbl-mini">N° Ticket</div>
-                <div class="val-mono" id="md_baja_ticket"></div>
-              </div>
-              <div class="col-md-6">
-                <div class="lbl-mini">ID Documento</div>
-                <div class="val-mono" id="md_baja_iddoc"></div>
-              </div>
-              <div class="col-md-6">
-                <div class="lbl-mini">Nombre Archivo</div>
-                <div class="val-mono" id="md_baja_archivo"></div>
+                <div class="val ticket" id="md_baja_ticket"></div>
               </div>
               <div class="col-md-6">
                 <div class="lbl-mini">Fecha de envio</div>
-                <div class="val-mono" id="md_baja_fecha"></div>
+                <div class="val mono" id="md_baja_fecha"></div>
               </div>
               <div class="col-md-12">
                 <div class="lbl-mini">Motivo</div>
-                <div class="val-mono" id="md_baja_motivo"></div>
+                <div class="val" id="md_baja_motivo"></div>
               </div>
             </div>
           </div>
