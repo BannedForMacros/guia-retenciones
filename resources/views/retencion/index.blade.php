@@ -255,6 +255,15 @@
   .b-anul { color: #b45309; border-color: #fcd34d; }
   .b-act  { color: var(--db-teal); border-color: #A8E8D5; }
 
+  /* Ticket de baja debajo del badge "Anulada" */
+  .ticket-baja {
+    font-family: ui-monospace, monospace;
+    font-size: .68rem;
+    color: var(--db-muted);
+    line-height: 1.1;
+    cursor: help;
+  }
+
   .ret-actions .btn {
     --bs-btn-padding-x: .5rem; --bs-btn-padding-y: .25rem;
     --bs-btn-font-size: .78rem;
