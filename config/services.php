@@ -52,4 +52,20 @@ return [
         'timeout'    => (int) env('DBPERU_TIMEOUT', 60),
     ],
 
+    /*
+    | Datos extra del Emisor que SUNAT exige en el JSON de Resumen de Reversion
+    | (baja del CRE). El RUC, razon social y direccion siguen viniendo de la
+    | tabla parametros (IDs 2, 3, 4). Estos otros 7 los leemos del .env porque
+    | son configuracion estatica de la empresa (no cambian por documento).
+    */
+    'emisor' => [
+        'nombre_comercial' => env('EMISOR_NOMBRE_COMERCIAL', ''),
+        'ubigeo'           => env('EMISOR_UBIGEO', ''),
+        'urbanizacion'     => env('EMISOR_URBANIZACION', ''),
+        'departamento'     => env('EMISOR_DEPARTAMENTO', ''),
+        'provincia'        => env('EMISOR_PROVINCIA', ''),
+        'distrito'         => env('EMISOR_DISTRITO', ''),
+        'email'            => env('EMISOR_EMAIL', ''),
+    ],
+
 ];

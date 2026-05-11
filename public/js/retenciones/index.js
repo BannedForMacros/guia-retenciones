@@ -183,46 +183,67 @@ var pintarModalDetalle = function (cab, detalles) {
   modal.show();
 };
 
-/* ── Anular ──────────────────────────────────────────────────────────── */
+/* ── Anular (Comunicacion de Baja a SUNAT) ──────────────────────────── */
 
 $(document).on('click', '.anular_retencion', function () {
   var serienumero = $(this).data('serienumero');
 
   Swal.fire({
     title: 'Anular Retencion',
-    html: '¿Seguro de anular <b>' + serienumero + '</b>?<br><small class="text-muted">Esta accion es de baja logica.</small>',
+    html:
+      '¿Seguro de anular <b>' + serienumero + '</b>?<br>' +
+      '<small class="text-muted">Se enviara una Comunicacion de Baja a SUNAT. ' +
+      'Si SUNAT no la acepta, el comprobante seguira activo.</small>',
     icon: 'warning',
-    input: 'text',
-    inputLabel: 'Motivo (opcional)',
-    inputPlaceholder: 'Ingrese motivo',
+    input: 'textarea',
+    inputLabel: 'Motivo de anulacion (obligatorio, maximo 100 caracteres)',
+    inputPlaceholder: 'Ej. error en el monto retenido',
+    inputAttributes: {
+      maxlength: 100,
+      'aria-label': 'Motivo de anulacion',
+    },
+    inputValidator: function (value) {
+      var v = (value || '').trim();
+      if (v.length < 3)  return 'Ingresa un motivo (minimo 3 caracteres).';
+      if (v.length > 100) return 'Maximo 100 caracteres.';
+      return null;
+    },
     showCancelButton: true,
-    confirmButtonText: 'Si, Anular',
+    confirmButtonText: 'Si, Anular en SUNAT',
     cancelButtonText: 'No, cancelar',
     confirmButtonColor: '#dc2626',
+    showLoaderOnConfirm: true,
+    allowOutsideClick: function () { return !Swal.isLoading(); },
+    preConfirm: function (motivo) {
+      var fd = new FormData();
+      fd.append('_token', _token);
+      fd.append('serienumero', serienumero);
+      fd.append('motivo', motivo.trim());
+
+      return $.ajax({
+        type: 'POST',
+        url: route('retenciones.anular'),
+        data: fd,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+      })
+      .then(function (resp) { return resp; })
+      .catch(function (xhr) {
+        var resp = xhr.responseJSON || { msj: 'Error al anular', msj_tipo: 'error' };
+        // No reject -> mostramos el error como resultado normal del swal
+        return resp;
+      });
+    },
   }).then(function (result) {
     if (!result.isConfirmed) return;
+    var resp = result.value || {};
 
-    var fd = new FormData();
-    fd.append('_token', _token);
-    fd.append('serienumero', serienumero);
-    fd.append('motivo', result.value || 'Anulacion solicitada por el usuario');
-
-    $.ajax({
-      type: 'POST',
-      url: route('retenciones.anular'),
-      data: fd,
-      processData: false,
-      contentType: false,
-      dataType: 'json',
-      success: function (resp) {
-        Swal.fire({ html: resp.msj, icon: resp.msj_tipo }).then(function () {
-          if (resp.procede) callListarRetenciones();
-        });
-      },
-      error: function (xhr) {
-        var resp = xhr.responseJSON || { msj: 'Error al anular', msj_tipo: 'error' };
-        Swal.fire({ html: resp.msj, icon: resp.msj_tipo || 'error' });
-      },
+    Swal.fire({
+      html: resp.msj || 'Sin respuesta del servidor.',
+      icon: resp.msj_tipo || 'error',
+    }).then(function () {
+      if (resp.procede) callListarRetenciones();
     });
   });
 });

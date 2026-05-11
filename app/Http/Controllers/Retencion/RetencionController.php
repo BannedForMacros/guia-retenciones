@@ -643,42 +643,169 @@ class RetencionController extends Controller
     }
 
     /**
-     * Anula la retencion (baja logica via SP_RETENCION_ANULAR).
+     * Anula la retencion (Comunicacion de Baja / Resumen de Reversion a SUNAT).
+     *
+     * Flujo:
+     *  1. Valida motivo (1..100 chars, OBLIGATORIO segun SUNAT).
+     *  2. Valida que el CRE no este ya anulado y que su fecha emision este
+     *     dentro de la ventana SUNAT (hoy y hasta 7 dias atras).
+     *  3. Reserva un correlativo diario atomico -> IdDocumento "RR-YYYYMMDD-N".
+     *  4. Envia POST /api/ResumenReversionCRE a DB Peru.
+     *  5. Solo si SUNAT acepta (Exito=true): ejecuta SP_RETENCION_ANULAR local,
+     *     persiste ticket+archivo+raw y replica al datamarket.
+     *  6. Si SUNAT falla: la retencion sigue activa; el usuario reintenta.
      */
     public function anular(Request $request)
     {
         $request->validate([
             'serienumero' => 'required|string|max:15',
-            'motivo'      => 'nullable|string|max:250',
+            'motivo'      => 'required|string|min:3|max:100',
+        ], [
+            'motivo.required' => 'El motivo de anulacion es obligatorio (SUNAT lo exige).',
+            'motivo.min'      => 'El motivo debe tener al menos 3 caracteres.',
+            'motivo.max'      => 'El motivo no puede superar los 100 caracteres.',
         ]);
 
         $rucempresa  = $this->getRucEmpresa();
         $serienumero = $request->post('serienumero');
-        $motivo      = $request->post('motivo', 'Anulacion solicitada por el usuario');
+        $motivo      = trim((string) $request->post('motivo'));
         $usuario     = (string) (Auth::user()->username ?? Auth::user()->name ?? 'sistema');
 
+        // ── 1. Cargar cabecera ──
+        $cab = DB::table('retenciones')
+            ->where('rucempresa',  $rucempresa)
+            ->where('serienumero', $serienumero)
+            ->first();
+
+        if (!$cab) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => 'Retencion no encontrada.',
+                'msj_tipo' => 'error',
+            ], 404);
+        }
+
+        if ($cab->estadodocumento === '11') {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "La retencion <b>{$serienumero}</b> ya fue anulada.",
+                'msj_tipo' => 'warning',
+            ], 409);
+        }
+
+        // Solo tiene sentido anular en SUNAT si ya fue aceptada. Si nunca llego
+        // a SUNAT (estadosunat null y no '05'/'A'), no hay nada que reversar.
+        $estadoSunat = (string) ($cab->estadosunat ?? '');
+        $fueAceptada = in_array($estadoSunat, ['A', '05'], true);
+        if (!$fueAceptada) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "La retencion <b>{$serienumero}</b> no fue aceptada por SUNAT, no procede su reversion.",
+                'msj_tipo' => 'warning',
+            ], 422);
+        }
+
+        // ── 2. Validar ventana SUNAT: fecha emision >= hoy-7d y <= hoy ──
+        $hoy           = date('Y-m-d');
+        $fechaEmisCre  = (string) $cab->fechaemision;
+        $diffDias      = (strtotime($hoy) - strtotime($fechaEmisCre)) / 86400;
+
+        if ($diffDias < 0) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => 'La fecha de emision del CRE es futura. Verifica los datos.',
+                'msj_tipo' => 'error',
+            ], 422);
+        }
+        if ($diffDias > 7) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "No se puede anular: el CRE tiene <b>".(int) $diffDias." dias</b> de emitido y SUNAT solo permite reversion dentro de los <b>7 dias</b>.",
+                'msj_tipo' => 'warning',
+            ], 422);
+        }
+
+        // ── 3. Reservar correlativo diario atomico ──
+        try {
+            $correlativo = $this->reservarCorrelativoBajaDiario($hoy);
+        } catch (Exception $e) {
+            Log::error('Error reservando correlativo baja: '.$e->getMessage());
+            return response()->json([
+                'procede'  => false,
+                'msj'      => 'No se pudo reservar el correlativo de la baja.',
+                'msj_tipo' => 'error',
+            ], 500);
+        }
+
+        // ── 4. Construir payload y enviar a SUNAT via DB Peru ──
+        $build = app(RetencionPayloadMapper::class)->buildReversionPayload([
+            'serienumero'       => $serienumero,
+            'motivo'            => $motivo,
+            'correlativo_dia'   => $correlativo,
+            'fecha_emision_cre' => $fechaEmisCre,
+            'fecha_hoy'         => $hoy,
+            'emisor'            => $this->getEmisorDatos(),
+        ]);
+
+        $envio = app(DbPeruSunatService::class)->enviarReversion($build['payload']);
+
+        // ── 5a. Si SUNAT FALLA: NO se anula localmente. Mensaje claro. ──
+        if (!$envio['ok']) {
+            $msjErr = $envio['mensaje_error'] ?: 'Error desconocido al comunicar con SUNAT.';
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "<b>No se pudo anular en SUNAT.</b><br>"
+                            ."La retencion <b>{$serienumero}</b> sigue activa. Puede reintentar mas tarde."
+                            ."<br><small class='text-muted'>".e($msjErr)."</small>",
+                'msj_tipo' => 'error',
+                'sunat'    => [
+                    'aceptado'      => false,
+                    'mensaje_error' => $envio['mensaje_error'],
+                    'iddocumento'   => $build['id_documento'],
+                ],
+            ], 502);
+        }
+
+        // ── 5b. SUNAT acepto: baja logica local + guardar ticket ──
         try {
             DB::statement('CALL SP_RETENCION_ANULAR(?, ?, ?, ?)', [
                 $rucempresa, $serienumero, $motivo, $usuario,
             ]);
+
+            DB::table('retenciones')
+                ->where('rucempresa',  $rucempresa)
+                ->where('serienumero', $serienumero)
+                ->update([
+                    'iddocumento_baja'    => $build['id_documento'],
+                    'nro_ticket_baja'     => $envio['nro_ticket'],
+                    'nombre_archivo_baja' => $envio['nombre_archivo'],
+                    'motivo_baja'         => mb_substr($motivo, 0, 100),
+                    'fecha_envio_baja'    => now(),
+                    'respuesta_baja'      => $envio['respuesta_raw'],
+                ]);
         } catch (Exception $e) {
-            Log::error('Retencion anular error: '.$e->getMessage());
+            // SUNAT YA acepto la baja pero local fallo. Hay que avisar fuerte
+            // porque el documento queda inconsistente (anulado en SUNAT, activo
+            // localmente). Loguear para soporte.
+            Log::error('Retencion anulada en SUNAT pero fallo persistencia local', [
+                'serienumero'    => $serienumero,
+                'nro_ticket'     => $envio['nro_ticket'],
+                'nombre_archivo' => $envio['nombre_archivo'],
+                'iddocumento'    => $build['id_documento'],
+                'error'          => $e->getMessage(),
+            ]);
             return response()->json([
                 'procede'  => false,
-                'msj'      => 'No se pudo anular: '.$e->getMessage(),
+                'msj'      => "<b>SUNAT acepto la baja</b> (ticket {$envio['nro_ticket']}) pero hubo un error guardando localmente. Contacta soporte.<br><small>".e($e->getMessage())."</small>",
                 'msj_tipo' => 'error',
-            ], 422);
+            ], 500);
         }
 
-        // ── Replicacion best-effort de la anulacion al datamarket ──
+        // ── 6. Replicar baja al datamarket (best-effort) ──
         $rep = app(DatamarketRetencionService::class)->anular(
             $rucempresa, $serienumero, $motivo, $usuario
         );
-
-        $msj = "Retencion <b>{$serienumero}</b> anulada correctamente.";
         if (!$rep['ok']) {
-            $msj .= '<br><small class="text-warning">Aviso: la anulacion no se replico al datamarket.</small>';
-            // Marcamos error_replicacion para visibilidad operativa.
             try {
                 DB::table('retenciones')
                     ->where('rucempresa',  $rucempresa)
@@ -689,12 +816,71 @@ class RetencionController extends Controller
             }
         }
 
+        $msj  = "Retencion <b>{$serienumero}</b> anulada en SUNAT.<br>";
+        $msj .= "<small>Ticket: <b>{$envio['nro_ticket']}</b></small>";
+        if (!$rep['ok']) {
+            $msj .= '<br><small class="text-warning">Aviso: no se replico al datamarket.</small>';
+        }
+
         return response()->json([
             'procede'              => true,
             'msj'                  => $msj,
             'msj_tipo'             => 'success',
+            'sunat'                => [
+                'aceptado'       => true,
+                'nro_ticket'     => $envio['nro_ticket'],
+                'nombre_archivo' => $envio['nombre_archivo'],
+                'iddocumento'    => $build['id_documento'],
+            ],
             'replicado_datamarket' => $rep['ok'],
         ]);
+    }
+
+    /**
+     * Reserva atomicamente el siguiente correlativo del IdDocumento de baja
+     * para una fecha (YYYY-MM-DD). Usa el truco LAST_INSERT_ID() de MySQL:
+     * un solo statement, sin race condition, sin SELECT FOR UPDATE.
+     */
+    private function reservarCorrelativoBajaDiario(string $fecha): int
+    {
+        DB::statement(
+            'INSERT INTO retencion_correlativo_baja_diario (fecha, ultimo_valor)
+             VALUES (?, 1)
+             ON DUPLICATE KEY UPDATE ultimo_valor = LAST_INSERT_ID(ultimo_valor + 1)',
+            [$fecha]
+        );
+        $row = DB::selectOne('SELECT LAST_INSERT_ID() AS v');
+        return (int) $row->v;
+    }
+
+    /**
+     * Datos del emisor para el JSON de baja.
+     *
+     *   RUC / razon social / direccion  -> Parametros 2, 3, 4 (BD, como hoy).
+     *   Ubigeo, Urbanizacion, Departamento, Provincia, Distrito, Email,
+     *   Nombre Comercial                -> config('services.emisor.*') (.env).
+     *
+     * Los del .env son configuracion estatica de la empresa y rara vez cambian,
+     * por eso no van a parametros (evitamos INSERTs manuales en BD). Si no se
+     * setean, viajan como string vacio.
+     */
+    private function getEmisorDatos(): array
+    {
+        $razon = $this->getRazonSocialEmpresa();
+        $emi   = (array) config('services.emisor', []);
+
+        return [
+            'ruc'              => $this->getRucEmpresa(),
+            'razon_social'     => $razon,
+            'direccion'        => $this->getDireccionEmpresa(),
+            'nombre_comercial' => $emi['nombre_comercial'] !== '' ? $emi['nombre_comercial'] : $razon,
+            'ubigeo'           => (string) ($emi['ubigeo']       ?? ''),
+            'urbanizacion'     => (string) ($emi['urbanizacion'] ?? ''),
+            'departamento'     => (string) ($emi['departamento'] ?? ''),
+            'provincia'        => (string) ($emi['provincia']    ?? ''),
+            'distrito'         => (string) ($emi['distrito']     ?? ''),
+            'email'            => (string) ($emi['email']        ?? ''),
+        ];
     }
 
     /**
