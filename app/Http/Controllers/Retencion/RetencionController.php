@@ -840,12 +840,16 @@ class RetencionController extends Controller
      * Reserva atomicamente el siguiente correlativo del IdDocumento de baja
      * para una fecha (YYYY-MM-DD). Usa el truco LAST_INSERT_ID() de MySQL:
      * un solo statement, sin race condition, sin SELECT FOR UPDATE.
+     *
+     * Nota sobre el INSERT inicial: usamos `LAST_INSERT_ID(1)` en el VALUES
+     * porque la tabla no tiene AUTO_INCREMENT — sin eso, el INSERT inicial
+     * deja LAST_INSERT_ID() en 0 y el primer correlativo del dia saldria "0".
      */
     private function reservarCorrelativoBajaDiario(string $fecha): int
     {
         DB::statement(
             'INSERT INTO retencion_correlativo_baja_diario (fecha, ultimo_valor)
-             VALUES (?, 1)
+             VALUES (?, LAST_INSERT_ID(1))
              ON DUPLICATE KEY UPDATE ultimo_valor = LAST_INSERT_ID(ultimo_valor + 1)',
             [$fecha]
         );
