@@ -146,4 +146,80 @@ class RetencionPayloadMapper
         $clean = ltrim($numero, '0');
         return $serie.'-'.($clean === '' ? '0' : $clean);
     }
+
+    /**
+     * Payload para POST /api/ResumenReversionCRE (baja del CRE).
+     *
+     * Estructura esperada:
+     *   {
+     *     "Bajas": [
+     *       { "Correlativo": "36", "MotivoBaja": "...", "Id": 1,
+     *         "TipoDocumento": "20", "Serie": "R001" }
+     *     ],
+     *     "IdDocumento": "RR-YYYYMMDD-N",
+     *     "FechaEmision": "YYYY-MM-DD",
+     *     "FechaReferencia": "YYYY-MM-DD",
+     *     "Emisor": { NroDocumento, TipoDocumento, NombreLegal, NombreComercial,
+     *                 Ubigeo, Direccion, Urbanizacion, Departamento, Provincia,
+     *                 Distrito, Email }
+     *   }
+     *
+     * @param array $in  [
+     *   'serienumero'       => 'R001-00000036',   // del CRE a anular
+     *   'motivo'            => '...',              // <=100 chars (validar antes)
+     *   'correlativo_dia'   => 1,                  // reservado del contador diario
+     *   'fecha_emision_cre' => 'YYYY-MM-DD',       // del CRE original (FechaReferencia)
+     *   'fecha_hoy'         => 'YYYY-MM-DD',
+     *   'emisor' => [                              // datos de la empresa (Parametros)
+     *     'ruc', 'razon_social', 'nombre_comercial', 'direccion',
+     *     'ubigeo', 'urbanizacion', 'departamento', 'provincia', 'distrito', 'email',
+     *   ],
+     * ]
+     *
+     * @return array{payload: array, id_documento: string} El payload listo para
+     *         POST y el IdDocumento ya armado (que tambien queda persistido).
+     */
+    public function buildReversionPayload(array $in): array
+    {
+        $fechaHoy = $in['fecha_hoy'];
+        $idDoc    = 'RR-'.str_replace('-', '', $fechaHoy).'-'.(int) $in['correlativo_dia'];
+
+        // Descomponer serienumero: "R001-00000036" -> serie "R001", correlativo "36"
+        [$serie, $numero] = explode('-', $in['serienumero'], 2);
+        $correlativoSinCeros = ltrim($numero, '0');
+        if ($correlativoSinCeros === '') $correlativoSinCeros = '0';
+
+        $emisor = $in['emisor'];
+
+        $payload = [
+            'Bajas' => [[
+                'Correlativo'   => $correlativoSinCeros,
+                'MotivoBaja'    => mb_substr($in['motivo'], 0, 100),
+                'Id'            => 1,
+                'TipoDocumento' => '20',   // 20 = Comprobante de Retencion (SUNAT)
+                'Serie'         => $serie,
+            ]],
+            'IdDocumento'     => $idDoc,
+            'FechaEmision'    => $fechaHoy,
+            'FechaReferencia' => $in['fecha_emision_cre'],
+            'Emisor' => [
+                'NroDocumento'    => (string) ($emisor['ruc']              ?? ''),
+                'TipoDocumento'   => '6',  // RUC
+                'NombreLegal'     => (string) ($emisor['razon_social']     ?? ''),
+                'NombreComercial' => (string) ($emisor['nombre_comercial'] ?? $emisor['razon_social'] ?? ''),
+                'Ubigeo'          => (string) ($emisor['ubigeo']           ?? ''),
+                'Direccion'       => (string) ($emisor['direccion']        ?? ''),
+                'Urbanizacion'    => (string) ($emisor['urbanizacion']     ?? ''),
+                'Departamento'    => (string) ($emisor['departamento']     ?? ''),
+                'Provincia'       => (string) ($emisor['provincia']        ?? ''),
+                'Distrito'        => (string) ($emisor['distrito']         ?? ''),
+                'Email'           => (string) ($emisor['email']            ?? ''),
+            ],
+        ];
+
+        return [
+            'payload'      => $payload,
+            'id_documento' => $idDoc,
+        ];
+    }
 }

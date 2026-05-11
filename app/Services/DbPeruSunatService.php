@@ -123,4 +123,99 @@ class DbPeruSunatService
             'respuesta_raw' => null,
         ];
     }
+
+    /**
+     * Envia el Resumen de Reversion (baja) a DB Peru.
+     *
+     *   POST http://e-dbfact.dbperu.com:8180/api/ResumenReversionCRE
+     *   Header: credencial: <token>
+     *
+     * Respuesta del servicio:
+     *   { NroTicket, NombreArchivo, Exito, MensajeError, Pila }
+     *
+     * Convencion de retorno de este wrapper:
+     *   [
+     *     'ok'             => bool,           // Exito == true
+     *     'http'           => int|null,
+     *     'nro_ticket'     => string|null,
+     *     'nombre_archivo' => string|null,
+     *     'mensaje_error'  => string|null,
+     *     'respuesta_raw'  => string|null,
+     *   ]
+     */
+    public function enviarReversion(array $payload): array
+    {
+        if (!$this->isEnabled()) {
+            return $this->emptyReversionResult('dbperu disabled');
+        }
+        if ($this->credencial() === '') {
+            Log::error('DBPERU_CREDENCIAL vacia: no se puede enviar reversion a SUNAT');
+            return $this->emptyReversionResult('credencial no configurada');
+        }
+
+        try {
+            $resp = Http::baseUrl($this->baseUrl())
+                ->withHeaders(['credencial' => $this->credencial()])
+                ->acceptJson()
+                ->asJson()
+                ->timeout((int) config('services.dbperu.timeout', 60))
+                ->post('/api/ResumenReversionCRE', $payload);
+
+            $json = $resp->json();
+            $body = $resp->body();
+
+            if (!$resp->successful()) {
+                Log::warning('DB Peru reversion fallo HTTP', [
+                    'status'        => $resp->status(),
+                    'iddocumento'   => $payload['IdDocumento'] ?? null,
+                    'body'          => substr($body, 0, 500),
+                ]);
+                return [
+                    'ok'             => false,
+                    'http'           => $resp->status(),
+                    'nro_ticket'     => null,
+                    'nombre_archivo' => null,
+                    'mensaje_error'  => 'http '.$resp->status().': '.substr($body, 0, 380),
+                    'respuesta_raw'  => $body,
+                ];
+            }
+
+            $exito = (bool) ($json['Exito'] ?? false);
+            $err   = $json['MensajeError'] ?? null;
+
+            if (!$exito) {
+                Log::warning('DB Peru reversion reporto Exito=false', [
+                    'iddocumento' => $payload['IdDocumento'] ?? null,
+                    'message'     => $err,
+                ]);
+            }
+
+            return [
+                'ok'             => $exito,
+                'http'           => $resp->status(),
+                'nro_ticket'     => $json['NroTicket']     ?? null,
+                'nombre_archivo' => $json['NombreArchivo'] ?? null,
+                'mensaje_error'  => $err ? substr((string) $err, 0, 1000) : null,
+                'respuesta_raw'  => $body,
+            ];
+        } catch (Throwable $e) {
+            Log::error('DB Peru reversion exception', [
+                'iddocumento' => $payload['IdDocumento'] ?? null,
+                'message'     => $e->getMessage(),
+            ]);
+            return $this->emptyReversionResult('conn: '.substr($e->getMessage(), 0, 800));
+        }
+    }
+
+    private function emptyReversionResult(string $error): array
+    {
+        return [
+            'ok'             => false,
+            'http'           => null,
+            'nro_ticket'     => null,
+            'nombre_archivo' => null,
+            'mensaje_error'  => $error,
+            'respuesta_raw'  => null,
+        ];
+    }
 }
