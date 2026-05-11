@@ -157,6 +157,23 @@ var pintarModalDetalle = function (cab, detalles) {
     $('#md_sunat_wrap').hide();
   }
 
+  // Bloque Anulacion SUNAT: solo si hay ticket de baja (estadodocumento = '11')
+  var ticketBaja  = cab.nro_ticket_baja     || '';
+  var idDocBaja   = cab.iddocumento_baja    || '';
+  var archivoBaja = cab.nombre_archivo_baja || '';
+  var fechaBaja   = cab.fecha_envio_baja    || '';
+  var motivoBaja  = cab.motivo_baja         || '';
+  if (ticketBaja || idDocBaja) {
+    $('#md_baja_ticket').text(ticketBaja || '—');
+    $('#md_baja_iddoc').text(idDocBaja || '—');
+    $('#md_baja_archivo').text(archivoBaja || '—');
+    $('#md_baja_fecha').text(fechaBaja || '—');
+    $('#md_baja_motivo').text(motivoBaja || '—');
+    $('#md_baja_wrap').show();
+  } else {
+    $('#md_baja_wrap').hide();
+  }
+
   var tiposDoc = { '01':'Factura','03':'Boleta','07':'N. Credito','08':'N. Debito','12':'R. Honorarios','14':'Liq. Compra','99':'Otros' };
 
   var html = '';

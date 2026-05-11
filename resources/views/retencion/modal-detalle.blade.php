@@ -164,6 +164,35 @@
           </div>
         </div>
 
+        {{-- Anulacion SUNAT (Resumen de Reversion). Solo si hay nro_ticket_baja --}}
+        <div id="md_baja_wrap" class="mb-3" style="display:none;">
+          <div class="md-section">Anulacion en SUNAT</div>
+          <div class="md-sunat">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <div class="lbl-mini">N° Ticket</div>
+                <div class="val-mono" id="md_baja_ticket"></div>
+              </div>
+              <div class="col-md-6">
+                <div class="lbl-mini">ID Documento</div>
+                <div class="val-mono" id="md_baja_iddoc"></div>
+              </div>
+              <div class="col-md-6">
+                <div class="lbl-mini">Nombre Archivo</div>
+                <div class="val-mono" id="md_baja_archivo"></div>
+              </div>
+              <div class="col-md-6">
+                <div class="lbl-mini">Fecha de envio</div>
+                <div class="val-mono" id="md_baja_fecha"></div>
+              </div>
+              <div class="col-md-12">
+                <div class="lbl-mini">Motivo</div>
+                <div class="val-mono" id="md_baja_motivo"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="md-section">Documentos relacionados</div>
         <div class="md-table-wrap">
           <table class="table md-table align-middle">

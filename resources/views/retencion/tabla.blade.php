@@ -61,6 +61,11 @@
         <td class="text-center">
           @if ($estDocAnul)
             <span class="ret-badge b-anul"><i class="fa fa-ban"></i> Anulada</span>
+            @if (!empty($r->nro_ticket_baja))
+              <div class="ticket-baja mt-1" title="ID: {{ $r->iddocumento_baja }}{{ $r->fecha_envio_baja ? ' · '.$r->fecha_envio_baja : '' }}">
+                Tk: {{ $r->nro_ticket_baja }}
+              </div>
+            @endif
           @else
             <span class="ret-badge b-act"><i class="fa fa-circle-check"></i> Activa</span>
           @endif
