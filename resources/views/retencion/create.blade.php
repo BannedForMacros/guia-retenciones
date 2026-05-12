@@ -222,6 +222,87 @@
   table.tabla-detalles select.form-select { font-size: .82rem; height: 30px; padding: .2rem .45rem; }
   table.tabla-detalles .in-factor-cambio { width: 100%; }
 
+  /* Celda Importe Pago: input + icono de historial */
+  table.tabla-detalles .pago-cell {
+    display: flex; align-items: center; gap: 4px;
+  }
+  table.tabla-detalles .pago-cell .in-importe-pago { flex: 1; min-width: 0; }
+  table.tabla-detalles .btn-info-pago {
+    flex-shrink: 0;
+    background: transparent; border: 0; padding: 0;
+    width: 22px; height: 22px;
+    color: var(--db-cyan);
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .82rem; cursor: pointer;
+    transition: background-color .12s, color .12s, transform .12s;
+  }
+  table.tabla-detalles .btn-info-pago:hover {
+    background: #E6F3FB; color: var(--db-blue);
+    transform: scale(1.08);
+  }
+  table.tabla-detalles .btn-info-pago:focus { outline: 0; box-shadow: 0 0 0 .15rem rgba(14, 108, 181, .15); }
+  table.tabla-detalles .btn-info-pago:active { transform: scale(.96); }
+
+  /* Popover de historial (independiente de Bootstrap Tooltip) */
+  .info-pago-popover {
+    position: absolute;
+    z-index: 1080;
+    background: #fff;
+    color: var(--db-text);
+    border: 1px solid var(--db-border);
+    border-top: 3px solid var(--db-cyan);
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(13, 46, 110, .14);
+    padding: .55rem .7rem;
+    min-width: 240px;
+    max-width: 280px;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-2px) scale(.98);
+    transition: opacity .12s ease-out, transform .12s ease-out;
+  }
+  .info-pago-popover.is-open { opacity: 1; transform: none; }
+  .info-pago-popover-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 0; height: 0; pointer-events: none;
+  }
+  .info-pago-popover.pop-left  .info-pago-popover-arrow {
+    right: -7px;
+    border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+    border-left: 7px solid #fff;
+    filter: drop-shadow(1px 0 0 var(--db-border));
+  }
+  .info-pago-popover.pop-right .info-pago-popover-arrow {
+    left: -7px;
+    border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+    border-right: 7px solid #fff;
+    filter: drop-shadow(-1px 0 0 var(--db-border));
+  }
+
+  .info-pago-tip { font-size: .75rem; line-height: 1.3; }
+  .info-pago-tip .tip-head {
+    font-family: ui-monospace, monospace; font-weight: 700;
+    color: var(--db-blue); font-size: .78rem;
+    padding-bottom: 4px; margin-bottom: 4px;
+    border-bottom: 1px solid var(--db-border);
+  }
+  .info-pago-tip .tip-row {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; padding: 2px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .info-pago-tip .tip-row span { color: var(--db-muted); font-size: .7rem; }
+  .info-pago-tip .tip-row b { color: var(--db-text); font-weight: 700; font-size: .76rem; }
+  .info-pago-tip .tip-row.tip-muted { color: var(--db-muted); font-style: italic; font-size: .7rem; justify-content: flex-start; }
+  .info-pago-tip .tip-row.tip-muted .fa { color: var(--db-cyan); margin-right: 4px; }
+  .info-pago-tip .tip-row.tip-saldo {
+    margin-top: 4px; padding-top: 5px;
+    border-top: 1px dashed var(--db-border);
+  }
+  .info-pago-tip .tip-row.tip-saldo b { color: var(--db-teal); }
+  .info-pago-tip .tip-row.tip-prox b { color: var(--db-blue); }
+
   /* ── Select2 inline (compacto) ────────────────────────────────── */
   .inline-search { width: 280px; }
   .inline-search .select2-container { width: 100% !important; }

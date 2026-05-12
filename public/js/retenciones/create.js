@@ -79,68 +79,31 @@ $(document).ready(function () {
 /* ─── Selección / limpieza de proveedor ──────────────────────────────── */
 
 /**
- * Cuando el proveedor elegido NO está marcado como afecto a retención,
- * se muestra un Swal de advertencia con 2 caminos:
- *   - Marcar ahora y continuar: PATCH al datamarket y selecciona.
- *   - Cancelar: no selecciona.
+ * Si el proveedor elegido no esta marcado como afecto a retencion, mostramos
+ * SOLO un aviso (sin accion). El usuario debe ir a "Proveedores Retenidos" en
+ * el listado para gestionar el padron — no lo cambiamos desde este form.
  */
 function validarYSeleccionarProveedor(prov) {
   var nombre = (prov.nombre || '').toUpperCase();
   var ruc    = prov.ruc || '';
 
   Swal.fire({
-    title: 'Proveedor no marcado como afecto a retención',
+    title: 'Proveedor no afecto a retención',
     html:
       '<div class="text-start">' +
-        '<p class="mb-2">El proveedor seleccionado no figura en el padrón de retención:</p>' +
+        '<p class="mb-2">No se puede emitir una retención a este proveedor porque no figura en el padrón:</p>' +
         '<div class="p-2 mb-3" style="background:#F5F5F5;border:1px solid #e5e7eb;border-radius:6px;">' +
           '<div style="font-weight:700;color:#1A3A5C;">' + _escapeHtml(nombre) + '</div>' +
           '<div style="font-family:ui-monospace,monospace;font-size:.78rem;color:#6b7280;">RUC: ' + _escapeHtml(ruc) + '</div>' +
         '</div>' +
-        '<p class="mb-0 small text-muted">Debes marcarlo como afecto para poder emitir la retención.</p>' +
+        '<p class="mb-0 small text-muted">Para marcarlo, abre <b>Proveedores Retenidos</b> desde el listado de retenciones.</p>' +
       '</div>',
     icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText:  '<i class="fa fa-check"></i> Marcar y continuar',
-    cancelButtonText:   'Cancelar',
+    confirmButtonText:  'Cerrar',
     confirmButtonColor: '#0D2E6E',
-    reverseButtons:     true,
     width: 520,
-    showLoaderOnConfirm: true,
-    allowOutsideClick: function () { return !Swal.isLoading(); },
-    preConfirm: function () {
-      var fd = new FormData();
-      fd.append('_token', _token);
-      fd.append('ruc',    ruc);
-      fd.append('afecto', '1');
-
-      return $.ajax({
-        url: route('retenciones.togglearAfectoRetencion'),
-        type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json',
-      })
-      .then(function (resp) { return { ok: true,  resp: resp }; })
-      .catch(function (xhr) {
-        var resp = xhr.responseJSON || { msj: 'No se pudo marcar al proveedor.', msj_tipo: 'error' };
-        return { ok: false, resp: resp };
-      });
-    },
-  }).then(function (result) {
-    if (!result.isConfirmed) return;          // Cancelar -> no seleccionar
-
-    var r = result.value || {};
-    if (!r.ok) {
-      Swal.fire({
-        html: (r.resp && r.resp.msj) || 'No se pudo marcar al proveedor.',
-        icon: (r.resp && r.resp.msj_tipo) || 'error',
-      });
-      return;
-    }
-    seleccionarProveedor(prov);
-    Swal.fire({
-      toast: true, position: 'top-end', timer: 1800, showConfirmButton: false,
-      icon: 'success', title: 'Proveedor marcado como afecto a retención',
-    });
   });
+  // No seleccionamos al proveedor: el form se queda en el estado previo.
 }
 
 function seleccionarProveedor(p) {
@@ -186,6 +149,11 @@ function destruirSelectorFacturas() {
 function inicializarSelectorFacturas(rucProveedor) {
   destruirSelectorFacturas();
   if (!rucProveedor || rucProveedor.length !== 11) return;
+
+  // CRITICO: removemos cualquier handler previo. select2('destroy') NO limpia
+  // los .on() de jQuery, asi que si no hacemos esto, cada cambio de proveedor
+  // agrega un listener mas y un click selecciona N facturas (bug de duplicados).
+  $('#factura_select').off('select2:select');
 
   $('#factura_select').prop('disabled', false).select2({
     theme: 'bootstrap-5',
@@ -282,11 +250,15 @@ function agregarLineaConFactura(f) {
   var hoy = new Date().toISOString().slice(0, 10);
   var importeDoc = parseFloat(f.importe_total || 0);
   var saldoPend  = parseFloat(f.saldo_pendiente != null ? f.saldo_pendiente : importeDoc);
+  var totalPagado   = parseFloat(f.total_pagado_acumulado   || 0);
+  var totalRetenido = parseFloat(f.total_retenido_acumulado || 0);
+  var ultimoNumPago = parseInt(f.ultimo_numero_pago, 10) || 0;
   // numero_pago = ultimo_numero_pago + 1, zero-padded a 3 digitos.
-  var siguienteNumPago = ((parseInt(f.ultimo_numero_pago, 10) || 0) + 1);
+  var siguienteNumPago = ultimoNumPago + 1;
   var siguienteNumPagoStr = String(siguienteNumPago).padStart(3, '0');
   var moneda     = f.moneda || 'PEN';
   var esUsd      = moneda === 'USD';
+  var simMoneda  = esUsd ? 'US$' : 'S/';
 
   // Toda la data del datamarket se guarda en data-* del <tr>; el form lo
   // usa al hacer submit. Las celdas son TEXTO (no editable).
@@ -305,6 +277,31 @@ function agregarLineaConFactura(f) {
   var importePagoDefault = saldoPend.toFixed(2);
   var importePagoMax     = saldoPend.toFixed(2);
 
+  // Contenido del tooltip del icono "info" en la celda Importe Pago.
+  // Muestra el historial real de la factura (de retenciones previas).
+  var tieneHistoria = totalPagado > 0 || totalRetenido > 0 || ultimoNumPago > 0;
+  var tooltipHtml =
+    '<div class="info-pago-tip">' +
+      '<div class="tip-head">' + _escapeHtml(f.serie_numero) + '</div>' +
+      '<div class="tip-row"><span>Importe total</span><b>' + simMoneda + ' ' + _fmt2(importeDoc) + '</b></div>' +
+      (tieneHistoria
+        ? '<div class="tip-row"><span>Ya pagado</span><b>' + simMoneda + ' ' + _fmt2(totalPagado) + '</b></div>' +
+          '<div class="tip-row"><span>Ya retenido</span><b>' + simMoneda + ' ' + _fmt2(totalRetenido) + '</b></div>' +
+          '<div class="tip-row"><span>Ult. n° pago</span><b>' + (ultimoNumPago || '—') + '</b></div>'
+        : '<div class="tip-row tip-muted"><i class="fa fa-circle-info"></i> Sin retenciones previas</div>') +
+      '<div class="tip-row tip-saldo"><span>Saldo pendiente</span><b>' + simMoneda + ' ' + _fmt2(saldoPend) + '</b></div>' +
+      (tieneHistoria
+        ? '<div class="tip-row tip-prox"><span>Este pago será el</span><b>n° ' + siguienteNumPagoStr + '</b></div>'
+        : '') +
+    '</div>';
+
+  // Solo el botón — el contenido del tooltip se inyecta por JS al construir
+  // la Tooltip (mas confiable que pasar HTML escapado por atributo).
+  var infoIcon =
+    '<button type="button" class="btn-info-pago" aria-label="Ver historial">' +
+      '<i class="fa fa-circle-info"></i>' +
+    '</button>';
+
   var tr =
     '<tr class="' + trClass + '" data-idx="' + idx + '"' +
         ' data-tipo-doc="'  + _escapeHtml(f.tipo_doc) + '"' +
@@ -322,7 +319,10 @@ function agregarLineaConFactura(f) {
     '  <td><input type="date" class="form-control in-fecha-pago" value="' + hoy + '"></td>' +
     '  <td><input type="number" class="form-control text-center in-numero-pago" min="1" max="999" step="1" value="' + siguienteNumPago + '" title="Número / cuota de pago"></td>' +
     '  <td>' +
-    '    <input type="number" class="form-control text-end in-importe-pago" step="0.01" min="0.01" max="' + importePagoMax + '" value="' + importePagoDefault + '">' +
+    '    <div class="pago-cell">' +
+    '      <input type="number" class="form-control text-end in-importe-pago" step="0.01" min="0.01" max="' + importePagoMax + '" value="' + importePagoDefault + '">' +
+    '      ' + infoIcon +
+    '    </div>' +
     '  </td>' +
     '  <td class="num-cell out-retenido fw-bold">S/ 0.00</td>' +
     '  <td class="num-cell out-neto">S/ 0.00</td>' +
@@ -331,15 +331,97 @@ function agregarLineaConFactura(f) {
     '  </td>' +
     '</tr>';
 
-  $('#detalles_body').append(tr);
+  var $tr = $(tr);
+  // El popover toma el HTML desde .data() — asi NUNCA pisamos atributos
+  // ni dependemos de Bootstrap Tooltip (no expuesto en window).
+  $tr.find('.btn-info-pago').data('info-html', tooltipHtml);
+  $('#detalles_body').append($tr);
   $('#vacio_msg').hide();
   $('#totales_foot').removeClass('d-none');
+
   recalcularTodo();
 }
 
+/* ─── Popover de historial (independiente de Bootstrap Tooltip) ─────── */
+
+var _infoPopover = null;   // { el, btn } | null
+
+function _closeInfoPopover() {
+  if (_infoPopover) {
+    _infoPopover.el.remove();
+    _infoPopover = null;
+  }
+}
+
+function _showInfoPopover(btn, html) {
+  _closeInfoPopover();
+
+  var pop = document.createElement('div');
+  pop.className = 'info-pago-popover';
+  pop.innerHTML = '<div class="info-pago-popover-arrow"></div>' + html;
+  document.body.appendChild(pop);
+
+  // Posicionar al costado IZQUIERDO de la celda. Si no entra, volteamos a la derecha.
+  var r  = btn.getBoundingClientRect();
+  var pr = pop.getBoundingClientRect();
+  var GAP = 10;
+  var top = window.scrollY + r.top + (r.height / 2) - (pr.height / 2);
+  var leftFlip = window.scrollX + r.right + GAP;
+  var leftDef  = window.scrollX + r.left  - pr.width - GAP;
+
+  var placement = 'left';
+  var left = leftDef;
+  if (leftDef < window.scrollX + 8) { left = leftFlip; placement = 'right'; }
+
+  // Clamp vertical para no salir del viewport
+  var minTop = window.scrollY + 8;
+  var maxTop = window.scrollY + window.innerHeight - pr.height - 8;
+  if (top < minTop) top = minTop;
+  if (top > maxTop) top = maxTop;
+
+  pop.classList.add('pop-' + placement);
+  pop.style.top  = top  + 'px';
+  pop.style.left = left + 'px';
+
+  // Animacion de entrada en el siguiente frame
+  requestAnimationFrame(function () { pop.classList.add('is-open'); });
+
+  _infoPopover = { el: pop, btn: btn };
+}
+
+// Click en el icono: abre / cierra
+$(document).on('click', '.btn-info-pago', function (e) {
+  e.stopPropagation();
+  var btn  = this;
+  var html = $(btn).data('info-html');
+  if (!html) return;
+
+  if (_infoPopover && _infoPopover.btn === btn) {
+    _closeInfoPopover();
+    return;
+  }
+  _showInfoPopover(btn, html);
+});
+
+// Click fuera -> cerrar (excepto dentro del popover mismo)
+$(document).on('click', function (e) {
+  if (!_infoPopover) return;
+  if (e.target.closest && e.target.closest('.info-pago-popover')) return;
+  _closeInfoPopover();
+});
+
+// Scroll / resize / Escape -> cerrar
+$(window).on('scroll resize', _closeInfoPopover);
+$(document).on('keydown', function (e) { if (e.key === 'Escape') _closeInfoPopover(); });
+
 /* Si el usuario quita una factura, renumera y oculta tfoot si quedó vacío */
 $(document).on('click', '.btn-eliminar-linea', function () {
-  $(this).closest('tr').remove();
+  var $tr = $(this).closest('tr');
+  // Si el popover abierto pertenece a esta fila, ciérralo antes de borrar.
+  if (_infoPopover && $.contains($tr.get(0), _infoPopover.btn)) {
+    _closeInfoPopover();
+  }
+  $tr.remove();
   $('#detalles_body tr').each(function (i) { $(this).find('.num-linea').text(i + 1); });
   if ($('#detalles_body tr').length === 0) {
     $('#vacio_msg').show();
