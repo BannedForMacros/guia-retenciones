@@ -289,8 +289,39 @@
       <input type="hidden" id="proveedor_razon"      name="razonsocialproveedor" value="">
       <input type="hidden" id="proveedor_direccion"  name="direccionproveedor"   value="">
 
-      {{-- ────────── Row: Datos del Comprobante (izq) + Proveedor (der) ────────── --}}
+      {{-- ────────── Row: Proveedor (izq, Paso 1) + Datos del Comprobante (der) ────────── --}}
       <div class="row g-3 mb-3">
+        {{-- Proveedor (Paso 1) --}}
+        <div class="col-md-6">
+          <div class="card-soft p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+              <div class="section-title with-step"><span class="step-badge">1</span>Proveedor</div>
+              <div class="inline-search" id="proveedor_search_wrap">
+                <select id="proveedor_select" class="form-select form-select-sm">
+                  <option value=""></option>
+                </select>
+              </div>
+            </div>
+
+            <div id="proveedor_empty" class="text-center text-muted small py-3">
+              <i class="fa fa-magnifying-glass d-block mb-1" style="font-size:1.1rem; opacity:.5;"></i>
+              Busca un proveedor por RUC o razón social
+            </div>
+
+            <div id="proveedor_chip" class="prov-chip d-none">
+              <div class="avatar" id="prov_avatar">·</div>
+              <div class="body">
+                <div class="name" id="prov_name"></div>
+                <div class="ruc">RUC <span id="prov_ruc"></span></div>
+                <div class="addr" id="prov_addr">—</div>
+              </div>
+              <button type="button" class="clear-btn" id="btn_limpiar_proveedor" title="Quitar proveedor">
+                <i class="fa fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {{-- Datos del Comprobante --}}
         <div class="col-md-6">
           <div class="card-soft p-3 h-100">
@@ -320,37 +351,6 @@
                        class="form-control form-control-sm"
                        maxlength="250" placeholder="Opcional">
               </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Proveedor (Paso 1) --}}
-        <div class="col-md-6">
-          <div class="card-soft p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
-              <div class="section-title with-step"><span class="step-badge">1</span>Proveedor</div>
-              <div class="inline-search" id="proveedor_search_wrap">
-                <select id="proveedor_select" class="form-select form-select-sm">
-                  <option value=""></option>
-                </select>
-              </div>
-            </div>
-
-            <div id="proveedor_empty" class="text-center text-muted small py-3">
-              <i class="fa fa-magnifying-glass d-block mb-1" style="font-size:1.1rem; opacity:.5;"></i>
-              Busca un proveedor por RUC o razón social
-            </div>
-
-            <div id="proveedor_chip" class="prov-chip d-none">
-              <div class="avatar" id="prov_avatar">·</div>
-              <div class="body">
-                <div class="name" id="prov_name"></div>
-                <div class="ruc">RUC <span id="prov_ruc"></span></div>
-                <div class="addr" id="prov_addr">—</div>
-              </div>
-              <button type="button" class="clear-btn" id="btn_limpiar_proveedor" title="Quitar proveedor">
-                <i class="fa fa-xmark"></i>
-              </button>
             </div>
           </div>
         </div>
