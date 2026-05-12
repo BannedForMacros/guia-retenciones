@@ -301,6 +301,10 @@
       </div>
     </div>
     <div class="actions">
+      <button type="button" class="btn-cfg" data-bs-toggle="modal" data-bs-target="#modalProveedoresRetenidos"
+              title="Gestionar proveedores afectos a retencion">
+        <i class="fa fa-user-check"></i> Proveedores Retenidos
+      </button>
       <button type="button" class="btn-cfg" data-bs-toggle="modal" data-bs-target="#modalSeries"
               title="Configurar series (MaestroDocumentoSerie)">
         <i class="fa fa-cog"></i> Series
@@ -459,8 +463,73 @@
   </div>
 </div>
 
+{{-- ────────── Modal: Proveedores Retenidos ────────── --}}
+<div class="modal fade" id="modalProveedoresRetenidos" tabindex="-1" aria-labelledby="modalProveedoresRetenidosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="modalProveedoresRetenidosLabel">
+          <i class="fa fa-user-check"></i> Proveedores Afectos a Retencion
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+          <div class="small text-muted">
+            <i class="fa fa-info-circle"></i>
+            Marca el checkbox para incluir al proveedor en el padron de retencion.
+            <span class="ms-2"><i class="fa fa-database"></i> <span id="pr_total_info">0</span> resultados</span>
+          </div>
+          <div class="input-icon" style="min-width: 260px;">
+            <i class="fa fa-search fa-prefix"></i>
+            <input type="text" id="pr_search" class="form-control form-control-sm"
+                   placeholder="Buscar RUC o razon social..." autocomplete="off">
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 60vh;">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light sticky-top">
+              <tr class="small text-uppercase">
+                <th style="width: 130px;">RUC</th>
+                <th>Razon Social</th>
+                <th>Direccion</th>
+                <th style="width: 120px;" class="text-center">Retenido</th>
+              </tr>
+            </thead>
+            <tbody id="pr_body">
+              <tr><td colspan="4" class="text-center text-muted small py-3">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="pr_error" class="alert alert-danger small d-none mt-2 mb-0"></div>
+
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <div class="small text-muted">
+            Mostrando <span id="pr_rango">0</span> de <span id="pr_total">0</span>
+          </div>
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" id="pr_prev" class="btn btn-outline-secondary" disabled>
+              <i class="fa fa-chevron-left"></i> Anterior
+            </button>
+            <button type="button" id="pr_next" class="btn btn-outline-secondary" disabled>
+              Siguiente <i class="fa fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <span class="small text-muted me-auto" id="pr_cambios_info">Sin cambios en esta sesion.</span>
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @push('js-scripts')
   <script src="{{ asset('js/retenciones/utils.js?v=') }}{{ rand() }}"></script>
   <script src="{{ asset('js/retenciones/index.js?v=') }}{{ rand() }}"></script>
+  <script src="{{ asset('js/retenciones/proveedores-retenidos.js?v=') }}{{ rand() }}"></script>
 @endpush
 @endsection
