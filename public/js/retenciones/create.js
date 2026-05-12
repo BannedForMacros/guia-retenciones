@@ -129,10 +129,13 @@ function inicializarSelectorFacturas(rucProveedor) {
         var items = (data.items || [])
           .filter(function (f) { return !yaEnForm[f.serie_numero]; })
           .map(function (f) {
+            // Una factura solo se bloquea si NO tiene saldo pendiente (totalmente
+            // cobrada). Si tiene retenciones previas pero queda saldo, sigue
+            // disponible para retencion parcial.
             return $.extend({}, f, {
               id: f.serie_numero,
               text: f.serie_numero,
-              disabled: !!f.ya_retenida,
+              disabled: f.disponible === false,
             });
           });
         return { results: items };
@@ -140,13 +143,30 @@ function inicializarSelectorFacturas(rucProveedor) {
     },
     templateResult: function (f) {
       if (!f.id) return f.text;
-      var importe = parseFloat(f.importe_total || 0).toFixed(2);
-      var sym = (f.moneda === 'USD') ? 'US$' : 'S/';
-      var tipoTxt = (TIPOS_DOC_REL.find(function (t) { return t.v === f.tipo_doc; }) || {}).t || f.tipo_doc;
-      var clase = f.ya_retenida ? 'factura-result is-retenida' : 'factura-result';
-      var badge = f.ya_retenida && f.retencion_serienumero
-        ? '<span class="badge-retenida" title="Retenida el ' + (f.retencion_fecha || '') + '">Ya retenida · ' + f.retencion_serienumero + '</span>'
-        : '';
+      var sym       = (f.moneda === 'USD') ? 'US$' : 'S/';
+      var importe   = parseFloat(f.importe_total || 0).toFixed(2);
+      var saldo     = parseFloat(f.saldo_pendiente != null ? f.saldo_pendiente : f.importe_total || 0).toFixed(2);
+      var retenido  = parseFloat(f.total_retenido_acumulado || 0).toFixed(2);
+      var disponible = f.disponible !== false;
+      var yaParcial  = !!f.ya_retenida && disponible;
+      var tipoTxt    = (TIPOS_DOC_REL.find(function (t) { return t.v === f.tipo_doc; }) || {}).t || f.tipo_doc;
+
+      var clase = !disponible ? 'factura-result is-retenida' : 'factura-result';
+
+      // Badge: completamente retenida vs. retencion parcial vs. sin retencion previa
+      var badge = '';
+      if (!disponible) {
+        badge = '<span class="badge-retenida" title="Sin saldo pendiente — totalmente cobrada">Retenida total</span>';
+      } else if (yaParcial) {
+        badge = '<span class="badge-parcial" title="Ya tiene retencion(es) previa(s)">Parcial · pagado ' + sym + ' ' + parseFloat(f.total_pagado_acumulado || 0).toFixed(2) + '</span>';
+      }
+
+      // Bloque inferior: saldo destacado (la info mas util para retener)
+      var saldoBlock = '<div class="meta">Emitida: ' + f.fecha_emision +
+                      ' · Total ' + sym + ' ' + importe +
+                      (yaParcial ? ' · Retenido ' + sym + ' ' + retenido : '') +
+                      '</div>';
+
       return $(
         '<div class="' + clase + '">' +
           '<div class="left">' +
@@ -155,9 +175,9 @@ function inicializarSelectorFacturas(rucProveedor) {
               '<span class="serie">' + f.serie_numero + '</span>' +
               badge +
             '</div>' +
-            '<div class="meta">Emitida: ' + f.fecha_emision + '</div>' +
+            saldoBlock +
           '</div>' +
-          '<div class="importe">' + sym + ' ' + importe + '</div>' +
+          '<div class="importe">Saldo<br>' + sym + ' ' + saldo + '</div>' +
         '</div>'
       );
     },
@@ -169,7 +189,7 @@ function inicializarSelectorFacturas(rucProveedor) {
 
   $('#factura_select').on('select2:select', function (e) {
     var f = e.params.data;
-    if (f.ya_retenida) return;
+    if (f.disponible === false) return;
     agregarLineaConFactura(f);
     $('#factura_select').val(null).trigger('change');
   });
@@ -182,6 +202,10 @@ function agregarLineaConFactura(f) {
   var idx = contadorLineas;
   var hoy = new Date().toISOString().slice(0, 10);
   var importeDoc = parseFloat(f.importe_total || 0);
+  var saldoPend  = parseFloat(f.saldo_pendiente != null ? f.saldo_pendiente : importeDoc);
+  // numero_pago = ultimo_numero_pago + 1, zero-padded a 3 digitos.
+  var siguienteNumPago = ((parseInt(f.ultimo_numero_pago, 10) || 0) + 1);
+  var siguienteNumPagoStr = String(siguienteNumPago).padStart(3, '0');
   var moneda     = f.moneda || 'PEN';
   var esUsd      = moneda === 'USD';
 
@@ -196,12 +220,19 @@ function agregarLineaConFactura(f) {
   var trClass = esUsd ? 'is-usd' : '';
   var monedaClass = esUsd ? 'is-usd' : 'is-pen';
 
+  // El importe pago arranca con el saldo pendiente (lo que falta retener),
+  // no con el importe total. Y el max del input tambien se limita al saldo
+  // para evitar pagar mas de lo que queda.
+  var importePagoDefault = saldoPend.toFixed(2);
+  var importePagoMax     = saldoPend.toFixed(2);
+
   var tr =
     '<tr class="' + trClass + '" data-idx="' + idx + '"' +
         ' data-tipo-doc="'  + _escapeHtml(f.tipo_doc) + '"' +
         ' data-serie-num="' + _escapeHtml(f.serie_numero) + '"' +
         ' data-fecha-doc="' + _escapeHtml(f.fecha_emision) + '"' +
         ' data-importe-doc="' + importeDoc.toFixed(2) + '"' +
+        ' data-saldo-pendiente="' + saldoPend.toFixed(2) + '"' +
         ' data-moneda="'    + moneda + '">' +
     '  <td class="text-center"><span class="num-linea">' + idx + '</span></td>' +
     '  <td class="mono-cell">' + _escapeHtml(f.serie_numero) + '</td>' +
@@ -210,8 +241,11 @@ function agregarLineaConFactura(f) {
     '  <td class="text-center"><span class="moneda-tag ' + monedaClass + '">' + moneda + '</span></td>' +
     '  <td class="text-center">' + tCambioCell + '</td>' +
     '  <td><input type="date" class="form-control in-fecha-pago" value="' + hoy + '"></td>' +
-    '  <td><input type="number" class="form-control text-center in-numero-pago" min="1" max="999" step="1" value="1" title="Número / cuota de pago"></td>' +
-    '  <td><input type="number" class="form-control text-end in-importe-pago" step="0.01" min="0" value="' + importeDoc.toFixed(2) + '"></td>' +
+    '  <td><input type="text" inputmode="numeric" pattern="\\d{1,3}" maxlength="3" class="form-control text-center in-numero-pago" value="' + siguienteNumPagoStr + '" title="Número / cuota de pago"></td>' +
+    '  <td>' +
+    '    <input type="number" class="form-control text-end in-importe-pago" step="0.01" min="0.01" max="' + importePagoMax + '" value="' + importePagoDefault + '">' +
+    '    <div class="saldo-hint text-muted small text-end mt-1"></div>' +
+    '  </td>' +
     '  <td class="num-cell out-retenido fw-bold">S/ 0.00</td>' +
     '  <td class="num-cell out-neto">S/ 0.00</td>' +
     '  <td class="text-center">' +
@@ -279,6 +313,26 @@ function recalcularTodo() {
     $tr.find('.out-retenido').text('S/ ' + _fmt2(retPEN));
     $tr.find('.out-neto').text('S/ ' + _fmt2(netoPEN));
 
+    // Pista del saldo: "Pagando ahora X, queda restante Y" / "Cubre todo el saldo"
+    var saldoPend = _parseNum($tr.attr('data-saldo-pendiente'));
+    var sym       = (moneda === 'USD') ? 'US$' : 'S/';
+    var $hint     = $tr.find('.saldo-hint');
+    if (saldoPend > 0 && pagoOri > 0) {
+      var queda = +(saldoPend - pagoOri).toFixed(2);
+      if (queda <= 0.005) {
+        $hint.removeClass('text-warning text-danger').addClass('text-success')
+             .html('<i class="fa fa-check-circle"></i> Cubre todo el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')');
+      } else if (pagoOri > saldoPend + 0.005) {
+        $hint.removeClass('text-success text-warning').addClass('text-danger')
+             .html('<i class="fa fa-triangle-exclamation"></i> Excede el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')');
+      } else {
+        $hint.removeClass('text-success text-danger').addClass('text-warning')
+             .html('Pagando ' + sym + ' ' + _fmt2(pagoOri) + ' · queda ' + sym + ' ' + _fmt2(queda));
+      }
+    } else {
+      $hint.removeClass('text-success text-warning text-danger').empty();
+    }
+
     totPagPEN += pagoPEN; totRetPEN += retPEN; totNetoPEN += netoPEN;
   });
 
@@ -308,9 +362,16 @@ $(document).on('click', '#btn_registrar', function () {
     var factor = (moneda === 'USD')
       ? RetUtils.parseNum($tr.find('.in-factor-cambio').val())
       : 1.0;
+    var saldo = RetUtils.parseNum($tr.attr('data-saldo-pendiente'));
+    var sn    = $tr.attr('data-serie-num') || '';
+    var sym   = (moneda === 'USD') ? 'US$' : 'S/';
     if (pag <= 0) {
       detallesValidos = false;
       razonInvalida = 'Cada línea necesita Importe Pago > 0.';
+    }
+    if (saldo > 0 && pag > saldo + 0.005) {
+      detallesValidos = false;
+      razonInvalida = 'El importe pago de <b>' + sn + '</b> excede el saldo pendiente (' + sym + ' ' + RetUtils.fmtNum(saldo, 2) + ').';
     }
     if (moneda === 'USD' && (!factor || factor <= 0)) {
       detallesValidos = false;

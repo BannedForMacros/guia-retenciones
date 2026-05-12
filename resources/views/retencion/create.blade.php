@@ -255,7 +255,25 @@
     color: #92400e; background: #fef3c7; border: 1px solid #fde68a;
     padding: 1px 6px; border-radius: 3px;
   }
+  /* Badge "Parcial": la factura ya tiene retencion previa pero queda saldo */
+  .factura-result .badge-parcial {
+    font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--db-blue); background: #E6F3FB; border: 1px solid #BFDDF1;
+    padding: 1px 6px; border-radius: 3px;
+  }
+  /* Saldo destacado en la columna importe del dropdown */
+  .factura-result .importe { text-align: right; line-height: 1.1; font-size: 11px; color: var(--db-muted); font-weight: 600; }
+  .factura-result .importe br + * { font-size: 13px; color: var(--db-teal); font-weight: 700; }
   .select2-results__option[aria-disabled="true"] { background: var(--db-bg); cursor: not-allowed; }
+
+  /* Pista "Pagando X · queda Y" debajo del input importe pago */
+  table.tabla-detalles .saldo-hint {
+    font-size: .65rem; line-height: 1.1; min-height: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.tabla-detalles .saldo-hint.text-success { color: var(--db-teal) !important; }
+  table.tabla-detalles .saldo-hint.text-warning { color: #b45309 !important; }
+  table.tabla-detalles .saldo-hint.text-danger  { color: #b91c1c !important; font-weight: 700; }
 </style>
 
 @section('content')

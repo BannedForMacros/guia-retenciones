@@ -1020,11 +1020,80 @@ class RetencionController extends Controller
             ], 502);
         }
 
+        // Enriquecemos cada factura con datos de retencion parcial usando MySQL
+        // local (fuente de verdad operativa): cuanto ya se retuvo, cuantas
+        // cuotas se cobraron y cual fue el ultimo numeropago.
+        //
+        // - saldo_pendiente   = importe_total - sum(importepagosinretencion)
+        // - total_retenido    = sum(importeretenido) (solo informativo)
+        // - ultimo_numero_pago= max(CAST numeropago AS UNSIGNED)
+        // - disponible        = saldo_pendiente > 0
+        $series = array_map(fn ($x) => $x['serie_numero'], $rep['items']);
+        $saldos = $this->saldosRetencionPorSerie($rucempresa, $series);
+
+        $items = [];
+        foreach ($rep['items'] as $it) {
+            $sn         = $it['serie_numero'];
+            $info       = $saldos[$sn] ?? ['total_pagado' => 0.0, 'total_retenido' => 0.0, 'ultimo_num_pago' => 0];
+            $importeTot = (float) $it['importe_total'];
+            $saldo      = round(max(0, $importeTot - $info['total_pagado']), 2);
+
+            $it['total_pagado_acumulado']   = $info['total_pagado'];
+            $it['total_retenido_acumulado'] = $info['total_retenido'];
+            $it['ultimo_numero_pago']       = $info['ultimo_num_pago'];
+            $it['saldo_pendiente']          = $saldo;
+            $it['disponible']               = $saldo > 0;
+
+            $items[] = $it;
+        }
+
         return response()->json([
             'procede' => true,
-            'items'   => $rep['items'],
+            'items'   => $items,
             'total'   => $rep['total'],
         ]);
+    }
+
+    /**
+     * Consulta MySQL local cuanto ya se retuvo / pago por cada
+     * serie_numero relacionado (excluye retenciones anuladas).
+     *
+     * @return array<string, array{total_pagado:float,total_retenido:float,ultimo_num_pago:int}>
+     */
+    private function saldosRetencionPorSerie(string $rucempresa, array $series): array
+    {
+        $series = array_values(array_unique(array_filter($series)));
+        if (empty($series)) return [];
+
+        // Generamos los ? dinamicamente — no podemos pasarle un array al binding.
+        $placeholders = implode(',', array_fill(0, count($series), '?'));
+
+        $rows = DB::select(
+            "SELECT
+                dr.serienumerorelacionado AS sn,
+                COALESCE(SUM(CAST(dr.importepagosinretencion AS DECIMAL(18,2))), 0) AS total_pagado,
+                COALESCE(SUM(CAST(dr.importeretenido          AS DECIMAL(18,2))), 0) AS total_retenido,
+                COALESCE(MAX(CAST(dr.numeropago AS UNSIGNED)), 0)                   AS ultimo_num_pago
+             FROM detalle_retenciones dr
+             INNER JOIN retenciones r
+                     ON r.rucempresa = dr.rucempresa
+                    AND r.serienumero = dr.serienumero
+             WHERE dr.rucempresa = ?
+               AND (r.estadodocumento IS NULL OR r.estadodocumento <> '11')
+               AND dr.serienumerorelacionado IN ({$placeholders})
+             GROUP BY dr.serienumerorelacionado",
+            array_merge([$rucempresa], $series)
+        );
+
+        $map = [];
+        foreach ($rows as $r) {
+            $map[$r->sn] = [
+                'total_pagado'    => (float) $r->total_pagado,
+                'total_retenido'  => (float) $r->total_retenido,
+                'ultimo_num_pago' => (int)   $r->ultimo_num_pago,
+            ];
+        }
+        return $map;
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────
