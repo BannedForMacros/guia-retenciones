@@ -280,6 +280,231 @@
     padding: .45rem .85rem; background: #fff; border: 1px solid var(--db-border);
     border-radius: 8px; color: #4b5563; font-size: .8rem; margin-top: 12px;
   }
+
+  /* ─── Modal: Proveedores Retenidos ──────────────────────────────────── */
+  #modalProveedoresRetenidos .modal-content { border: 0; border-radius: 10px; overflow: hidden; }
+
+  /* Header navy con tile-icon (consistente con .ret-head) */
+  #modalProveedoresRetenidos .pr-header {
+    background: var(--db-navy);
+    color: #fff;
+    border-bottom: 0;
+    padding: .8rem 1rem;
+    align-items: center;
+  }
+  #modalProveedoresRetenidos .pr-title-wrap {
+    display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto;
+  }
+  #modalProveedoresRetenidos .pr-icon-tile {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,.14);
+    border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  #modalProveedoresRetenidos .modal-title {
+    font-size: 1.02rem; font-weight: 800; letter-spacing: -.015em; color: #fff;
+  }
+  #modalProveedoresRetenidos .pr-subtitle {
+    font-size: .72rem; opacity: .82; margin-top: 2px; line-height: 1.1;
+  }
+  #modalProveedoresRetenidos .btn-close { opacity: .85; }
+
+  /* Body */
+  #modalProveedoresRetenidos .modal-body { background: #fff; padding: 1rem 1rem .75rem; }
+
+  /* Toolbar (stats + search) */
+  #modalProveedoresRetenidos .pr-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 10px;
+  }
+  #modalProveedoresRetenidos .pr-stats {
+    font-size: .78rem; color: var(--db-muted);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  #modalProveedoresRetenidos .pr-stats .fa { color: var(--db-cyan); }
+  #modalProveedoresRetenidos .pr-stats b { color: var(--db-text); font-weight: 700; }
+
+  #modalProveedoresRetenidos .pr-search-wrap { position: relative; min-width: 280px; }
+  #modalProveedoresRetenidos .pr-search-wrap > .fa {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: #9ca3af; font-size: .78rem; pointer-events: none;
+  }
+  #modalProveedoresRetenidos .pr-search-input {
+    width: 100%; height: 34px;
+    padding: .35rem .6rem .35rem 30px;
+    border: 1px solid var(--db-border); border-radius: 6px;
+    background: #fff; color: var(--db-text); font-size: .85rem;
+  }
+  #modalProveedoresRetenidos .pr-search-input:focus {
+    outline: 0; border-color: var(--db-blue);
+    box-shadow: 0 0 0 .15rem rgba(14, 108, 181, .12);
+  }
+
+  /* Tabla (mismo look que .ret-dt-table) */
+  #modalProveedoresRetenidos .pr-table-wrap {
+    background: #fff; border: 1px solid var(--db-border);
+    border-radius: 8px; overflow: auto; max-height: 55vh;
+  }
+  #modalProveedoresRetenidos .pr-table { width: 100%; margin: 0; font-size: .83rem; border-collapse: separate; border-spacing: 0; }
+  #modalProveedoresRetenidos .pr-table thead th {
+    background: var(--db-navy); color: #fff;
+    font-weight: 700; font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
+    padding: .7rem .8rem; position: sticky; top: 0; z-index: 2;
+    white-space: nowrap; border: 0;
+  }
+  #modalProveedoresRetenidos .pr-table tbody td {
+    padding: .6rem .8rem; vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6; color: var(--db-text);
+  }
+  #modalProveedoresRetenidos .pr-table tbody tr:hover td { background: #F0FAFE; }
+  #modalProveedoresRetenidos .pr-table tbody tr:last-child td { border-bottom: 0; }
+
+  /* Filas pendientes: verde si vamos a AGREGAR a retencion, rojo si vamos a QUITAR */
+  #modalProveedoresRetenidos .pr-table tbody tr.pr-pending-add td {
+    background: #F0FDF4;
+    border-bottom-color: #DCFCE7;
+  }
+  #modalProveedoresRetenidos .pr-table tbody tr.pr-pending-add:hover td { background: #DCFCE7; }
+  #modalProveedoresRetenidos .pr-table tbody tr.pr-pending-add td:first-child {
+    box-shadow: inset 3px 0 0 #10B981;
+  }
+
+  #modalProveedoresRetenidos .pr-table tbody tr.pr-pending-remove td {
+    background: #FEF2F2;
+    border-bottom-color: #FEE2E2;
+  }
+  #modalProveedoresRetenidos .pr-table tbody tr.pr-pending-remove:hover td { background: #FEE2E2; }
+  #modalProveedoresRetenidos .pr-table tbody tr.pr-pending-remove td:first-child {
+    box-shadow: inset 3px 0 0 #DC2626;
+  }
+
+  #modalProveedoresRetenidos .pr-ruc {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    color: var(--db-text); font-weight: 600; font-size: .8rem;
+  }
+  #modalProveedoresRetenidos .pr-name { font-weight: 600; color: var(--db-text); line-height: 1.2; }
+  #modalProveedoresRetenidos .pr-direccion {
+    color: var(--db-muted); font-size: .76rem;
+    max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #modalProveedoresRetenidos .pr-direccion.empty { font-style: italic; opacity: .65; }
+
+  /* Badge "pendiente": dos variantes — agregar (verde) / quitar (rojo) */
+  #modalProveedoresRetenidos .pr-pending-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: .12rem .45rem; border-radius: 3px;
+    font-size: .62rem; font-weight: 700;
+    border: 1px solid;
+    margin-left: 8px;
+    text-transform: uppercase; letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  #modalProveedoresRetenidos .pr-pending-badge.add {
+    color: #047857; border-color: #6EE7B7; background: #ECFDF5;
+  }
+  #modalProveedoresRetenidos .pr-pending-badge.remove {
+    color: #b91c1c; border-color: #FCA5A5; background: #FEF2F2;
+  }
+
+  /* Checkbox grande con color brand */
+  #modalProveedoresRetenidos .pr-toggle {
+    width: 18px; height: 18px; cursor: pointer; margin: 0;
+    border: 1.5px solid #cbd5e1;
+  }
+  #modalProveedoresRetenidos .pr-toggle:checked {
+    background-color: var(--db-teal);
+    border-color: var(--db-teal);
+  }
+  #modalProveedoresRetenidos .pr-toggle:focus {
+    box-shadow: 0 0 0 .18rem rgba(46, 203, 161, .18);
+    border-color: var(--db-teal);
+  }
+
+  #modalProveedoresRetenidos .pr-empty {
+    text-align: center; color: var(--db-muted);
+    font-size: .82rem; padding: 1.5rem 0 !important;
+  }
+
+  /* Pager */
+  #modalProveedoresRetenidos .pr-pager {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px;
+  }
+  #modalProveedoresRetenidos .pr-pager-info { font-size: .78rem; color: var(--db-muted); }
+  #modalProveedoresRetenidos .pr-pager-info b { color: var(--db-text); font-weight: 700; }
+  #modalProveedoresRetenidos .pr-pager-btns { display: flex; gap: 6px; }
+  #modalProveedoresRetenidos .pr-btn-pager {
+    width: 32px; height: 32px;
+    border: 1px solid var(--db-border); background: #fff; color: var(--db-text);
+    border-radius: 6px; font-size: .75rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: border-color .12s, color .12s;
+  }
+  #modalProveedoresRetenidos .pr-btn-pager:hover:not(:disabled) {
+    border-color: var(--db-blue); color: var(--db-blue);
+  }
+  #modalProveedoresRetenidos .pr-btn-pager:disabled {
+    color: #cbd5e1; background: #fafafa; cursor: not-allowed;
+  }
+
+  /* Footer */
+  #modalProveedoresRetenidos .pr-footer {
+    background: #FAFBFC;
+    border-top: 1px solid var(--db-border);
+    padding: .65rem 1rem;
+    gap: 8px;
+  }
+  #modalProveedoresRetenidos .pr-pending-info { font-size: .8rem; color: var(--db-text); }
+  #modalProveedoresRetenidos .pr-no-changes { color: var(--db-muted); }
+  #modalProveedoresRetenidos .pr-counter {
+    background: var(--db-cyan); color: #fff;
+    padding: 3px 10px; border-radius: 999px;
+    font-weight: 700; font-size: .72rem;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-right: 6px;
+  }
+  #modalProveedoresRetenidos .pr-delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: .7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px;
+    margin-left: 4px;
+  }
+  #modalProveedoresRetenidos .pr-delta.plus  { color: #047857; background: #D1FAE5; }
+  #modalProveedoresRetenidos .pr-delta.minus { color: #b91c1c; background: #FEE2E2; }
+
+  /* Botones del footer */
+  #modalProveedoresRetenidos .pr-btn {
+    padding: .42rem .85rem; border-radius: 5px;
+    font-size: .82rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid; white-space: nowrap; line-height: 1;
+    transition: background-color .12s, border-color .12s, color .12s;
+  }
+  #modalProveedoresRetenidos .pr-btn-primary {
+    background: var(--db-navy); color: #fff; border-color: var(--db-navy);
+  }
+  #modalProveedoresRetenidos .pr-btn-primary:hover:not(:disabled) {
+    background: var(--db-blue); border-color: var(--db-blue);
+  }
+  #modalProveedoresRetenidos .pr-btn-secondary {
+    background: #fff; color: var(--db-text); border-color: var(--db-border);
+  }
+  #modalProveedoresRetenidos .pr-btn-secondary:hover {
+    background: var(--db-bg); border-color: var(--db-blue); color: var(--db-blue);
+  }
+  #modalProveedoresRetenidos .pr-btn-ghost {
+    background: #fff; color: #b91c1c; border-color: #fca5a5;
+  }
+  #modalProveedoresRetenidos .pr-btn-ghost:hover:not(:disabled) {
+    background: #fef2f2; border-color: #b91c1c;
+  }
+  #modalProveedoresRetenidos .pr-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  @media (max-width: 576px) {
+    #modalProveedoresRetenidos .pr-search-wrap { width: 100%; min-width: 0; }
+    #modalProveedoresRetenidos .pr-table { min-width: 640px; }
+  }
 </style>
 
 @section('content')
@@ -464,65 +689,83 @@
 </div>
 
 {{-- ────────── Modal: Proveedores Retenidos ────────── --}}
-<div class="modal fade" id="modalProveedoresRetenidos" tabindex="-1" aria-labelledby="modalProveedoresRetenidosLabel" aria-hidden="true">
+<div class="modal fade pr-modal" id="modalProveedoresRetenidos" tabindex="-1" aria-labelledby="modalProveedoresRetenidosLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header py-2">
-        <h6 class="modal-title" id="modalProveedoresRetenidosLabel">
-          <i class="fa fa-user-check"></i> Proveedores Afectos a Retencion
-        </h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
-          <div class="small text-muted">
-            <i class="fa fa-info-circle"></i>
-            Marca el checkbox para incluir al proveedor en el padron de retencion.
-            <span class="ms-2"><i class="fa fa-database"></i> <span id="pr_total_info">0</span> resultados</span>
+
+      <div class="modal-header pr-header">
+        <div class="pr-title-wrap">
+          <span class="pr-icon-tile"><i class="fa fa-user-check"></i></span>
+          <div>
+            <h6 class="modal-title" id="modalProveedoresRetenidosLabel">Proveedores Retenidos</h6>
+            <div class="pr-subtitle">Selecciona los proveedores afectos a retención</div>
           </div>
-          <div class="input-icon" style="min-width: 260px;">
-            <i class="fa fa-search fa-prefix"></i>
-            <input type="text" id="pr_search" class="form-control form-control-sm"
-                   placeholder="Buscar RUC o razon social..." autocomplete="off">
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="pr-toolbar">
+          <div class="pr-stats">
+            <i class="fa fa-database"></i> <b id="pr_total_info">0</b> proveedores
+          </div>
+          <div class="pr-search-wrap">
+            <i class="fa fa-search"></i>
+            <input type="text" id="pr_search" class="pr-search-input"
+                   placeholder="Buscar por RUC o razón social…" autocomplete="off">
           </div>
         </div>
 
-        <div class="table-responsive" style="max-height: 60vh;">
-          <table class="table table-sm align-middle mb-0">
-            <thead class="table-light sticky-top">
-              <tr class="small text-uppercase">
+        <div class="pr-table-wrap">
+          <table class="pr-table">
+            <thead>
+              <tr>
                 <th style="width: 130px;">RUC</th>
-                <th>Razon Social</th>
-                <th>Direccion</th>
-                <th style="width: 120px;" class="text-center">Retenido</th>
+                <th>Razón Social</th>
+                <th>Dirección</th>
+                <th class="text-center" style="width: 110px;">Retenido</th>
               </tr>
             </thead>
             <tbody id="pr_body">
-              <tr><td colspan="4" class="text-center text-muted small py-3">Cargando…</td></tr>
+              <tr><td colspan="4" class="pr-empty">Cargando…</td></tr>
             </tbody>
           </table>
         </div>
 
         <div id="pr_error" class="alert alert-danger small d-none mt-2 mb-0"></div>
 
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <div class="small text-muted">
-            Mostrando <span id="pr_rango">0</span> de <span id="pr_total">0</span>
+        <div class="pr-pager">
+          <div class="pr-pager-info">
+            Mostrando <b id="pr_rango">0</b> de <b id="pr_total">0</b>
           </div>
-          <div class="btn-group btn-group-sm" role="group">
-            <button type="button" id="pr_prev" class="btn btn-outline-secondary" disabled>
-              <i class="fa fa-chevron-left"></i> Anterior
+          <div class="pr-pager-btns">
+            <button type="button" id="pr_prev" class="pr-btn-pager" disabled title="Anterior">
+              <i class="fa fa-chevron-left"></i>
             </button>
-            <button type="button" id="pr_next" class="btn btn-outline-secondary" disabled>
-              Siguiente <i class="fa fa-chevron-right"></i>
+            <button type="button" id="pr_next" class="pr-btn-pager" disabled title="Siguiente">
+              <i class="fa fa-chevron-right"></i>
             </button>
           </div>
         </div>
+
       </div>
-      <div class="modal-footer py-2">
-        <span class="small text-muted me-auto" id="pr_cambios_info">Sin cambios en esta sesion.</span>
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+      <div class="modal-footer pr-footer">
+        <div class="pr-pending-info me-auto" id="pr_cambios_info">
+          <span class="pr-no-changes">Sin cambios pendientes</span>
+        </div>
+        <button type="button" class="pr-btn pr-btn-ghost" id="pr_btn_descartar" disabled>
+          <i class="fa fa-rotate-left"></i> Descartar
+        </button>
+        <button type="button" class="pr-btn pr-btn-secondary" id="pr_btn_cerrar">
+          Cerrar
+        </button>
+        <button type="button" class="pr-btn pr-btn-primary" id="pr_btn_confirmar" disabled>
+          <i class="fa fa-check-double"></i> Confirmar Retenidos
+        </button>
       </div>
+
     </div>
   </div>
 </div>

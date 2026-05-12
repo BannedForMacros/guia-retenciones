@@ -437,13 +437,19 @@ class DatamarketRetencionService
     private function extractError($json, string $body, int $status): string
     {
         if (is_array($json)) {
-            if (!empty($json['detail'])) {
-                $detail = $json['detail'];
-                if (is_string($detail)) return substr($detail, 0, 400);
-                if (is_array($detail))  return substr(json_encode($detail), 0, 400);
-            }
-            if (!empty($json['message'])) {
-                return substr((string) $json['message'], 0, 400);
+            $detail  = $json['detail']  ?? null;
+            $message = $json['message'] ?? null;
+
+            $detailStr = '';
+            if (is_string($detail))      $detailStr = $detail;
+            elseif (is_array($detail))   $detailStr = json_encode($detail);
+
+            // En errores 500 de SQL Server, FastAPI envia detail="Error de base de datos"
+            // y el mensaje real (driver/SP) va en `message`. Concatenamos ambos para
+            // que el usuario vea la causa raiz y no solo el placeholder.
+            $parts = array_filter([$detailStr, $message], fn ($v) => $v !== null && $v !== '');
+            if (!empty($parts)) {
+                return substr(implode(' — ', $parts), 0, 400);
             }
         }
         return 'http '.$status.': '.substr($body, 0, 380);

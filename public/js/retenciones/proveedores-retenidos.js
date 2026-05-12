@@ -1,11 +1,14 @@
 /* Modal: Proveedores Afectos a Retencion
  *
  *   - Lista paginada server-side via /retenciones/proveedoresRetenidos.
- *   - Busqueda con debounce (300ms), se reinicia al primer offset.
- *   - Cada checkbox dispara un Swal de confirmacion antes de
- *     llamar a /retenciones/togglearAfectoRetencion.
- *   - Al cerrar el modal, si hubo cambios, muestra un resumen con la
- *     lista de proveedores afectados en esta sesion.
+ *   - Buscador con debounce (300ms).
+ *   - Los checkboxes son SOLO un staging area: marcar/desmarcar no llama
+ *     a la API, solo acumula cambios pendientes en memoria. El usuario
+ *     puede paginar/buscar y los pendientes se conservan.
+ *   - "Confirmar Retenidos": Swal con el resumen, y al aceptar dispara
+ *     los PATCH en paralelo (Promise.all). Si alguno falla, se reporta.
+ *   - "Descartar": limpia los pendientes y vuelve a la vista del server.
+ *   - Cerrar con pendientes: Swal pregunta si confirmar / descartar.
  */
 (function () {
   'use strict';
@@ -13,15 +16,16 @@
   var PAGE_SIZE = 50;
   var SEARCH_DEBOUNCE_MS = 300;
 
-  // Estado del modal (vive mientras la pagina esta abierta)
+  // pending[ruc] = { nombre, current: bool, original: bool }
   var state = {
     search: '',
     offset: 0,
     total:  0,
-    rows:   [],      // ultimo resultset visible
-    cambios: {},     // {ruc: {nombre, afecto, prev_afecto}}
+    rows:   [],
+    pending: {},
     searchTimer: null,
     loading: false,
+    confirming: false,
   };
 
   function escapeHtml(s) {
@@ -30,31 +34,81 @@
     });
   }
 
+  /** Devuelve 'add' si la accion pendiente es marcar, 'remove' si es desmarcar. */
+  function pendingKind(ruc) {
+    var p = state.pending[ruc];
+    if (!p) return null;
+    return p.current ? 'add' : 'remove';
+  }
+
+  function badgeHtml(kind) {
+    return kind === 'add'
+      ? '<span class="pr-pending-badge add" title="Se agregara al padron de retencion al confirmar">' +
+          '<i class="fa fa-plus"></i> Agregar</span>'
+      : '<span class="pr-pending-badge remove" title="Se quitara del padron de retencion al confirmar">' +
+          '<i class="fa fa-minus"></i> Quitar</span>';
+  }
+
+  function pendingCount() {
+    return Object.keys(state.pending).length;
+  }
+
+  /** Devuelve el "current" efectivo de un proveedor: lo pendiente si existe, si no, lo del server. */
+  function currentValue(ruc, serverValue) {
+    var p = state.pending[ruc];
+    return p ? p.current : !!serverValue;
+  }
+
+  /** Sumar / restar un toggle al diario de pendientes. */
+  function registrarToggle(ruc, nombre, newValue, originalValue) {
+    if (newValue === originalValue) {
+      delete state.pending[ruc];
+    } else {
+      state.pending[ruc] = {
+        nombre:   nombre,
+        current:  newValue,
+        original: originalValue,
+      };
+    }
+  }
+
   function setLoading(on) {
     state.loading = !!on;
     $('#pr_prev, #pr_next').prop('disabled', on || false);
     if (on) {
-      $('#pr_body').html('<tr><td colspan="4" class="text-center text-muted small py-3">' +
-        '<i class="fa fa-spinner fa-spin"></i> Cargando…</td></tr>');
+      $('#pr_body').html('<tr><td colspan="4" class="pr-empty">' +
+        '<i class="fa fa-spinner fa-spin"></i>&nbsp; Cargando…</td></tr>');
     }
   }
 
-  function actualizarResumenFooter() {
-    var n = Object.keys(state.cambios).length;
+  function actualizarFooter() {
+    var n = pendingCount();
     if (n === 0) {
-      $('#pr_cambios_info').text('Sin cambios en esta sesion.');
-    } else {
-      $('#pr_cambios_info').html('<i class="fa fa-clock-rotate-left"></i> ' + n +
-        ' cambio' + (n === 1 ? '' : 's') + ' en esta sesion.');
+      $('#pr_cambios_info').html('<span class="pr-no-changes">Sin cambios pendientes</span>');
+      $('#pr_btn_confirmar, #pr_btn_descartar').prop('disabled', true);
+      return;
     }
+
+    var marcados = 0, desmarcados = 0;
+    Object.keys(state.pending).forEach(function (ruc) {
+      if (state.pending[ruc].current) marcados++;
+      else                            desmarcados++;
+    });
+
+    var html = '<span class="pr-counter"><i class="fa fa-clock-rotate-left"></i> ' +
+               n + ' pendiente' + (n === 1 ? '' : 's') + '</span>';
+    if (marcados)    html += '<span class="pr-delta plus">+'  + marcados    + '</span>';
+    if (desmarcados) html += '<span class="pr-delta minus">−' + desmarcados + '</span>';
+    $('#pr_cambios_info').html(html);
+    $('#pr_btn_confirmar, #pr_btn_descartar').prop('disabled', false);
   }
 
   function renderRows() {
     var $tbody = $('#pr_body').empty();
-    var $err   = $('#pr_error').addClass('d-none').text('');
+    $('#pr_error').addClass('d-none').text('');
 
     if (!state.rows.length) {
-      $tbody.html('<tr><td colspan="4" class="text-center text-muted small py-3">' +
+      $tbody.html('<tr><td colspan="4" class="pr-empty">' +
         (state.search
           ? 'Sin resultados para "' + escapeHtml(state.search) + '".'
           : 'No hay proveedores cargados.') + '</td></tr>');
@@ -63,24 +117,37 @@
 
     var html = '';
     state.rows.forEach(function (p) {
-      var ruc   = p.ruc || '';
-      var nom   = p.razon_social || '';
-      var dir   = p.direccion || '—';
-      var afect = !!p.afecto_retencion;
-      var chkId = 'pr_chk_' + ruc;
+      var ruc       = p.ruc || '';
+      var nom       = p.razon_social || '';
+      var dir       = (p.direccion || '').trim();
+      var serverV   = !!p.afecto_retencion;
+      var currentV  = currentValue(ruc, serverV);
+      var kind      = pendingKind(ruc);   // 'add' | 'remove' | null
+      var rowCls    = kind === 'add' ? ' class="pr-pending-add"'
+                    : kind === 'remove' ? ' class="pr-pending-remove"'
+                    : '';
+      var chkId     = 'pr_chk_' + ruc;
+
       html +=
-        '<tr data-ruc="' + escapeHtml(ruc) + '">' +
-          '<td class="font-monospace small">' + escapeHtml(ruc) + '</td>' +
-          '<td><span class="prov-name">' + escapeHtml(nom) + '</span></td>' +
-          '<td class="small text-muted">' + escapeHtml(dir) + '</td>' +
-          '<td class="text-center">' +
-            '<div class="form-check d-inline-block m-0">' +
-              '<input type="checkbox" class="form-check-input pr-toggle" ' +
-                'id="' + chkId + '" ' +
-                'data-ruc="' + escapeHtml(ruc) + '" ' +
-                'data-nombre="' + escapeHtml(nom) + '" ' +
-                (afect ? 'checked' : '') + '>' +
+        '<tr data-ruc="' + escapeHtml(ruc) + '"' + rowCls + '>' +
+          '<td><span class="pr-ruc">' + escapeHtml(ruc) + '</span></td>' +
+          '<td>' +
+            '<span class="pr-name">' + escapeHtml(nom) + '</span>' +
+            (kind ? badgeHtml(kind) : '') +
+          '</td>' +
+          '<td>' +
+            '<div class="pr-direccion' + (dir ? '' : ' empty') + '" title="' +
+              escapeHtml(dir || 'Sin dirección') + '">' +
+              escapeHtml(dir || '—') +
             '</div>' +
+          '</td>' +
+          '<td class="text-center">' +
+            '<input type="checkbox" class="form-check-input pr-toggle" ' +
+              'id="' + chkId + '" ' +
+              'data-ruc="'    + escapeHtml(ruc) + '" ' +
+              'data-nombre="' + escapeHtml(nom) + '" ' +
+              'data-server="' + (serverV ? '1' : '0') + '" ' +
+              (currentV ? 'checked' : '') + '>' +
           '</td>' +
         '</tr>';
     });
@@ -100,7 +167,6 @@
 
   function fetchPagina() {
     setLoading(true);
-
     $.ajax({
       url: route('retenciones.proveedoresRetenidos'),
       type: 'GET',
@@ -117,13 +183,11 @@
         state.total = resp.total || 0;
       }
       renderRows();
-      actualizarPaginacion();
     })
     .fail(function (xhr) {
       state.rows = [];
       state.total = 0;
       renderRows();
-      actualizarPaginacion();
       var msg = (xhr.responseJSON && (xhr.responseJSON.msj || xhr.responseJSON.message))
                 || ('HTTP ' + xhr.status);
       $('#pr_error').removeClass('d-none').text(msg);
@@ -141,62 +205,12 @@
 
   // ── Init al abrir el modal ──
   $('#modalProveedoresRetenidos').on('shown.bs.modal', function () {
-    // No reseteamos `cambios` para que el usuario pueda abrir-cerrar y
-    // seguir viendo el resumen en footer. Si quieres limpiarlo siempre,
-    // descomenta la siguiente linea.
-    // state.cambios = {};
-    state.search = '';
+    state.search   = '';
+    state.offset   = 0;
+    state.pending  = {};
     $('#pr_search').val('');
-    actualizarResumenFooter();
-    resetYRecargar();
-  });
-
-  // ── Cierre: mostrar resumen si hubo cambios ──
-  $('#modalProveedoresRetenidos').on('hidden.bs.modal', function () {
-    var cambios = state.cambios;
-    var rucs = Object.keys(cambios);
-    if (rucs.length === 0) return;
-
-    var marcados   = rucs.filter(function (r) { return cambios[r].afecto; });
-    var desmarcados= rucs.filter(function (r) { return !cambios[r].afecto; });
-
-    var html = '<div class="text-start small">';
-    html += '<div class="mb-2">Se realizaron <b>' + rucs.length + '</b> ' +
-            'actualizacion' + (rucs.length === 1 ? '' : 'es') + ':</div>';
-
-    if (marcados.length) {
-      html += '<div class="mb-1 text-success"><b><i class="fa fa-check"></i> ' +
-              marcados.length + ' marcados como afectos:</b></div>';
-      html += '<ul class="mb-2 ps-3" style="max-height:160px; overflow:auto;">';
-      marcados.forEach(function (ruc) {
-        html += '<li><code>' + escapeHtml(ruc) + '</code> — ' +
-                escapeHtml(cambios[ruc].nombre) + '</li>';
-      });
-      html += '</ul>';
-    }
-    if (desmarcados.length) {
-      html += '<div class="mb-1 text-danger"><b><i class="fa fa-xmark"></i> ' +
-              desmarcados.length + ' ya no afectos:</b></div>';
-      html += '<ul class="mb-0 ps-3" style="max-height:160px; overflow:auto;">';
-      desmarcados.forEach(function (ruc) {
-        html += '<li><code>' + escapeHtml(ruc) + '</code> — ' +
-                escapeHtml(cambios[ruc].nombre) + '</li>';
-      });
-      html += '</ul>';
-    }
-    html += '</div>';
-
-    Swal.fire({
-      title: 'Resumen de cambios',
-      html: html,
-      icon: 'info',
-      confirmButtonText: 'Entendido',
-      width: 560,
-    });
-
-    // Despues de mostrar el resumen, lo "consumimos" para no repetirlo
-    state.cambios = {};
-    actualizarResumenFooter();
+    actualizarFooter();
+    fetchPagina();
   });
 
   // ── Buscador con debounce ──
@@ -220,91 +234,254 @@
     fetchPagina();
   });
 
-  // ── Toggle del checkbox con SweetAlert de confirmacion ──
-  // IMPORTANTE: el handler revierte la UI si el usuario cancela o si la API falla.
+  // ── Toggle SIN llamar a la API: solo actualiza pending ──
   $(document).on('change', '.pr-toggle', function () {
     var $chk    = $(this);
     var ruc     = $chk.data('ruc');
     var nombre  = $chk.data('nombre') || '';
-    var afecto  = $chk.is(':checked');           // valor que quiere quedar
-    var prev    = !afecto;                       // valor previo (antes del toggle)
-    var accion  = afecto ? 'marcar' : 'desmarcar';
-    var verbo   = afecto ? 'afecto a retencion' : 'NO afecto a retencion';
+    var serverV = $chk.data('server') === 1 || $chk.data('server') === '1';
+    var newV    = $chk.is(':checked');
+
+    registrarToggle(ruc, nombre, newV, serverV);
+
+    var $row = $chk.closest('tr');
+    var kind = pendingKind(ruc);    // 'add' | 'remove' | null
+
+    // Limpiar primero (sea cual sea el estado anterior) y luego aplicar
+    $row.removeClass('pr-pending-add pr-pending-remove');
+    $row.find('.pr-pending-badge').remove();
+
+    if (kind) {
+      $row.addClass(kind === 'add' ? 'pr-pending-add' : 'pr-pending-remove');
+      $row.find('.pr-name').after(badgeHtml(kind));
+    }
+
+    actualizarFooter();
+  });
+
+  // ── Descartar pendientes ──
+  $(document).on('click', '#pr_btn_descartar', function () {
+    if (pendingCount() === 0) return;
 
     Swal.fire({
-      title: 'Confirmar cambio',
-      html:
-        '¿Seguro de <b>' + accion + '</b> al proveedor como <b>' + verbo + '</b>?<br>' +
-        '<div class="mt-2 small text-muted">' +
-          '<code>' + escapeHtml(ruc) + '</code> — ' + escapeHtml(nombre) +
-        '</div>',
+      title: 'Descartar cambios',
+      html: 'Se descartaran <b>' + pendingCount() + '</b> cambio(s) pendientes.<br>' +
+            '<small class="text-muted">Esto no toca la base de datos.</small>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Si, descartar',
+      cancelButtonText:  'No',
+      confirmButtonColor: '#dc2626',
+    }).then(function (result) {
+      if (!result.isConfirmed) return;
+      state.pending = {};
+      renderRows();
+      actualizarFooter();
+    });
+  });
+
+  // ── Confirmar Retenidos: dispara las PATCH en paralelo ──
+  function confirmarPendientes() {
+    if (state.confirming || pendingCount() === 0) return Promise.resolve(false);
+
+    var pendings = Object.keys(state.pending).map(function (ruc) {
+      return Object.assign({ ruc: ruc }, state.pending[ruc]);
+    });
+    var marcados   = pendings.filter(function (p) { return p.current; });
+    var desmarcados= pendings.filter(function (p) { return !p.current; });
+
+    var html = '<div class="text-start small">';
+    html += '<div class="mb-2">Se aplicaran <b>' + pendings.length + '</b> ' +
+            'cambio' + (pendings.length === 1 ? '' : 's') + ' al datamarket:</div>';
+    if (marcados.length) {
+      html += '<div class="mb-1 text-success"><b><i class="fa fa-check"></i> ' +
+              marcados.length + ' a marcar como afectos:</b></div>';
+      html += '<ul class="mb-2 ps-3" style="max-height:140px; overflow:auto;">';
+      marcados.forEach(function (p) {
+        html += '<li><code>' + escapeHtml(p.ruc) + '</code> — ' + escapeHtml(p.nombre) + '</li>';
+      });
+      html += '</ul>';
+    }
+    if (desmarcados.length) {
+      html += '<div class="mb-1 text-danger"><b><i class="fa fa-xmark"></i> ' +
+              desmarcados.length + ' a desmarcar:</b></div>';
+      html += '<ul class="mb-0 ps-3" style="max-height:140px; overflow:auto;">';
+      desmarcados.forEach(function (p) {
+        html += '<li><code>' + escapeHtml(p.ruc) + '</code> — ' + escapeHtml(p.nombre) + '</li>';
+      });
+      html += '</ul>';
+    }
+    html += '</div>';
+
+    return Swal.fire({
+      title: 'Confirmar Retenidos',
+      html: html,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Si, ' + accion,
-      cancelButtonText:  'Cancelar',
-      confirmButtonColor: afecto ? '#0E6CB5' : '#dc2626',
+      confirmButtonText: 'Si, aplicar al datamarket',
+      cancelButtonText:  'No, revisar',
+      confirmButtonColor: '#0E6CB5',
       showLoaderOnConfirm: true,
       allowOutsideClick: function () { return !Swal.isLoading(); },
+      width: 560,
       preConfirm: function () {
-        var fd = new FormData();
-        fd.append('_token', _token);
-        fd.append('ruc',    ruc);
-        fd.append('afecto', afecto ? '1' : '0');
-
-        return $.ajax({
-          url: route('retenciones.togglearAfectoRetencion'),
-          type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json',
-        })
-        .then(function (resp) { return resp; })
-        .catch(function (xhr) {
-          var resp = xhr.responseJSON || { msj: 'Error al actualizar.', msj_tipo: 'error' };
-          // El swal mostrara el error como resultado normal (no como reject)
-          return Object.assign({ procede: false }, resp);
-        });
+        state.confirming = true;
+        return ejecutarBulk(pendings)
+          .finally(function () { state.confirming = false; });
       },
     }).then(function (result) {
-      if (!result.isConfirmed) {
-        // Usuario cancelo: revertir checkbox a su estado previo
-        $chk.prop('checked', prev);
-        return;
-      }
+      if (!result.isConfirmed) return false;
 
-      var resp = result.value || {};
-      if (!resp.procede) {
-        $chk.prop('checked', prev);
-        Swal.fire({
-          title: 'No se pudo actualizar',
-          html: resp.msj || 'Error al actualizar.',
-          icon: resp.msj_tipo || 'error',
-        });
-        return;
-      }
+      var report = result.value || { ok: 0, fail: 0, errores: [] };
+      mostrarResultadoBulk(report);
+      // Limpiar pendientes que se aplicaron OK
+      report.aplicadosRucs.forEach(function (ruc) { delete state.pending[ruc]; });
+      // Refrescar tabla para reflejar el estado real del server
+      fetchPagina();
+      actualizarFooter();
+      return true;
+    });
+  }
 
-      // Persistir en el estado en memoria del row actual
-      var row = state.rows.find(function (r) { return String(r.ruc) === String(ruc); });
-      if (row) row.afecto_retencion = !!resp.afecto_retencion;
-
-      // Llevar el cambio al "diario de cambios" de la sesion. Si el usuario
-      // volvio al valor original, lo sacamos del diario.
-      var actual   = !!resp.afecto_retencion;
-      var original = !!state.cambios[ruc] ? state.cambios[ruc].prev_afecto : prev;
-      if (actual === original) {
-        delete state.cambios[ruc];
-      } else {
-        state.cambios[ruc] = {
-          nombre: nombre,
-          afecto: actual,
-          prev_afecto: state.cambios[ruc] ? state.cambios[ruc].prev_afecto : prev,
-        };
-      }
-      actualizarResumenFooter();
-
-      // Toast discreto (no interrumpe el flujo)
-      Swal.fire({
-        toast: true, position: 'top-end', timer: 1500, showConfirmButton: false,
-        icon: resp.msj_tipo || 'success',
-        title: resp.msj || (actual ? 'Marcado como afecto' : 'Ya no afecto'),
+  /**
+   * Ejecuta los PATCH en paralelo (un request por proveedor). Si quieres una
+   * sola request, agrega un endpoint bulk en FastAPI; para N<=50 esto es OK.
+   */
+  function ejecutarBulk(pendings) {
+    var promesas = pendings.map(function (p) {
+      var fd = new FormData();
+      fd.append('_token', _token);
+      fd.append('ruc',    p.ruc);
+      fd.append('afecto', p.current ? '1' : '0');
+      return $.ajax({
+        url: route('retenciones.togglearAfectoRetencion'),
+        type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json',
+      })
+      .then(function (resp) { return { ok: true,  ruc: p.ruc, nombre: p.nombre, resp: resp }; })
+      .catch(function (xhr) {
+        var msg = (xhr.responseJSON && (xhr.responseJSON.msj || xhr.responseJSON.message))
+                  || ('HTTP ' + xhr.status);
+        return { ok: false, ruc: p.ruc, nombre: p.nombre, error: msg };
       });
+    });
+
+    return Promise.all(promesas).then(function (results) {
+      var ok = 0, fail = 0;
+      var errores = [];
+      var aplicadosRucs = [];
+      results.forEach(function (r) {
+        if (r.ok) { ok++; aplicadosRucs.push(r.ruc); }
+        else      { fail++; errores.push(r); }
+      });
+      return { ok: ok, fail: fail, errores: errores, aplicadosRucs: aplicadosRucs };
+    });
+  }
+
+  function mostrarResultadoBulk(report) {
+    if (report.fail === 0) {
+      Swal.fire({
+        title: '¡Listo!',
+        html: '<b>' + report.ok + '</b> proveedor' + (report.ok === 1 ? '' : 'es') +
+              ' actualizado' + (report.ok === 1 ? '' : 's') + ' en el datamarket.',
+        icon: 'success',
+        timer: 1800,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    var html = '<div class="text-start small">';
+    if (report.ok) {
+      html += '<div class="mb-2 text-success"><i class="fa fa-check"></i> ' +
+              report.ok + ' actualizados correctamente.</div>';
+    }
+    html += '<div class="mb-1 text-danger"><b><i class="fa fa-triangle-exclamation"></i> ' +
+            report.fail + ' fallaron:</b></div>';
+    html += '<ul class="mb-0 ps-3" style="max-height:200px; overflow:auto;">';
+    report.errores.forEach(function (e) {
+      html += '<li><code>' + escapeHtml(e.ruc) + '</code> — ' +
+              escapeHtml(e.nombre) + '<br>' +
+              '<small class="text-muted">' + escapeHtml(e.error) + '</small></li>';
+    });
+    html += '</ul></div>';
+
+    Swal.fire({
+      title: 'Hubo errores',
+      html: html,
+      icon: report.ok ? 'warning' : 'error',
+      width: 600,
+    });
+  }
+
+  $(document).on('click', '#pr_btn_confirmar', function () {
+    confirmarPendientes();
+  });
+
+  // ── Cerrar: si hay pendientes, preguntar ──
+  $(document).on('click', '#pr_btn_cerrar', function () {
+    if (pendingCount() === 0) {
+      $('#modalProveedoresRetenidos').modal('hide');
+      return;
+    }
+    Swal.fire({
+      title: 'Tienes ' + pendingCount() + ' cambio(s) pendiente(s)',
+      text:  '¿Que quieres hacer?',
+      icon:  'warning',
+      showCancelButton:      true,
+      showDenyButton:        true,
+      confirmButtonText:     'Confirmar ahora',
+      denyButtonText:        'Descartar y cerrar',
+      cancelButtonText:      'Seguir editando',
+      confirmButtonColor:    '#0E6CB5',
+      denyButtonColor:       '#dc2626',
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        confirmarPendientes().then(function () {
+          // Si despues de aplicar no quedaron pendientes, cerramos.
+          if (pendingCount() === 0) $('#modalProveedoresRetenidos').modal('hide');
+        });
+      } else if (result.isDenied) {
+        state.pending = {};
+        $('#modalProveedoresRetenidos').modal('hide');
+      }
+    });
+  });
+
+  // El "X" / Escape de Bootstrap NO pasa por #pr_btn_cerrar — interceptamos
+  // el hide para preguntar. Si tras el Swal el usuario confirma cerrar,
+  // dejamos pasar el hide; si decide quedarse, lo prevenimos.
+  $('#modalProveedoresRetenidos').on('hide.bs.modal', function (e) {
+    if (state.confirming) return;        // estamos aplicando, no estorbar
+    if (pendingCount() === 0) return;    // sin pendientes, cerrar libre
+
+    // Si ya estabamos en medio de un prompt de cierre, dejamos pasar
+    if (state._closing) { state._closing = false; return; }
+
+    e.preventDefault();
+    Swal.fire({
+      title: 'Tienes ' + pendingCount() + ' cambio(s) pendiente(s)',
+      text:  '¿Que quieres hacer?',
+      icon:  'warning',
+      showCancelButton:      true,
+      showDenyButton:        true,
+      confirmButtonText:     'Confirmar ahora',
+      denyButtonText:        'Descartar y cerrar',
+      cancelButtonText:      'Seguir editando',
+      confirmButtonColor:    '#0E6CB5',
+      denyButtonColor:       '#dc2626',
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        confirmarPendientes().then(function () {
+          if (pendingCount() === 0) {
+            state._closing = true;
+            $('#modalProveedoresRetenidos').modal('hide');
+          }
+        });
+      } else if (result.isDenied) {
+        state.pending = {};
+        state._closing = true;
+        $('#modalProveedoresRetenidos').modal('hide');
+      }
     });
   });
 })();
