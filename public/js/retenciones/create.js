@@ -241,10 +241,9 @@ function agregarLineaConFactura(f) {
     '  <td class="text-center"><span class="moneda-tag ' + monedaClass + '">' + moneda + '</span></td>' +
     '  <td class="text-center">' + tCambioCell + '</td>' +
     '  <td><input type="date" class="form-control in-fecha-pago" value="' + hoy + '"></td>' +
-    '  <td><input type="text" inputmode="numeric" pattern="\\d{1,3}" maxlength="3" class="form-control text-center in-numero-pago" value="' + siguienteNumPagoStr + '" title="Número / cuota de pago"></td>' +
+    '  <td><input type="number" class="form-control text-center in-numero-pago" min="1" max="999" step="1" value="' + siguienteNumPago + '" title="Número / cuota de pago"></td>' +
     '  <td>' +
     '    <input type="number" class="form-control text-end in-importe-pago" step="0.01" min="0.01" max="' + importePagoMax + '" value="' + importePagoDefault + '">' +
-    '    <div class="saldo-hint text-muted small text-end mt-1"></div>' +
     '  </td>' +
     '  <td class="num-cell out-retenido fw-bold">S/ 0.00</td>' +
     '  <td class="num-cell out-neto">S/ 0.00</td>' +
@@ -291,6 +290,7 @@ $(document).on('input', '.in-importe-pago', function () {
 
 function recalcularTodo() {
   var totPagPEN = 0, totRetPEN = 0, totNetoPEN = 0;
+  var saldosHtml = '';
 
   $('#detalles_body tr').each(function () {
     var $tr = $(this);
@@ -313,25 +313,35 @@ function recalcularTodo() {
     $tr.find('.out-retenido').text('S/ ' + _fmt2(retPEN));
     $tr.find('.out-neto').text('S/ ' + _fmt2(netoPEN));
 
-    // Pista del saldo: "Pagando ahora X, queda restante Y" / "Cubre todo el saldo"
+    // Card del panel de saldos (lugar estrategico fuera de la tabla)
     var saldoPend = _parseNum($tr.attr('data-saldo-pendiente'));
     var sym       = (moneda === 'USD') ? 'US$' : 'S/';
-    var $hint     = $tr.find('.saldo-hint');
+    var sn        = $tr.attr('data-serie-num') || '—';
+    var stateCls, stateTxt, stateIco = '';
     if (saldoPend > 0 && pagoOri > 0) {
       var queda = +(saldoPend - pagoOri).toFixed(2);
       if (queda <= 0.005) {
-        $hint.removeClass('text-warning text-danger').addClass('text-success')
-             .html('<i class="fa fa-check-circle"></i> Cubre todo el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')');
+        stateCls = 'full';
+        stateIco = '<i class="fa fa-circle-check"></i>';
+        stateTxt = 'Cubre todo el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')';
       } else if (pagoOri > saldoPend + 0.005) {
-        $hint.removeClass('text-success text-warning').addClass('text-danger')
-             .html('<i class="fa fa-triangle-exclamation"></i> Excede el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')');
+        stateCls = 'exceed';
+        stateIco = '<i class="fa fa-triangle-exclamation"></i>';
+        stateTxt = 'Excede el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')';
       } else {
-        $hint.removeClass('text-success text-danger').addClass('text-warning')
-             .html('Pagando ' + sym + ' ' + _fmt2(pagoOri) + ' · queda ' + sym + ' ' + _fmt2(queda));
+        stateCls = 'partial';
+        stateTxt = 'Pagando ' + sym + ' ' + _fmt2(pagoOri) +
+                   ' · queda ' + sym + ' ' + _fmt2(queda);
       }
     } else {
-      $hint.removeClass('text-success text-warning text-danger').empty();
+      stateCls = 'partial';
+      stateTxt = 'Sin importe';
     }
+    saldosHtml +=
+      '<div class="saldo-card saldo-' + stateCls + '">' +
+        '<span class="serie">' + _escapeHtml(sn) + '</span>' +
+        '<span class="status">' + stateIco + ' ' + stateTxt + '</span>' +
+      '</div>';
 
     totPagPEN += pagoPEN; totRetPEN += retPEN; totNetoPEN += netoPEN;
   });
@@ -339,6 +349,14 @@ function recalcularTodo() {
   $('#tot_pagado').text('S/ ' + _fmt2(totPagPEN));
   $('#tot_retenido').text('S/ ' + _fmt2(totRetPEN));
   $('#tot_neto').text('S/ ' + _fmt2(totNetoPEN));
+
+  // Pintar/ocultar el panel de saldos
+  var $panel = $('#saldos_panel');
+  if (saldosHtml) {
+    $panel.html(saldosHtml).removeClass('d-none');
+  } else {
+    $panel.empty().addClass('d-none');
+  }
 }
 
 /* ─── Registrar ──────────────────────────────────────────────────────── */

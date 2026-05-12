@@ -266,14 +266,37 @@
   .factura-result .importe br + * { font-size: 13px; color: var(--db-teal); font-weight: 700; }
   .select2-results__option[aria-disabled="true"] { background: var(--db-bg); cursor: not-allowed; }
 
-  /* Pista "Pagando X · queda Y" debajo del input importe pago */
-  table.tabla-detalles .saldo-hint {
-    font-size: .65rem; line-height: 1.1; min-height: 12px;
+  /* Panel "Saldos por documento" debajo de la tabla.
+     Lugar estrategico fuera del flow de la tabla para no comprimir las celdas. */
+  .saldos-panel {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 10px; padding: 10px 12px;
+    background: #FAFBFC; border: 1px solid var(--db-border); border-radius: 6px;
+  }
+  .saldo-card {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #fff; border: 1px solid var(--db-border);
+    border-left: 3px solid var(--db-cyan);
+    border-radius: 5px; padding: 6px 12px;
+    font-size: .78rem; min-width: 280px;
     font-variant-numeric: tabular-nums;
   }
-  table.tabla-detalles .saldo-hint.text-success { color: var(--db-teal) !important; }
-  table.tabla-detalles .saldo-hint.text-warning { color: #b45309 !important; }
-  table.tabla-detalles .saldo-hint.text-danger  { color: #b91c1c !important; font-weight: 700; }
+  .saldo-card .serie {
+    font-family: ui-monospace, monospace; font-weight: 700;
+    color: var(--db-text); font-size: .72rem;
+    padding-right: 8px; border-right: 1px solid var(--db-border);
+  }
+  .saldo-card .status { color: var(--db-muted); font-size: .72rem; line-height: 1.2; flex: 1; }
+  .saldo-card .status i { margin-right: 2px; }
+
+  .saldo-card.saldo-partial { border-left-color: #f59e0b; }
+  .saldo-card.saldo-partial .status { color: #92400e; font-weight: 600; }
+
+  .saldo-card.saldo-full    { border-left-color: var(--db-teal); }
+  .saldo-card.saldo-full    .status { color: var(--db-teal); font-weight: 700; }
+
+  .saldo-card.saldo-exceed  { border-left-color: #b91c1c; background: #FEF2F2; }
+  .saldo-card.saldo-exceed  .status { color: #b91c1c; font-weight: 700; }
 </style>
 
 @section('content')
@@ -420,6 +443,10 @@
           <i class="fa fa-inbox"></i> No has agregado documentos.
           Selecciona un proveedor y luego elige una factura del buscador.
         </div>
+
+        {{-- Panel "Saldos por documento": una tarjeta por linea agregada.
+             Se rellena/actualiza en recalcularTodo() del JS. --}}
+        <div id="saldos_panel" class="saldos-panel d-none"></div>
       </div>
 
     </form>
