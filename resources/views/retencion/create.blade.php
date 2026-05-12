@@ -84,18 +84,28 @@
   }
   .section-title.with-step { display: inline-flex; align-items: center; }
 
-  /* ── Comprobante: TEXTO puro en azul brand (visible) ──────────── */
-  .serie-text {
-    height: calc(1.5em + .5rem + 2px);
-    display: flex; align-items: center;
-    padding: 0;
-    font-family: inherit;
-    font-weight: 800; color: var(--db-blue);
-    font-size: 1rem; letter-spacing: .01em;
+  /* ── Chip de serie-numero al lado del titulo ──────────────────── */
+  .header-serie {
+    display: inline-flex; align-items: center;
+    background: var(--db-blue); color: #fff;
+    font-family: ui-monospace, monospace; font-weight: 700;
+    font-size: 1rem; letter-spacing: .02em;
+    padding: .35rem .75rem; border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(13, 46, 110, .15);
+    line-height: 1;
   }
-  .serie-text.is-empty {
-    color: #b45309; font-style: italic; font-weight: 500; font-size: .85rem;
+  .header-serie.is-empty {
+    background: #FFFBEB; color: #b45309;
+    border: 1px dashed #FCD34D; font-style: italic; font-weight: 600;
   }
+
+  /* ── Textarea de observación: grande y comoda ─────────────────── */
+  .obs-textarea {
+    resize: vertical;
+    min-height: 70px;
+    line-height: 1.4;
+  }
+  #obs_counter { float: right; font-size: .65rem; color: var(--db-muted); }
 
   /* ── Proveedor: chip con tinte cyan ─────────────────────────── */
   .prov-chip {
@@ -297,6 +307,87 @@
 
   .saldo-card.saldo-exceed  { border-left-color: #b91c1c; background: #FEF2F2; }
   .saldo-card.saldo-exceed  .status { color: #b91c1c; font-weight: 700; }
+
+  /* Importe Pago invalido (excede el saldo): borde rojo + halo */
+  table.tabla-detalles input.in-importe-pago.is-invalid {
+    border-color: #b91c1c !important;
+    background: #FEF2F2 !important;
+    color: #991b1b !important;
+    font-weight: 700;
+    background-image: none !important;     /* mata el ícono de Bootstrap */
+    padding-right: .45rem !important;       /* recupera padding normal */
+  }
+  table.tabla-detalles input.in-importe-pago.is-invalid:focus {
+    box-shadow: 0 0 0 .15rem rgba(185, 28, 28, .15) !important;
+  }
+
+  /* ── Swal "Confirmar Retención": resumen estructurado ───────────── */
+  .sw-popup-retencion { padding: 0 !important; }
+  .sw-popup-retencion .swal2-title { color: var(--db-text); font-weight: 800; font-size: 1.05rem; }
+  .sw-popup-retencion .swal2-html-container { margin: 0 !important; text-align: left; padding: 0 1rem !important; }
+
+  .sw-resumen .sw-head {
+    display: flex; align-items: center; gap: 12px;
+    background: #F0FAFE; border: 1px solid #BFDDF1;
+    border-radius: 6px; padding: .55rem .75rem;
+    margin-bottom: 10px;
+  }
+  .sw-resumen .sw-serie {
+    background: var(--db-blue); color: #fff;
+    font-family: ui-monospace, monospace; font-weight: 700; font-size: .85rem;
+    padding: .25rem .55rem; border-radius: 4px; flex-shrink: 0;
+  }
+  .sw-resumen .sw-meta { font-size: .76rem; color: var(--db-text); line-height: 1.4; }
+  .sw-resumen .sw-meta b { font-weight: 700; }
+
+  .sw-resumen .sw-mono { font-family: ui-monospace, monospace; font-weight: 600; }
+
+  .sw-resumen table.sw-table {
+    width: 100%; border-collapse: collapse;
+    font-size: .76rem; margin-bottom: 10px;
+  }
+  .sw-resumen table.sw-table thead th {
+    background: var(--db-bg); color: var(--db-muted);
+    font-weight: 700; font-size: .62rem;
+    text-transform: uppercase; letter-spacing: .04em;
+    padding: .35rem .5rem; text-align: left;
+    border-bottom: 1px solid var(--db-border);
+  }
+  .sw-resumen table.sw-table thead th.text-center { text-align: center; }
+  .sw-resumen table.sw-table thead th.text-end    { text-align: right; }
+  .sw-resumen table.sw-table tbody td {
+    padding: .4rem .5rem; border-bottom: 1px solid #f3f4f6;
+    color: var(--db-text); font-variant-numeric: tabular-nums;
+  }
+  .sw-resumen table.sw-table tbody tr:last-child td { border-bottom: 0; }
+  .sw-resumen table.sw-table td.text-end    { text-align: right; }
+  .sw-resumen table.sw-table td.text-center { text-align: center; }
+  .sw-resumen table.sw-table td.sw-ret      { color: var(--db-teal); font-weight: 700; }
+
+  .sw-resumen .sw-pill {
+    display: inline-block; padding: 1px 7px; border-radius: 999px;
+    font-size: .62rem; font-weight: 700; border: 1px solid;
+  }
+  .sw-resumen .sw-pill-warn { color: #92400e; background: #FFFBEB; border-color: #FCD34D; }
+  .sw-resumen .sw-pill-ok   { color: var(--db-teal); background: #ECFDF5; border-color: #A8E8D5; }
+
+  .sw-resumen .sw-totales {
+    display: flex; gap: 12px; justify-content: space-between;
+    background: #FAFBFC; border: 1px solid var(--db-border);
+    border-radius: 6px; padding: .55rem .75rem;
+    font-size: .78rem;
+  }
+  .sw-resumen .sw-totales > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .sw-resumen .sw-totales span { font-size: .62rem; color: var(--db-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+  .sw-resumen .sw-totales b { font-size: .9rem; color: var(--db-text); font-variant-numeric: tabular-nums; }
+  .sw-resumen .sw-tot-ret b { color: var(--db-teal); }
+
+  .sw-resumen .sw-warn-block {
+    margin-top: 10px; padding: .55rem .75rem;
+    background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 6px;
+    color: #92400e; font-size: .76rem; line-height: 1.4;
+  }
+  .sw-resumen .sw-warn-block i { margin-right: 4px; }
 </style>
 
 @section('content')
@@ -309,7 +400,16 @@
           <a href="{{ route('retenciones.index') }}">Retenciones</a>
           <span class="text-muted"> / Nueva</span>
         </div>
-        <h1 class="page-title">Nueva Retención</h1>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h1 class="page-title mb-0">Nueva Retención</h1>
+          @if (!empty($serieDefault))
+            <span class="header-serie" title="Serie y número del comprobante">
+              {{ $serieDefault }}-{{ $numeroSugerido }}
+            </span>
+          @else
+            <span class="header-serie is-empty" title="Sin serie configurada">Sin serie</span>
+          @endif
+        </div>
       </div>
       <div class="d-flex gap-1 align-items-center">
         <a href="{{ route('retenciones.index') }}" class="btn-ghost">
@@ -367,30 +467,22 @@
         <div class="col-md-6">
           <div class="card-soft p-3 h-100">
             <div class="section-title mb-2">Datos del Comprobante</div>
-            {{-- Tres columnas en la misma fila → labels y valores alineados al
-                 mismo baseline. --}}
             <div class="row g-2">
-              <div class="col-md-4">
-                <label class="form-label small mb-1">Comprobante</label>
-                <div class="serie-text {{ empty($serieDefault) ? 'is-empty' : '' }}">
-                  @if (!empty($serieDefault))
-                    {{ $serieDefault }}-{{ $numeroSugerido }}
-                  @else
-                    Sin serie
-                  @endif
-                </div>
-              </div>
-              <div class="col-md-4">
+              <div class="col-md-5">
                 <label class="form-label small mb-1">Fecha Emisión *</label>
                 <input type="date" id="fecha_emision" name="fecha_emision"
                        class="form-control form-control-sm"
                        value="{{ $fechaHoy }}" max="{{ $fechaHoy }}">
               </div>
-              <div class="col-md-4">
-                <label class="form-label small mb-1">Observación</label>
-                <input type="text" name="observacion"
-                       class="form-control form-control-sm"
-                       maxlength="250" placeholder="Opcional">
+              <div class="col-md-7">
+                <label class="form-label small mb-1">
+                  Observación
+                  <span class="text-muted small" id="obs_counter">0 / 250</span>
+                </label>
+                <textarea name="observacion" id="observacion"
+                          class="form-control form-control-sm obs-textarea"
+                          rows="3" maxlength="250"
+                          placeholder="Detalle opcional (ej. n° de orden de compra, referencia interna…)"></textarea>
               </div>
             </div>
           </div>

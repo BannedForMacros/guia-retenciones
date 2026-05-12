@@ -60,6 +60,11 @@ $(document).ready(function () {
   });
 
   $('#btn_limpiar_proveedor').on('click', limpiarProveedor);
+
+  // Contador del textarea de Observacion
+  $(document).on('input', '#observacion', function () {
+    $('#obs_counter').text((this.value || '').length + ' / 250');
+  });
 });
 
 /* ─── Selección / limpieza de proveedor ──────────────────────────────── */
@@ -318,9 +323,10 @@ function recalcularTodo() {
     var sym       = (moneda === 'USD') ? 'US$' : 'S/';
     var sn        = $tr.attr('data-serie-num') || '—';
     var stateCls, stateTxt, stateIco = '';
+    var excede = false;
     if (saldoPend > 0 && pagoOri > 0) {
       var queda = +(saldoPend - pagoOri).toFixed(2);
-      if (queda <= 0.005) {
+      if (queda <= 0.005 && queda >= -0.005) {
         stateCls = 'full';
         stateIco = '<i class="fa fa-circle-check"></i>';
         stateTxt = 'Cubre todo el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')';
@@ -328,6 +334,7 @@ function recalcularTodo() {
         stateCls = 'exceed';
         stateIco = '<i class="fa fa-triangle-exclamation"></i>';
         stateTxt = 'Excede el saldo (' + sym + ' ' + _fmt2(saldoPend) + ')';
+        excede = true;
       } else {
         stateCls = 'partial';
         stateTxt = 'Pagando ' + sym + ' ' + _fmt2(pagoOri) +
@@ -337,6 +344,10 @@ function recalcularTodo() {
       stateCls = 'partial';
       stateTxt = 'Sin importe';
     }
+
+    // Marca visual en el input cuando excede el saldo
+    $tr.find('.in-importe-pago').toggleClass('is-invalid', excede);
+
     saldosHtml +=
       '<div class="saldo-card saldo-' + stateCls + '">' +
         '<span class="serie">' + _escapeHtml(sn) + '</span>' +
@@ -398,12 +409,99 @@ $(document).on('click', '#btn_registrar', function () {
   });
   if (!detallesValidos) { Swal.fire({ html: razonInvalida, icon: 'warning' }); return; }
 
+  // ── Resumen detallado para el swal de confirmacion ──
+  var lineasHtml = '';
+  var totRetPEN = 0, totNetoPEN = 0, totPagPEN = 0;
+  var hayParciales = 0;
+
+  $('#detalles_body tr').each(function () {
+    var $tr   = $(this);
+    var moneda = ($tr.attr('data-moneda') || 'PEN').toUpperCase();
+    var factor = (moneda === 'USD')
+      ? RetUtils.parseNum($tr.find('.in-factor-cambio').val())
+      : 1.0;
+    if (!factor) factor = 1.0;
+
+    var pagoOri  = RetUtils.parseNum($tr.find('.in-importe-pago').val());
+    var pagoPEN  = +(pagoOri * factor).toFixed(2);
+    var retPEN   = +(pagoPEN * TASA_DEC).toFixed(2);
+    var netoPEN  = +(pagoPEN - retPEN).toFixed(2);
+    var saldoPnd = RetUtils.parseNum($tr.attr('data-saldo-pendiente'));
+    var queda    = +(saldoPnd - pagoOri).toFixed(2);
+    var sym      = (moneda === 'USD') ? 'US$' : 'S/';
+    var sn       = $tr.attr('data-serie-num') || '—';
+    var nro      = $tr.find('.in-numero-pago').val() || '1';
+
+    var estadoBadge = '';
+    if (queda > 0.005) {
+      hayParciales++;
+      estadoBadge = '<span class="sw-pill sw-pill-warn">Queda ' + sym + ' ' + RetUtils.fmtNum(queda, 2) + '</span>';
+    } else {
+      estadoBadge = '<span class="sw-pill sw-pill-ok">✓ Saldado</span>';
+    }
+
+    lineasHtml +=
+      '<tr>' +
+        '<td class="sw-mono">' + sn + '</td>' +
+        '<td class="text-center">' + parseInt(nro, 10) + '</td>' +
+        '<td class="text-end">' + sym + ' ' + RetUtils.fmtNum(pagoOri, 2) + '</td>' +
+        '<td class="text-end sw-ret">S/ ' + RetUtils.fmtNum(retPEN, 2) + '</td>' +
+        '<td>' + estadoBadge + '</td>' +
+      '</tr>';
+
+    totPagPEN  += pagoPEN;
+    totRetPEN  += retPEN;
+    totNetoPEN += netoPEN;
+  });
+
+  var seriePill = $('#serie').val() + '-' + $('#numero').val();
+  var prov      = $('#proveedor_razon').val() || '—';
+  var rucProv   = $('#proveedor_ruc').val() || '';
+  var fechaEm   = $('#fecha_emision').val() || '';
+
+  var avisoParcial = hayParciales > 0
+    ? '<div class="sw-warn-block">'
+      + '<i class="fa fa-circle-info"></i> '
+      + '<b>' + hayParciales + '</b> documento(s) quedan con <b>saldo pendiente</b>. '
+      + 'Podrás retener el resto en una próxima retención.'
+      + '</div>'
+    : '';
+
+  var resumenHtml =
+    '<div class="sw-resumen">' +
+      '<div class="sw-head">' +
+        '<div class="sw-serie">' + seriePill + '</div>' +
+        '<div class="sw-meta">' +
+          '<span><b>Proveedor:</b> ' + _escapeHtml(prov) + (rucProv ? ' <span class="sw-mono">(' + rucProv + ')</span>' : '') + '</span><br>' +
+          '<span><b>Fecha emisión:</b> ' + fechaEm + ' · <b>Tasa:</b> ' + TASA_PCT.toFixed(2).replace(/\.?0+$/, '') + '%</span>' +
+        '</div>' +
+      '</div>' +
+      '<table class="sw-table">' +
+        '<thead><tr>' +
+          '<th>Documento</th><th class="text-center">N° Pago</th>' +
+          '<th class="text-end">Importe</th><th class="text-end">Retiene</th>' +
+          '<th>Estado</th>' +
+        '</tr></thead>' +
+        '<tbody>' + lineasHtml + '</tbody>' +
+      '</table>' +
+      '<div class="sw-totales">' +
+        '<div><span>Total pagado</span><b>S/ ' + RetUtils.fmtNum(totPagPEN, 2) + '</b></div>' +
+        '<div class="sw-tot-ret"><span>Total a retener</span><b>S/ ' + RetUtils.fmtNum(totRetPEN, 2) + '</b></div>' +
+        '<div><span>Neto al proveedor</span><b>S/ ' + RetUtils.fmtNum(totNetoPEN, 2) + '</b></div>' +
+      '</div>' +
+      avisoParcial +
+    '</div>';
+
   Swal.fire({
-    html: '¿Registrar la retención <b>' + $('#serie').val() + '-' + $('#numero').val() + '</b>?',
-    icon: 'question',
+    title: 'Confirmar Retención',
+    html: resumenHtml,
+    icon: null,
     showCancelButton: true,
-    confirmButtonText: 'Sí, registrar',
+    confirmButtonText: '<i class="fa fa-check"></i> Sí, registrar',
     cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#0D2E6E',
+    width: '720px',
+    customClass: { popup: 'sw-popup-retencion' },
   }).then(function (result) {
     if (!result.isConfirmed) return;
 
@@ -416,7 +514,7 @@ $(document).on('click', '#btn_registrar', function () {
     fd.append('tipodocproveedor',     '06');
     fd.append('direccionproveedor',   $('#proveedor_direccion').val() || '');
     fd.append('razonsocialproveedor', $('#proveedor_razon').val());
-    fd.append('observacion',          $('input[name="observacion"]').val() || '');
+    fd.append('observacion',          $('[name="observacion"]').val() || '');
 
     $('#detalles_body tr').each(function (i) {
       var $tr = $(this);
