@@ -967,6 +967,8 @@ class RetencionController extends Controller
                 'proveedor_ruc'       => $ruc,
                 'proveedor_nombre'    => $nombre,
                 'proveedor_direccion' => $p['direccion'] ?? '',
+                // Flag para que el form de create avise si NO esta en padron de retencion
+                'afecto_retencion'    => (bool) ($p['afecto_retencion'] ?? false),
             ];
         }
 

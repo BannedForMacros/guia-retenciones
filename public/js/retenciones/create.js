@@ -50,12 +50,21 @@ $(document).ready(function () {
 
   $('#proveedor_select').on('select2:select', function (e) {
     var d = e.params.data || {};
-    seleccionarProveedor({
+    var prov = {
       ruc:       d.proveedor_ruc       || '',
       nombre:    d.proveedor_nombre    || '',
       direccion: d.proveedor_direccion || '',
-    });
-    // Limpiamos la selección visible — la info ya está en el chip.
+    };
+
+    // Si el proveedor NO esta marcado como afecto a retencion, advertimos
+    // y ofrecemos marcarlo en un solo paso.
+    if (d.afecto_retencion === false) {
+      validarYSeleccionarProveedor(prov);
+    } else {
+      seleccionarProveedor(prov);
+    }
+
+    // Limpiamos la selección visible — la info ya está en el chip (si procedio).
     $('#proveedor_select').val(null).trigger('change');
   });
 
@@ -68,6 +77,71 @@ $(document).ready(function () {
 });
 
 /* ─── Selección / limpieza de proveedor ──────────────────────────────── */
+
+/**
+ * Cuando el proveedor elegido NO está marcado como afecto a retención,
+ * se muestra un Swal de advertencia con 2 caminos:
+ *   - Marcar ahora y continuar: PATCH al datamarket y selecciona.
+ *   - Cancelar: no selecciona.
+ */
+function validarYSeleccionarProveedor(prov) {
+  var nombre = (prov.nombre || '').toUpperCase();
+  var ruc    = prov.ruc || '';
+
+  Swal.fire({
+    title: 'Proveedor no marcado como afecto a retención',
+    html:
+      '<div class="text-start">' +
+        '<p class="mb-2">El proveedor seleccionado no figura en el padrón de retención:</p>' +
+        '<div class="p-2 mb-3" style="background:#F5F5F5;border:1px solid #e5e7eb;border-radius:6px;">' +
+          '<div style="font-weight:700;color:#1A3A5C;">' + _escapeHtml(nombre) + '</div>' +
+          '<div style="font-family:ui-monospace,monospace;font-size:.78rem;color:#6b7280;">RUC: ' + _escapeHtml(ruc) + '</div>' +
+        '</div>' +
+        '<p class="mb-0 small text-muted">Debes marcarlo como afecto para poder emitir la retención.</p>' +
+      '</div>',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText:  '<i class="fa fa-check"></i> Marcar y continuar',
+    cancelButtonText:   'Cancelar',
+    confirmButtonColor: '#0D2E6E',
+    reverseButtons:     true,
+    width: 520,
+    showLoaderOnConfirm: true,
+    allowOutsideClick: function () { return !Swal.isLoading(); },
+    preConfirm: function () {
+      var fd = new FormData();
+      fd.append('_token', _token);
+      fd.append('ruc',    ruc);
+      fd.append('afecto', '1');
+
+      return $.ajax({
+        url: route('retenciones.togglearAfectoRetencion'),
+        type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json',
+      })
+      .then(function (resp) { return { ok: true,  resp: resp }; })
+      .catch(function (xhr) {
+        var resp = xhr.responseJSON || { msj: 'No se pudo marcar al proveedor.', msj_tipo: 'error' };
+        return { ok: false, resp: resp };
+      });
+    },
+  }).then(function (result) {
+    if (!result.isConfirmed) return;          // Cancelar -> no seleccionar
+
+    var r = result.value || {};
+    if (!r.ok) {
+      Swal.fire({
+        html: (r.resp && r.resp.msj) || 'No se pudo marcar al proveedor.',
+        icon: (r.resp && r.resp.msj_tipo) || 'error',
+      });
+      return;
+    }
+    seleccionarProveedor(prov);
+    Swal.fire({
+      toast: true, position: 'top-end', timer: 1800, showConfirmButton: false,
+      icon: 'success', title: 'Proveedor marcado como afecto a retención',
+    });
+  });
+}
 
 function seleccionarProveedor(p) {
   $('#proveedor_ruc').val(p.ruc);
