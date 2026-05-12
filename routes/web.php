@@ -114,6 +114,10 @@ Route::controller(RetencionController::class)->group(function () {
     Route::get ('retenciones/facturasProveedor',   'facturasProveedor')->name('retenciones.facturasProveedor');
     Route::get ('retenciones/listarProveedores',   'listarProveedores')->name('retenciones.listarProveedores');
 
+    // Modal "Proveedores Retenidos" del index
+    Route::get ('retenciones/proveedoresRetenidos',        'proveedoresRetenidos')->name('retenciones.proveedoresRetenidos');
+    Route::post('retenciones/togglearAfectoRetencion',     'togglearAfectoRetencion')->name('retenciones.togglearAfectoRetencion');
+
     // Series (modal en el form)
     Route::get ('retenciones/series',               'listarSeries')->name('retenciones.listarSeries');
     Route::post('retenciones/series',               'crearSerie')->name('retenciones.crearSerie');

@@ -381,6 +381,59 @@ class DatamarketRetencionService
         }
     }
 
+    /**
+     * Marca / desmarca a un proveedor como afecto a retencion. Endpoint:
+     * PATCH /proveedores/{ruc}/afecto-retencion
+     *
+     * Devuelve:
+     *  ['ok' => bool, 'afecto_retencion' => bool, 'http' => int|null, 'error' => ?string]
+     */
+    public function setAfectoRetencion(string $ruc, bool $afecto, string $usuario): array
+    {
+        if (!$this->isEnabled()) {
+            return ['ok' => false, 'afecto_retencion' => false, 'http' => null, 'error' => 'datamarket disabled'];
+        }
+
+        $url  = '/proveedores/'.rawurlencode($ruc).'/afecto-retencion';
+        $body = [
+            'afecto'             => $afecto,
+            'usuariomodificador' => $usuario,
+        ];
+
+        try {
+            $resp = $this->client()->patch($url, $body);
+
+            if ($resp->successful()) {
+                $j = $resp->json() ?? [];
+                return [
+                    'ok'                => true,
+                    'afecto_retencion'  => (bool) ($j['afecto_retencion'] ?? $afecto),
+                    'http'              => $resp->status(),
+                    'error'             => null,
+                ];
+            }
+
+            $msg = $this->extractError($resp->json(), $resp->body(), $resp->status());
+            Log::warning('Datamarket afecto-retencion fallo', [
+                'status'  => $resp->status(),
+                'ruc'     => $ruc,
+                'message' => $msg,
+            ]);
+            return ['ok' => false, 'afecto_retencion' => false, 'http' => $resp->status(), 'error' => $msg];
+        } catch (Throwable $e) {
+            Log::warning('Datamarket afecto-retencion exception', [
+                'ruc'     => $ruc,
+                'message' => $e->getMessage(),
+            ]);
+            return [
+                'ok'                => false,
+                'afecto_retencion'  => false,
+                'http'              => null,
+                'error'             => 'conn: '.substr($e->getMessage(), 0, 400),
+            ];
+        }
+    }
+
     private function extractError($json, string $body, int $status): string
     {
         if (is_array($json)) {

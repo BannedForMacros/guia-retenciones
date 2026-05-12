@@ -974,6 +974,82 @@ class RetencionController extends Controller
     }
 
     /**
+     * Lista paginada de proveedores (con flag afecto_retencion) para el
+     * modal "Proveedores Retenidos" del index. No comparte shape con
+     * listarProveedores() porque ese es para el Select2 del form de creacion.
+     *
+     * GET /retenciones/proveedoresRetenidos?search=&limit=&offset=
+     */
+    public function proveedoresRetenidos(Request $request)
+    {
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+            'limit'  => 'nullable|integer|min:1|max:200',
+            'offset' => 'nullable|integer|min:0',
+        ]);
+
+        $rep = app(DatamarketRetencionService::class)->listarProveedores(
+            $request->query('search'),
+            (int) $request->query('limit', 50),
+            (int) $request->query('offset', 0),
+        );
+
+        if (!$rep['ok']) {
+            return response()->json([
+                'procede' => false,
+                'msj'     => 'No se pudo consultar el datamarket: '.$rep['error'],
+                'items'   => [],
+                'total'   => 0,
+            ], 502);
+        }
+
+        return response()->json([
+            'procede' => true,
+            'items'   => $rep['items'],
+            'total'   => $rep['total'],
+        ]);
+    }
+
+    /**
+     * Marca / desmarca a un proveedor como afecto a retencion en el datamarket.
+     *
+     * POST /retenciones/togglearAfectoRetencion  body: {ruc, afecto}
+     */
+    public function togglearAfectoRetencion(Request $request)
+    {
+        $request->validate([
+            'ruc'    => 'required|string|size:11|regex:/^\d{11}$/',
+            'afecto' => 'required|boolean',
+        ]);
+
+        $usuario = (string) (Auth::user()->username ?? Auth::user()->name ?? 'sistema');
+        $rep = app(DatamarketRetencionService::class)->setAfectoRetencion(
+            (string) $request->input('ruc'),
+            (bool)   $request->boolean('afecto'),
+            $usuario,
+        );
+
+        if (!$rep['ok']) {
+            $http = ($rep['http'] === 404) ? 404 : 502;
+            return response()->json([
+                'procede'  => false,
+                'msj'      => $rep['error'] ?: 'No se pudo actualizar el proveedor.',
+                'msj_tipo' => 'error',
+            ], $http);
+        }
+
+        return response()->json([
+            'procede'          => true,
+            'ruc'              => (string) $request->input('ruc'),
+            'afecto_retencion' => (bool) $rep['afecto_retencion'],
+            'msj'              => $rep['afecto_retencion']
+                ? 'Proveedor marcado como afecto a retencion.'
+                : 'Proveedor ya no esta afecto a retencion.',
+            'msj_tipo'         => 'success',
+        ]);
+    }
+
+    /**
      * Lista las facturas / NC / ND de un proveedor para el selector del form.
      * Delega al FastAPI (datamarket); la respuesta incluye flag ya_retenida
      * por cada fila (cruce contra dbo.detalleretenciones del datamarket).
