@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Parametro;
 use App\Models\Retencion;
 use App\Services\DatamarketRetencionService;
-use App\Services\DbPeruSunatService;
+use App\Services\FacturadorService;
 use App\Services\RetencionPayloadMapper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -448,7 +448,7 @@ class RetencionController extends Controller
             'detalles'             => $detallesNorm,
         ]);
 
-        $envio = app(DbPeruSunatService::class)->enviar($sunatPayload);
+        $envio = app(FacturadorService::class)->enviar($sunatPayload);
 
         // ── 4. Persistir resultado del envio en MySQL y replicar al datamarket ──
         $estadoProceso   = $envio['ok'] ? 'C' : 'F';
@@ -643,6 +643,237 @@ class RetencionController extends Controller
     }
 
     /**
+     * TipoComprobante SUNAT del Comprobante de Retencion (para la consulta de estado).
+     */
+    private const TIPO_COMPROBANTE_RETENCION = '20';
+
+    /**
+     * Consulta a SUNAT (via facturador) el estado actual del CRE y lo refresca
+     * localmente. Endpoint generico POST {base}/api/consulta/estado.
+     *
+     * Respuesta del facturador -> CodigoRespuesta: A/B/O/P
+     *   A = Aceptado, B = Rechazado, O = Observado, P = Pendiente (sin respuesta SUNAT)
+     */
+    public function consultarEstado(Request $request)
+    {
+        $request->validate(['serienumero' => 'required|string|max:15']);
+
+        $rucempresa  = $this->getRucEmpresa();
+        $serienumero = $request->post('serienumero');
+
+        $cab = DB::table('retenciones')
+            ->where('rucempresa',  $rucempresa)
+            ->where('serienumero', $serienumero)
+            ->first();
+
+        if (!$cab) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => 'Retencion no encontrada.',
+                'msj_tipo' => 'error',
+            ], 404);
+        }
+        // Un CRE anulado no debe "revivir" por una consulta de estado.
+        $anulada = ($cab->estadodocumento === '11');
+
+        $r = app(FacturadorService::class)->consultarEstado(
+            self::TIPO_COMPROBANTE_RETENCION,
+            $serienumero
+        );
+
+        if (!$r['ok'] || $r['codigo'] === null) {
+            $err = $r['mensaje_error'] ?: 'El facturador no devolvio un estado valido.';
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "No se pudo consultar el estado de <b>{$serienumero}</b>.<br><small>".e($err)."</small>",
+                'msj_tipo' => 'error',
+            ], 502);
+        }
+
+        // CodigoRespuesta -> columnas locales (estadosunat guarda el codigo crudo A/B/O/P)
+        $codigo = $r['codigo'];
+        $map = [
+            'A' => ['proceso' => 'C', 'doc' => '1',  'label' => 'Aceptada'],
+            'O' => ['proceso' => 'C', 'doc' => '1',  'label' => 'Observado'],
+            'B' => ['proceso' => 'F', 'doc' => null, 'label' => 'Rechazada'],
+            'P' => ['proceso' => 'P', 'doc' => null, 'label' => 'Pendiente'],
+        ];
+        $m = $map[$codigo] ?? ['proceso' => 'P', 'doc' => null, 'label' => $codigo];
+
+        $update = [
+            'estadosunat'   => $codigo,
+            'estadoproceso' => $m['proceso'],
+            'mensaje_error' => $codigo === 'A' ? null : ($r['mensaje'] ?: $r['detalle']),
+        ];
+        // estadodocumento solo si NO esta anulada (no revivir un CRE dado de baja).
+        if ($m['doc'] !== null && !$anulada) {
+            $update['estadodocumento'] = $m['doc'];
+        }
+
+        try {
+            DB::table('retenciones')
+                ->where('rucempresa',  $rucempresa)
+                ->where('serienumero', $serienumero)
+                ->update($update);
+        } catch (Exception $e) {
+            Log::error('No se pudo refrescar estado consultado: '.$e->getMessage());
+            return response()->json([
+                'procede'  => false,
+                'msj'      => 'Se consulto el estado pero no se pudo guardar localmente.',
+                'msj_tipo' => 'error',
+            ], 500);
+        }
+
+        return response()->json([
+            'procede'  => true,
+            'msj'      => "Estado de <b>{$serienumero}</b>: <b>{$m['label']}</b>."
+                        .($r['detalle'] ? "<br><small>".e($r['detalle'])."</small>" : ''),
+            'msj_tipo' => $codigo === 'B' ? 'warning' : 'success',
+            'estado'   => [
+                'codigo'  => $codigo,
+                'label'   => $m['label'],
+                'mensaje' => $r['mensaje'],
+                'detalle' => $r['detalle'],
+            ],
+        ]);
+    }
+
+    /**
+     * Reenvia a SUNAT un CRE que NO llego a aceptarse (quedo Pendiente/Fallida),
+     * reconstruyendo el payload desde la BD (no depende del formulario).
+     * No procede si ya fue aceptado, rechazado o anulado.
+     */
+    public function reenviar(Request $request)
+    {
+        $request->validate(['serienumero' => 'required|string|max:15']);
+
+        $rucempresa  = $this->getRucEmpresa();
+        $serienumero = $request->post('serienumero');
+        $usuario     = (string) (Auth::user()->username ?? Auth::user()->name ?? 'sistema');
+
+        $cabRows = DB::select('CALL SP_RETENCION_OBTENER(?, ?)',          [$rucempresa, $serienumero]);
+        $detRows = DB::select('CALL SP_RETENCION_OBTENER_DETALLES(?, ?)', [$rucempresa, $serienumero]);
+
+        if (empty($cabRows)) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => 'Retencion no encontrada.',
+                'msj_tipo' => 'error',
+            ], 404);
+        }
+        $cab = $cabRows[0];
+
+        if ($cab->estadodocumento === '11') {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "La retencion <b>{$serienumero}</b> esta anulada, no se puede reenviar.",
+                'msj_tipo' => 'warning',
+            ], 409);
+        }
+
+        // Solo se reenvia lo que NUNCA fue confirmado por SUNAT (Pendiente/Fallida).
+        $yaResuelta = in_array((string) $cab->estadosunat, ['A', 'O', '05', 'B', '09'], true)
+                      || $cab->estadoproceso === 'C';
+        if ($yaResuelta) {
+            return response()->json([
+                'procede'  => false,
+                'msj'      => "La retencion <b>{$serienumero}</b> ya tiene respuesta de SUNAT, no procede reenviarla.",
+                'msj_tipo' => 'warning',
+            ], 409);
+        }
+
+        // ── Reconstruir el payload de emision desde los detalles guardados ──
+        $detalles = [];
+        foreach ($detRows as $d) {
+            $moneda   = strtoupper($d->monedaimportedocrela ?? 'PEN');
+            $retenido = (float) $d->importeretenido;
+            $neto     = (float) $d->montonetopagar;
+            $pagoOrig = (float) $d->importepagosinretencion;
+            // importePEN = retenido + neto; factor = importePEN / importe original.
+            $factor   = ($moneda === 'USD' && $pagoOrig > 0)
+                          ? round(($retenido + $neto) / $pagoOrig, 3)
+                          : 1.0;
+
+            $detalles[] = [
+                'tipo_doc_rel'         => $d->tipodocrelacionado,
+                'serie_num_rel'        => $d->serienumerorelacionado,
+                'fecha_doc_rel'        => $d->fechaemisiondocrelacionado,
+                'importe_doc'          => (float) $d->importetotaldocrela,
+                'fecha_pago'           => $d->fechapago,
+                'numero_pago'          => (int) $d->numeropago,
+                'importe_pago'         => $pagoOrig,
+                'moneda'               => $moneda,
+                'factor_cambio'        => $factor,
+                'importe_retenido_pen' => $retenido,
+                'monto_neto_pen'       => $neto,
+            ];
+        }
+
+        $sunatPayload = app(RetencionPayloadMapper::class)->buildSunatPayload([
+            'rucempresa'           => $rucempresa,
+            'serienumero'          => $serienumero,
+            'fechaemision'         => $cab->fechaemision,
+            'numdocproveedor'      => $cab->numdocproveedor,
+            'tipodocproveedor'     => $cab->tipodocidentidadproveedor ?? '06',
+            'razonsocialproveedor' => $cab->razonsocialproveedor,
+            'direccionproveedor'   => $cab->direccionproveedor ?? '',
+            'razonsocialempresa'   => $this->getRazonSocialEmpresa(),
+            'direccionempresa'     => $this->getDireccionEmpresa(),
+            'tasaretencion'        => $cab->tasaretencion,
+            'observacion'          => $cab->observacion ?? '',
+            'totalRetenidoPEN'     => (float) $cab->importetotalretenido,
+            'totalPagadoPEN'       => (float) $cab->importetotalpagado,
+            'detalles'             => $detalles,
+        ]);
+
+        $envio = app(FacturadorService::class)->enviar($sunatPayload);
+
+        $estadoProceso   = $envio['ok'] ? 'C' : 'F';
+        $estadoSunat     = $envio['ok'] ? 'A' : null;
+        $estadoDocumento = $envio['ok'] ? '1' : null;
+
+        $this->actualizarEnvioLocal($rucempresa, $serienumero, [
+            'estadosunat'    => $estadoSunat,
+            'estadoproceso'  => $estadoProceso,
+            'estadodocumento'=> $estadoDocumento,
+            'codigohash'     => $envio['codigohash'],
+            'codigoqr'       => $envio['codigoqr'],
+            'pdf417'         => $envio['pdf417'],
+            'mensaje_error'  => $envio['mensaje_error'],
+            'respuesta_envio'=> $envio['respuesta_raw'],
+            'usuario'        => $usuario,
+        ]);
+
+        // Replicar el resultado al datamarket (best-effort)
+        app(DatamarketRetencionService::class)->actualizarEnvioSunat($rucempresa, $serienumero, [
+            'estadosunat'        => $estadoSunat,
+            'estadoproceso'      => $estadoProceso,
+            'estadodocumento'    => $estadoDocumento,
+            'codigohash'         => $envio['codigohash'],
+            'codigoqr'           => $envio['codigoqr'],
+            'pdf417'             => $envio['pdf417'],
+            'mensaje_error'      => $envio['mensaje_error'],
+            'respuesta_envio'    => $envio['respuesta_raw'],
+            'usuariomodificador' => $usuario,
+        ]);
+
+        if ($envio['ok']) {
+            return response()->json([
+                'procede'  => true,
+                'msj'      => "Retencion <b>{$serienumero}</b> reenviada y aceptada por SUNAT.",
+                'msj_tipo' => 'success',
+            ]);
+        }
+
+        return response()->json([
+            'procede'  => true,
+            'msj'      => "Se reintento el envio de <b>{$serienumero}</b> pero <b>SUNAT no lo acepto</b>."
+                        .(!empty($envio['mensaje_error']) ? '<br><small>'.e($envio['mensaje_error']).'</small>' : ''),
+            'msj_tipo' => 'warning',
+        ]);
+    }
+
+    /**
      * Anula la retencion (Comunicacion de Baja / Resumen de Reversion a SUNAT).
      *
      * Flujo:
@@ -747,7 +978,7 @@ class RetencionController extends Controller
             'emisor'            => $this->getEmisorDatos(),
         ]);
 
-        $envio = app(DbPeruSunatService::class)->enviarReversion($build['payload']);
+        $envio = app(FacturadorService::class)->enviarReversion($build['payload']);
 
         // ── 5a. Si SUNAT FALLA: NO se anula localmente. Mensaje claro. ──
         if (!$envio['ok']) {

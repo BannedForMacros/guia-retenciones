@@ -294,6 +294,91 @@ $(document).on('click', '.anular_retencion', function () {
   });
 });
 
+/* ─── Consultar estado en SUNAT ───────────────────────────────────── */
+
+$(document).on('click', '.consultar_estado', function () {
+  var serienumero = $(this).data('serienumero');
+
+  Swal.fire({
+    title: 'Consultando estado…',
+    html: 'Preguntando a SUNAT por <b>' + serienumero + '</b>',
+    allowOutsideClick: false,
+    didOpen: function () { Swal.showLoading(); },
+  });
+
+  var fd = new FormData();
+  fd.append('_token', _token);
+  fd.append('serienumero', serienumero);
+
+  $.ajax({
+    type: 'POST',
+    url: route('retenciones.consultarEstado'),
+    data: fd,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+  })
+  .then(function (resp) {
+    Swal.fire({
+      html: resp.msj || 'Sin respuesta del servidor.',
+      icon: resp.msj_tipo || 'info',
+    }).then(function () {
+      if (resp.procede) callListarRetenciones();
+    });
+  })
+  .catch(function (xhr) {
+    var resp = xhr.responseJSON || { msj: 'Error al consultar el estado.', msj_tipo: 'error' };
+    Swal.fire({ html: resp.msj, icon: resp.msj_tipo || 'error' });
+  });
+});
+
+/* ─── Reenviar a SUNAT (CRE Pendiente/Fallida) ────────────────────── */
+
+$(document).on('click', '.reenviar_retencion', function () {
+  var serienumero = $(this).data('serienumero');
+
+  Swal.fire({
+    title: 'Reenviar a SUNAT',
+    html:
+      '¿Reenviar <b>' + serienumero + '</b>?<br>' +
+      '<small class="text-muted">Se reintenta la emision del comprobante. ' +
+      'Solo aplica a retenciones que no llegaron a aceptarse.</small>',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Si, reenviar',
+    cancelButtonText: 'No, cancelar',
+    showLoaderOnConfirm: true,
+    allowOutsideClick: function () { return !Swal.isLoading(); },
+    preConfirm: function () {
+      var fd = new FormData();
+      fd.append('_token', _token);
+      fd.append('serienumero', serienumero);
+
+      return $.ajax({
+        type: 'POST',
+        url: route('retenciones.reenviar'),
+        data: fd,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+      })
+      .then(function (resp) { return resp; })
+      .catch(function (xhr) {
+        return xhr.responseJSON || { msj: 'Error al reenviar.', msj_tipo: 'error' };
+      });
+    },
+  }).then(function (result) {
+    if (!result.isConfirmed) return;
+    var resp = result.value || {};
+    Swal.fire({
+      html: resp.msj || 'Sin respuesta del servidor.',
+      icon: resp.msj_tipo || 'error',
+    }).then(function () {
+      if (resp.procede) callListarRetenciones();
+    });
+  });
+});
+
 /* ─── Modal: Configuración de Series ──────────────────────────────── */
 
 (function () {

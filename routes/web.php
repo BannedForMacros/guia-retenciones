@@ -109,6 +109,8 @@ Route::controller(RetencionController::class)->group(function () {
     Route::post('retenciones/store',               'store')->name('retenciones.store');
     Route::post('retenciones/show',                'show')->name('retenciones.show');
     Route::post('retenciones/anular',              'anular')->name('retenciones.anular');
+    Route::post('retenciones/consultar-estado',    'consultarEstado')->name('retenciones.consultarEstado');
+    Route::post('retenciones/reenviar',            'reenviar')->name('retenciones.reenviar');
     Route::post('retenciones/siguienteNumero',     'siguienteNumero')->name('retenciones.siguienteNumero');
     Route::get ('retenciones/pdf/{serienumero}',   'pdf')->name('retenciones.pdf');
     Route::get ('retenciones/facturasProveedor',   'facturasProveedor')->name('retenciones.facturasProveedor');

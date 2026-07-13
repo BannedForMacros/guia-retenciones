@@ -1,16 +1,19 @@
 {{-- Parcial: tabla de retenciones + KPIs ($list, $totales) --}}
 
 @php
-  // Esquema de estados (DB Peru): estadosunat='A' (Aceptada), estadoproceso='C/F/P', estadodocumento='1'/'11'(anulada)
+  // Estado SUNAT. `estadosunat` guarda el CodigoRespuesta de la consulta/envio:
+  //   A=Aceptada  B=Rechazada  O=Observado  P=Pendiente   ('05'/'09' = legados)
+  // Si no hay codigo, se deriva del proceso del envio (estadoproceso C/F).
   $estadoSunatLabel = function ($r) {
-    if ($r->estadosunat === 'A')         return ['label' => 'Aceptada',  'class' => 'b-acep'];
-    if ($r->estadoproceso === 'F')        return ['label' => 'Fallida',   'class' => 'b-rech'];
-    if ($r->estadoproceso === 'C')        return ['label' => 'Aceptada',  'class' => 'b-acep'];
-    if ($r->estadoproceso === 'P' || $r->estadoproceso === null) return ['label' => 'Pendiente', 'class' => 'b-pend'];
-    // Compat con codigos legados ('00','05','09')
-    if ($r->estadosunat === '05')         return ['label' => 'Aceptada',  'class' => 'b-acep'];
-    if ($r->estadosunat === '09')         return ['label' => 'Rechazada', 'class' => 'b-rech'];
-    return ['label' => $r->estadosunat ?? 'Sin estado', 'class' => 'b-pend'];
+    switch ($r->estadosunat) {
+      case 'A':  case '05': return ['label' => 'Aceptada',  'class' => 'b-acep'];
+      case 'B':  case '09': return ['label' => 'Rechazada', 'class' => 'b-rech'];
+      case 'O':             return ['label' => 'Observado', 'class' => 'b-obs'];
+      case 'P':             return ['label' => 'Pendiente', 'class' => 'b-pend'];
+    }
+    if ($r->estadoproceso === 'F') return ['label' => 'Fallida',  'class' => 'b-rech'];
+    if ($r->estadoproceso === 'C') return ['label' => 'Aceptada', 'class' => 'b-acep'];
+    return ['label' => 'Pendiente', 'class' => 'b-pend'];
   };
   $fmt = function ($v, $mon = 'PEN') {
     $sym = $mon === 'USD' ? 'US$' : 'S/';
@@ -42,6 +45,9 @@
         $estLabel   = $est['label'];
         $estClass   = $est['class'];
         $estDocAnul = ($r->estadodocumento === '11');
+        // Reenvio: solo cuando NUNCA fue confirmado por SUNAT (Pendiente/Fallida) y no esta anulada.
+        $estResuelto  = in_array($r->estadosunat, ['A', 'O', '05', 'B', '09'], true) || $r->estadoproceso === 'C';
+        $puedeReenviar = !$estDocAnul && !$estResuelto;
       @endphp
       <tr>
         <td class="serie-cell">{{ $r->serienumero }}</td>
@@ -79,6 +85,18 @@
              target="_blank" class="btn btn-outline-secondary" title="PDF">
             <i class="fa fa-file-pdf"></i>
           </a>
+          @if (!$estDocAnul)
+            <button type="button" class="btn btn-outline-info consultar_estado"
+                    data-serienumero="{{ $r->serienumero }}" title="Consultar estado en SUNAT">
+              <i class="fa fa-arrows-rotate"></i>
+            </button>
+          @endif
+          @if ($puedeReenviar)
+            <button type="button" class="btn btn-outline-warning reenviar_retencion"
+                    data-serienumero="{{ $r->serienumero }}" title="Reenviar a SUNAT">
+              <i class="fa fa-paper-plane"></i>
+            </button>
+          @endif
           @if (!$estDocAnul)
             <button type="button" class="btn btn-outline-danger anular_retencion"
                     data-serienumero="{{ $r->serienumero }}" title="Anular">

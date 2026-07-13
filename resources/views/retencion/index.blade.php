@@ -252,6 +252,7 @@
   .b-acep { color: var(--db-teal); border-color: #A8E8D5; }
   .b-rech { color: #b91c1c; border-color: #fca5a5; }
   .b-pend { color: #b45309; border-color: #fcd34d; }
+  .b-obs  { color: #7c3aed; border-color: #c4b5fd; }
   .b-anul { color: #b45309; border-color: #fcd34d; }
   .b-act  { color: var(--db-teal); border-color: #A8E8D5; }
 
